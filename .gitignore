@@ -24,14 +24,14 @@ yarn-error.log*
 .env.*
 
 
-# --- BACKEND (Flask) ---
-/backend/__pycache__/
-/backend/*.pyc
-/backend/venv/
-/backend/instance/
-/backend/.pytest_cache/
-/backend/.mypy_cache/
-backend/.env
+# --- api (Flask) ---
+/api/__pycache__/
+/api/*.pyc
+/api/venv/
+/api/instance/
+/api/.pytest_cache/
+/api/.mypy_cache/
+api/.env
 
 
 # --- WEB (Next.js) ---
