@@ -10,6 +10,7 @@ export default function Home() {
           alt="Inverted Logo"
           width={180}
           height={38}
+          reroute="/"
         />
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">

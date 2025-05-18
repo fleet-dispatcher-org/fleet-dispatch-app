@@ -10,6 +10,7 @@ interface LogoProps {
     x?: number;
     y?: number;
     alt?: string;
+    reroute?: string
 
 }
 
@@ -18,9 +19,11 @@ const Logo: React.FC<LogoProps> = ({
     height = 38,
     width = 180,
     path, 
-    alt
+    alt,
+    reroute
 }) => {
     return (
+        <a href={reroute}>
         <img
             className={className}
             src={path}
@@ -28,6 +31,7 @@ const Logo: React.FC<LogoProps> = ({
             width={width}
             height={height}
         />
+        </a>
     )
 }
 
