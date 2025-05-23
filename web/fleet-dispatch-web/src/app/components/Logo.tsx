@@ -7,8 +7,6 @@ interface LogoProps {
     height?: number;
     width?: number;
     path?: string;
-    x?: number;
-    y?: number;
     alt?: string;
     reroute?: string
 
