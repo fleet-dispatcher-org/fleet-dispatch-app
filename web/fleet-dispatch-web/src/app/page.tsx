@@ -4,6 +4,7 @@ import Image from "next/image";
 import Logo from "./components/Logo";
 import { Helmet } from "react-helmet";
 import { useEffect } from "react";
+import { Button } from "./components/Button";
 
 export default function Home() {
   useEffect(() => {
@@ -13,12 +14,14 @@ export default function Home() {
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center justify-center sm-flex:row m:items-start">
         <Logo 
-          path="/fleet-dispatch-logo-resized-invert.png"
+          path="/fleet-dispatch-logo-no-background.png"
           alt="Inverted Logo"
           width={180}
           height={38}
           reroute="/"
         />
+
+        <h1 className="text-4xl sm:text-6xl font-italic font-bold text-center">Fleet Dispatch</h1>
 
         <div className="flex gap-4 items-center justify-center flex-col sm:flex-row">
           <a
@@ -29,7 +32,7 @@ export default function Home() {
           >
             <Image
               className="light:invert hover:dark:inverted-colors"
-              src="/fleet-dispatch-logo-resized.png"
+              src="/fleet-dispatch-logo-no-background.png"
               alt="Vercel logomark"
               width={20}
               height={20}
@@ -38,7 +41,7 @@ export default function Home() {
           </a>
           <a
             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="/dispatcher"
+            href="/register"
             target="_blank"
             rel="noopener noreferrer"
           >
