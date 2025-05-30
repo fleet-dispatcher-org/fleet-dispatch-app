@@ -3,6 +3,7 @@
 import React from "react";
 import { useEffect } from "react";
 import { Button } from "../components/Button";
+import Logo from "../components/Logo";
 
 export default function Register() {
     useEffect(() => {
@@ -10,10 +11,18 @@ export default function Register() {
       })
     return (
         <main>
-            <header className="flex flex-row justify-around">
-            <h1 className="text-4xl font-bold text-center">Fleet Registration</h1>
+            <header className="flex flex-row mx-auto w-[400px] mt-20 justify-center space-x-0">
+                <Logo
+                          className="mr-3" 
+                          path="/fleet-dispatch-logo-no-background.png"
+                          alt="Inverted Logo"
+                          width={70}
+                          height={20}
+                          reroute="/"
+                        />
+            <h1 className="text-4xl font-bold text-center mt-4">Fleet Registration</h1>
             </header>
-            <form className="space-y-4 mx-auto w-[400px] mt-40 gap-10">
+            <form className="space-y-4 mx-auto w-[400px] mt-20 gap-10">
                 <ul className="space-y-8">
                     <li className="flex">
                         <div className="w-[100px] pr-2">

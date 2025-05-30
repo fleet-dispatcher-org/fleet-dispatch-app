@@ -14,8 +14,8 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({
     className,
-    height = 38,
-    width = 180,
+    height,
+    width,
     path, 
     alt,
     reroute
