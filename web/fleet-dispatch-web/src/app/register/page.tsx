@@ -13,40 +13,74 @@ export default function Register() {
             <header className="flex flex-row justify-around">
             <h1 className="text-4xl font-bold text-center">Fleet Registration</h1>
             </header>
-            <form>
-                <ol className="list-none p-0 m-0 space-y-2 flex flex-col gap-10  justify-center align-middle items-center mt-20 margin-auto ">
-                    <li className="flex flex-row">
-                        <label className="font-bold mr-2 w-[100px]" htmlFor="name">Name: </label>
-                        <input className="border border-solid border-white" id="name" name="name" type="text" />
-                        
+            <form className="space-y-4 mx-auto w-[400px] mt-40 gap-10">
+                <ul className="space-y-8">
+                    <li className="flex">
+                        <div className="w-[100px] pr-2">
+                        <label className="font-bold block pt-[6px]" htmlFor="name">Name:</label>
+                        </div>
+                        <div className="flex flex-col">
+                        <input className="border border-white w-64" id="name" />
+                        </div>
                     </li>
-                    
-                    <li className="flex flex-row">
-                        <label className="font-bold mr-2 w-[100px]" htmlFor="title">Title: </label>
-                        <input className="border border-solid border-white" id="title" name="title" type="text" />
+
+                    <li className="flex">
+                        <div className="w-[100px] pr-2">
+                        <label className="font-bold block pt-[6px]" htmlFor="title">Title: </label>
+                        </div>
+                        <div className="flex flex-col">
+                        <input className="border border-white w-64" id="title" />
+                        </div>
+
                     </li>
-                    <li className="flex flex-row">
-                        <label className="font-bold mr-2 w-[100px]" htmlFor="company">Company: </label>
-                        <input className="border border-solid border-white" id="company" name="company" type="text" />
+
+                    <li className="flex">
+                        <div className="w-[100px] pr-2">
+                        <label className="font-bold block pt-[6px]" htmlFor="fleet-name">Fleet Name:</label>
+                        </div>
+                        <div className="flex flex-col">
+                        <input className="border border-white w-64" id="fleet-name" />
+                        <p className="text-sm text-gray-400 mt-1">This may change due to availability.</p>
+                        </div>
                     </li>
-                    <li className="flex flex-row">
-                        <label className="font-bold mr-2 w-[100px]" htmlFor="email">Email: </label>
-                        <input className="border border-solid border-white" id="email" name="email" type="email" />
+
+                    <li className="flex">
+                        <div className="w-[100px] pr-2">
+                        <label className="font-bold block pt-[6px]" htmlFor="company">Company:</label>
+                        </div>
+                        <div className="flex flex-col">
+                        <input className="border border-white w-64" id="company" />
+                        </div>
                     </li>
-                    <li className="flex flex-row">
-                        <label className="font-bold mr-2" htmlFor="phone">Phone: </label>
+
+                    <li className="flex">
+                        <div className="w-[100px] pr-2">
+                        <label className="font-bold block pt-[6px]" htmlFor="email">Email:</label>
+                        </div>
+                        <div className="flex flex-col">
+                        <input className="border border-white w-64" id="email" />
+                        <p className="text-sm text-gray-400 mt-1">We'll never share your email.</p>
+                        </div>
+                    </li>
+
+                    <li className="flex">
+                        <div className="w-[100px] pr-2">
+                        <label className="font-bold block pt-[6px]" htmlFor="phone">Phone:</label>
+                        </div>
+                        <div className="flex flex-col">
                         <div className="flex gap-2">
                             <input className="border border-white w-16" id="area" name="area-code" />
                             <input className="border border-white w-40" id="phone" name="phone" />
                         </div>
+                            <div className="flex flex-row gap-2">
+                                <p className="text-sm text-gray-400 mt-1">Ex. +1 </p>
+                                <p className="text-sm text-gray-400 mt-1 ml-10">(123) 456-7890</p>
+                            </div>
+                        </div>
                     </li>
-                    <li>
-                        <Button type="general">
-                            Register
-                        </Button>
-                    </li>
-                </ol>
-            </form>
+                    </ul>
+                    <Button type="general">Register</Button>
+                    </form>
         </main>
     );
 }
