@@ -1,8 +1,11 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Calendar from "../../components/Calendar";
+import Button  from "../../components/Button";
 
 export default function DummyDriver() {
+    const [isVisible, setisVisible] = useState(false);
+    const [isVisible2, setisVisible2] = useState(false);
     useEffect(() => {
         document.title = "Driver Home";
       })
@@ -19,9 +22,23 @@ export default function DummyDriver() {
                 <h2 className="text-1xl font-bold text-center mt-2">San Diego, CA</h2>
             </header>
             <main className="flex flex-row mt-15 space-x-0">
-                <div className="flex flex-col ml-10 justify-center">
-                    <h1 className="text-2xl font-bold text-left mt-6">Requested Time Off</h1>
-                    <Calendar type="range"></Calendar>
+                <div className="flex flex-col ml-10 justify-center" id="timeOff">
+                    <h1 className="text-2xl font-bold text-left mt-6">Requested Time Off: </h1>
+                    <Button type="text" onClick={() => {
+                        setisVisible(prev => !prev);
+                        console.log(isVisible);
+                    }}>Request Time Off</Button>
+                    <Calendar type="range" id="calendarTimeOff" isVisible={isVisible}></Calendar>
+                </div>
+                <div className="flex flex-col mx-auto justify-center" id="loads">
+                    <h1 className="text-2xl font-bold text-left mt-6">Loads</h1>
+                </div>
+                <div className="flex flex-col ml-10 justify-center mr-20" id="nextAvailable">
+                    <h1 className="text-2xl font-bold text-left mt-6">Next Available: </h1>
+                    <Button type="text" onClick={() => {
+                        setisVisible2(prev => !prev);
+                    }}>Set Next Available</Button>
+                    <Calendar type="single" id="calendarNextAvailable" isVisible={isVisible2}></Calendar>
                 </div>
             </main>
         </div>

@@ -7,6 +7,8 @@ import 'react-day-picker/dist/style.css'; // Default styles
 interface CalendarProps {
     children?: React.ReactNode;
     type?: "single" | "range";
+    id?: string;
+    isVisible?: boolean;
     className?: string;
     height?: number;
     width?: number;
@@ -14,10 +16,14 @@ interface CalendarProps {
     y?: number;
 }
 
-export default function Calendar({height, width, className, x, y, children, type}: CalendarProps) {
+export default function Calendar({height, width, className, x, y, children, type, id, isVisible=false}: CalendarProps) {
+    const [selected, setSelected] = useState<Date | undefined>();
+    const [range, setRange] = useState<DateRange | undefined>({
+            from: new Date(),
+            to: new Date(),
+        });
 
-      if (type === "single") {
-        const [selected, setSelected] = useState<Date | undefined>();
+      if (type === "single" && isVisible) {
         return (
                 <div className="p-4">
                 <DayPicker
@@ -33,11 +39,7 @@ export default function Calendar({height, width, className, x, y, children, type
                 )}
                 </div>
             );   
-      } else if (type === "range") {
-        const [range, setRange] = useState<DateRange | undefined>({
-            from: new Date(),
-            to: new Date(),
-        });
+      } else if (type === "range" && isVisible) {
         return (
                 <div className="p-4">
                 <DayPicker
