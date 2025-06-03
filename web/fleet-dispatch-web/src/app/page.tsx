@@ -4,7 +4,7 @@ import Image from "next/image";
 import Logo from "./components/Logo";
 import { Helmet } from "react-helmet";
 import { useEffect } from "react";
-import { Button } from "./components/Button";
+import Button  from "./components/Button";
 
 export default function Home() {
   useEffect(() => {

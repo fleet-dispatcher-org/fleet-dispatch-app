@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useEffect } from "react";
-import { Button } from "../components/Button";
+import Button from "../components/Button";
 import Logo from "../components/Logo";
 
 export default function Register() {
@@ -22,7 +22,7 @@ export default function Register() {
                         />
             <h1 className="text-4xl font-bold text-center mt-4">Fleet Registration</h1>
             </header>
-            <form className="space-y-4 mx-auto w-[400px] mt-20 gap-10">
+            <form action="" className="space-y-4 mx-auto w-[400px] mt-20 gap-10">
                 <ul className="space-y-8">
                     <li className="flex">
                         <div className="w-[100px] pr-2">
@@ -88,7 +88,9 @@ export default function Register() {
                         </div>
                     </li>
                     </ul>
-                    <Button type="general">Register</Button>
+                    <Button type="general" onClick={() => {
+                        window.location.href = "/register/done";
+                    }}>Register</Button>
                     </form>
         </main>
     );
