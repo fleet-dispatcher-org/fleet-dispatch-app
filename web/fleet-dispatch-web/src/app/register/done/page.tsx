@@ -1,9 +1,19 @@
 "use client";
 
 import React from "react";
+import Logo from "../../components/Logo";
 
 export default function Done() {
-    return (<div className="flex flex-row mx-auto w-[400px] mt-20 justify-center space-x-0">
-            <h1>Thank you for registering, a member of our sales team will reach out shortly</h1>
+    return (<div className="flex flex-col mx-auto w-[400px] mt-10 justify-center space-x-0 font-bold text-center">
+            <Logo 
+                                  path="/fleet-dispatch-logo-no-background.png"
+                                  alt="Inverted Logo"
+                                  width={70}
+                                  height={70}
+                                  reroute="/"
+                                  className="mx-auto"
+                                />
+            <h1 className="font-bold text-center mt-4">Thank you for registering, a member of our sales team will reach out shortly</h1>
+            <a className="mt-4 hover:underline" href="/">Back to Home</a>
         </div>);
 }
