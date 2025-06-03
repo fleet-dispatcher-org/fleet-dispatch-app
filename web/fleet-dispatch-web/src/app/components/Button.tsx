@@ -4,7 +4,7 @@ import React from "react";
 
 interface ButtonProps {
     children: React.ReactNode;
-    type: "add" | "general" | "text",
+    type: "add" | "general" | "hollow" | "text";
     className?: string;
     onClick?: () => void;
 }
@@ -31,7 +31,7 @@ export default function Button({ children, type, className, onClick }: ButtonPro
         </button>
     );  
     }
-    else if (type === "text") {
+    else if (type === "hollow") {
       return (
         <button
             className=" bg-black text-white border-white rounded-full border border-solid transition-colors flex items-center justify-center hover:bg-gray-50 hover:text-black mt-3 cursor-pointer gap-2 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
@@ -40,7 +40,18 @@ export default function Button({ children, type, className, onClick }: ButtonPro
             {children}
         </button>
         );
-    } 
+    }
+
+    else if (type === "text") {
+      return (
+        <button
+            className="text-foreground hover:text-[#383838] dark:hover:text-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto cursor-pointer"
+            onClick={onClick}
+        >
+            {children}
+        </button>
+        );
+    }
 
 
     
