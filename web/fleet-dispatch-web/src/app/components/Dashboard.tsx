@@ -13,10 +13,7 @@ interface DashboardProps {
 }
 
 export default function Dashboard({title, height, width, className, x, y, children}: DashboardProps) {
-    return <div className={className} 
-        style={{height: height, width: width, position: "relative", left: x, top: y}}>
-        <ol>
-        {children}
-        </ol>
+    return <div className={`${className} h-${height} w-${width} left-${x} top-${y}`} >
+            {children}
         </div>;
 }
