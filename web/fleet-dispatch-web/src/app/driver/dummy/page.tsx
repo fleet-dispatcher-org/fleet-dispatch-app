@@ -5,6 +5,10 @@ import Button  from "../../components/Button";
 import DashboardItem from "@/app/components/DashboardItem";
 import Logo from "../../components/Logo";
 
+
+// TODO: Have a way to keep the Driver Liscense up to date.
+// TODO: Start & Destination in, API Call with Google Maps. Maybe for later on.  
+
 export default function DummyDriver() {
     const [isVisible, setisVisible] = useState(false);
     const [isVisible2, setisVisible2] = useState(false);
@@ -85,10 +89,16 @@ export default function DummyDriver() {
                 </div>
                 <div className="flex flex-col mx-auto mb-10 justify-center" id="loads">
                     <h1 className="text-2xl mx-auto font-bold text-left mt-6">Loads</h1>
+                    
+                    {/* TODO: Change this to be the truck number and the route destination, not a clickable.
+                     Just have the info out there */}
+                    
                     <DashboardItem href={["/loads/current-load", "/trucks/current-truck"]} title={["Current Load", "Current Truck"]} gap={10}/>
                     <Button type="hollow" onClick={() => {
                         window.location.href = "/loads/load-status";
                     }}>Update Load Status</Button>
+                    
+                    {/* Change this to Pending Loads. Previous Loads should be a clickable link not a section */}
                     <h1 className="text-2xl mx-auto font-bold text-left mt-8">Previous Loads</h1>
                     <DashboardItem href={["/loads/previous-load", "/trucks/previous-truck"]} title={["Previous Load", "Previous Truck"]} gap={10}/>
                     <DashboardItem href={["/loads/previous-load", "/trucks/previous-truck"]} title={["Previous Load", "Previous Truck"]} gap={10}/>

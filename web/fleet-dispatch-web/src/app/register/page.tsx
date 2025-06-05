@@ -5,6 +5,10 @@ import { useEffect } from "react";
 import Button from "../components/Button";
 import Logo from "../components/Logo";
 
+// TODO: Add form validation
+// TODO: Ad MC number. Motor Carrier Number, will be needed. 
+// NOTE: Will be aiming for Mom & Pop shops
+
 export default function Register() {
     useEffect(() => {
         document.title = "Fleet Registration";

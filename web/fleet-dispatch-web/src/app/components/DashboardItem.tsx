@@ -6,6 +6,8 @@ interface DashboardItemProps {
     href: string[];
     title: string[];
     gap?: number;
+    mt?: number;
+    ml?: number;
     children?: React.ReactNode;
 }
 
