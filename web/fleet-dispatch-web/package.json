@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@mui/x-date-pickers": "^8.5.0",
+    "@prisma/client": "^6.9.0",
     "lucide-react": "^0.511.0",
     "next": "15.3.2",
     "react": "^19.0.0",
