@@ -1,0 +1,67 @@
+// CREATE TRUCKS TABLE
+
+CREATE TABLE trucks (
+id SERIAL PRIMARY KEY, 
+license_plate VARCHAR(20) NOT NULL UNIQUE, 
+make VARCHAR(20) NOT NULL, 
+model VARCHAR(20) NOT NULL, 
+year INTEGER CHECK (year >= 1900 AND year <= EXTRACT(YEAR FROM CURRENT_DATE)),
+capacity_tons NUMERIC(5,2),
+mileage INTEGER, 
+is_active BOOLEAN DEFAULT TRUE,
+current_location VARCHAR(20),
+assigned_driver BOOLEAN DEFAULT FALSE,
+driver_id INTEGER,
+assigned_trailer BOOLEAN DEFAULT FALSE, 
+trailer_id INTEGER,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+)
+
+// CREATE drivers TABLE
+
+CREATE TABLE drivers (
+id SERIAL PRIMARY KEY, 
+first_name VARCHAR(20),
+last_name VARCHAR(20),
+license_number VARCHAR(20),
+license_expiration VARCHAR(20),
+license_class VARCHAR(1),
+current_location VARCHAR(20),
+in_range BOOLEAN DEFAULT FALSE, 
+is_available BOOLEAN DEFAULT TRUE, 
+driver_reports_ready BOOLEAN DEFAULT FALSE, 
+has_home_need BOOLEAN DEFAULT FALSE, 
+assigned_truck_id INTEGER REFERENCES trucks(id) ON DELETE SET NULL DEFAULT NULL,
+phone_number VARCHAR(15),
+emergency_contact VARCHAR(20) NOT NULL, 
+emergency_contact_phone VARCHAR(15) NOT NULL, 
+hours_driven_today INTEGER, 
+hours_driven_week INTEGER, 
+last_rest_period INTEGER, 
+certifications TEXT[], 
+drug_test_current BOOLEAN, 
+employment_status VARCHAR(20),
+hire_date DATE 
+)
+
+// CREATE trailers TABLE
+CREATE TABLE trailers (
+id SERIAL PRIMARY KEY, 
+attached_truck_id INTEGER REFERENCES trucks(id),
+current_location VARCHAR(20),
+has_registration BOOLEAN DEFAULT true, 
+bureaucratically_sound BOOLEAN DEFAULT true, 
+correct_equipment_working BOOLEAN DEFAULT true, 
+in_range_first_stop BOOLEAN DEFAULT false, 
+make VARCHAR(20) NOT NULL, 
+model VARCHAR(20) NOT NULL, 
+year INTEGER CHECK (year >= 1900 AND year <= EXTRACT(YEAR FROM CURRENT_DATE)),
+max_cargo_capacity NUMERIC(7,2),
+current_cargo_weight NUMERIC(7,2),
+license_plate VARCHAR(20),
+registration_expiry DATE, 
+last_inspection_date DATE, 
+next_inspection_due DATE, 
+required_permits TEXT[],
+insurance_valid BOOLEAN 
+)
