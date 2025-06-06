@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.6.1",
     "@mui/x-date-pickers": "^8.5.0",
     "@prisma/client": "^6.9.0",
     "lucide-react": "^0.511.0",
