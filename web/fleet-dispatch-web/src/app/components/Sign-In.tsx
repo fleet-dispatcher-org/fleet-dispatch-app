@@ -3,6 +3,7 @@
 
 import { signIn } from "next-auth/react"
 import Button from "./Button"
+import { login } from "../lib/actions/auth"
 
 
 interface SignInProps {
@@ -11,5 +12,5 @@ interface SignInProps {
 }
 
 export default function SignIn({children, className}: SignInProps) {
-  return <Button type="sign-in" onClick={() => signIn("google")}> {children} </Button>
+  return <Button type="sign-in" onClick={() => login()}> {children} </Button>
 }
