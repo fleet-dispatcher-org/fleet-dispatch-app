@@ -12,5 +12,5 @@ interface SignInProps {
 }
 
 export default function SignIn({children, className}: SignInProps) {
-  return <Button type="sign-in" onClick={() => login()}> {children} </Button>
+  return <Button type="sign-in" onClick={() => signIn()}> {children} </Button>
 }
