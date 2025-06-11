@@ -4,7 +4,7 @@ import React from "react";
 
 interface ButtonProps {
     children: React.ReactNode;
-    type: "add" | "general" | "hollow" | "text"| "sign-in";
+    type: "add" | "general" | "hollow" | "text"| "sign-in" | "none";
     className?: string;
     onClick?: () => void;
 }
@@ -57,6 +57,17 @@ export default function Button({ children, type, className, onClick }: ButtonPro
       return (
         <button
             className=" bg-black text-white border-white rounded-full border border-solid transition-colors flex items-center justify-center hover:bg-gray-50 hover:text-black cursor-pointer gap-2 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
+            onClick={onClick}
+        >
+            {children}
+        </button>
+        );
+    }
+
+    else if (type === "none") {
+      return (
+        <button
+        className="hover:cursor-pointer"
             onClick={onClick}
         >
             {children}
