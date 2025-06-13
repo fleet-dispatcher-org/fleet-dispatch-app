@@ -4,6 +4,7 @@ import { auth } from "../../../auth";
 // import { useState } from "react";
 import Logo from "../components/Logo";
 import Location from "../components/Location";
+import CalendarCombo from "../components/CalendarCombo";
 import Image from "next/image";
 
 export default async function Driver() {
@@ -18,6 +19,7 @@ export default async function Driver() {
 
     else if (session?.user) {
         return (
+    // This is the parent div, don't mess with it.
     <div>
         <div className="flex flex-row space-x-0">
             <Logo 
@@ -39,6 +41,12 @@ export default async function Driver() {
             <h1 className="text-4xl font-bold text-center mt-6">Jake Zalesny</h1>
           <Location />
         </header>
+        <main className="flex flex-row mt-4 space-x-0">
+            <div className="flex flex-col ml-10 mb-10 justify-center" id="timeOff">
+                <h1 className="text-2xl font-bold text-left mt-6">Requested Time Off: </h1>
+                <CalendarCombo type="range"/>
+            </div>
+        </main>
     </div>
         
     );
