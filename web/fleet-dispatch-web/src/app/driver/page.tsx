@@ -46,6 +46,14 @@ export default async function Driver() {
                 <h1 className="text-2xl font-bold text-left mt-6">Requested Time Off: </h1>
                 <CalendarCombo type="range"/>
             </div>
+            <div className="flex flex-col mx-auto mb-10 justify-center" id="loads">
+                    <h1 className="text-2xl mx-auto font-bold text-left">Loads</h1>
+            </div>
+            <div className="flex flex-col ml-10 justify-center mb-10 mr-20" id="nextAvailable">
+                <h1 className="text-2xl font-bold text-left mt-6">Next Available: </h1>
+                <CalendarCombo type="single"/>
+
+            </div>
         </main>
     </div>
         
