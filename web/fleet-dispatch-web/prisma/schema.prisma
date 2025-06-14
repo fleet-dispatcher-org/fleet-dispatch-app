@@ -9,7 +9,7 @@ datasource db {
 }
 
 model drivers {
-  id                      Int       @id @default(autoincrement())
+  id                      String    @id @default(cuid())
   first_name              String?   @db.VarChar(20)
   last_name               String?   @db.VarChar(20)
   license_number          String?   @db.VarChar(20)
@@ -20,7 +20,7 @@ model drivers {
   is_available            Boolean?  @default(true)
   driver_reports_ready    Boolean?  @default(false)
   has_home_need           Boolean?  @default(false)
-  assigned_truck_id       Int?
+  assigned_truck_id       String?
   phone_number            String?   @db.VarChar(15)
   emergency_contact       String    @db.VarChar(20)
   emergency_contact_phone String    @db.VarChar(15)
@@ -37,7 +37,7 @@ model drivers {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model trailers {
   id                        Int       @id @default(autoincrement())
-  attached_truck_id         Int?
+  assigned_truck_id         String?
   current_location          String?   @db.VarChar(20)
   has_registration          Boolean?  @default(true)
   bureaucratically_sound    Boolean?  @default(true)
@@ -54,12 +54,12 @@ model trailers {
   next_inspection_due       DateTime? @db.Date
   required_permits          String[]
   insurance_valid           Boolean?
-  trucks                    trucks?   @relation(fields: [attached_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  truck_id                  trucks?   @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model trucks {
-  id               Int        @id @default(autoincrement())
+  id               String     @id @default(cuid())
   license_plate    String     @unique @db.VarChar(20)
   make             String     @db.VarChar(20)
   model            String     @db.VarChar(20)
