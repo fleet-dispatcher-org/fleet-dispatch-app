@@ -1,5 +1,7 @@
-import Prisma from "./prisma";
-
+import { PrismaClient } from "@prisma/client/extension";
+const prisma = new PrismaClient();
 const seed = async () => {
-    const prisma = Prisma();
+    await prisma.User.createMany({data: [
+        {},
+    ]});
 }

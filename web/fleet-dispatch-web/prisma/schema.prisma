@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model drivers {
+model Driver {
   id                      String    @id @default(cuid())
   first_name              String?   @db.VarChar(20)
   last_name               String?   @db.VarChar(20)
@@ -30,11 +30,11 @@ model drivers {
   drug_test_current       Boolean?
   employment_status       String?   @db.VarChar(20)
   hire_date               DateTime? @db.Date
-  trucks                  trucks?   @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
+  trucks                  Truck?   @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model trailers {
+model Trailer {
   id                        Int       @id @default(autoincrement())
   assigned_truck_id         String?
   current_location          String?   @db.VarChar(20)
@@ -53,11 +53,11 @@ model trailers {
   next_inspection_due       DateTime? @db.Date
   required_permits          String[]
   insurance_valid           Boolean?
-  truck_id                  trucks?   @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  truck_id                  Truck?   @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model trucks {
+model Truck {
   id               String     @id @default(cuid())
   license_plate    String     @unique @db.VarChar(20)
   make             String     @db.VarChar(20)
@@ -72,8 +72,8 @@ model trucks {
   assigned_trailer Boolean?   @default(false)
   trailer_id       Int?
   created_at       DateTime?  @default(now()) @db.Timestamp(6)
-  drivers          drivers[]
-  trailers         trailers[]
+  driver           Driver[]
+  trailer          Trailer[]
 }
 
 model User {
