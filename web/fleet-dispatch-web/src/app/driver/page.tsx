@@ -6,6 +6,8 @@ import Logo from "../components/Logo";
 import Location from "../components/Location";
 import CalendarCombo from "../components/CalendarCombo";
 import Image from "next/image";
+import RoleGuard from "../components/RoleGuard";
+import UserProfileCard from "../components/UserProfileCard";
 
 export default async function Driver() {
     // const [isVisible, setisVisible] = useState(false);
@@ -20,7 +22,7 @@ export default async function Driver() {
     else if (session?.user) {
         return (
     // This is the parent div, don't mess with it.
-    <div>
+    <RoleGuard allowedRoles={['DRIVER', 'ADMIN']}>
         <div className="flex flex-row space-x-0">
             <Logo 
                         path="/fleet-dispatch-logo-no-background.png"
@@ -32,13 +34,14 @@ export default async function Driver() {
             <h4 className="text-3xl mt-0.5 ml-1 font-bold">Fleet Dispatch</h4>
         </div>
         <header className="flex flex-col mx-auto mt-15 justify-center space-x-0">
-            { session.user.image && (<Image 
+            {/* { session.user.image && (<Image 
             src={session.user.image} 
             alt="driver image" 
             width={200} height={200}
             className="rounded-full mx-auto">
             </Image>)}
-            <h1 className="text-4xl font-bold text-center mt-6">Jake Zalesny</h1>
+            <h1 className="text-4xl font-bold text-center mt-6">{session.user.name}</h1> */}
+            <UserProfileCard />
           <Location />
         </header>
         <main className="flex flex-row mt-4 space-x-0">
@@ -55,7 +58,7 @@ export default async function Driver() {
 
             </div>
         </main>
-    </div>
+    </RoleGuard>
         
     );
 }
