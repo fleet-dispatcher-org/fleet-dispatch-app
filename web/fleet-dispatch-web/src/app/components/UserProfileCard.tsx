@@ -18,20 +18,22 @@ export default function UserProfileCard() {
     const [error, setError] = useState<string | null>(null)
     
       useEffect(() => {
-    const fetchUserData = async () => {
-        try {
-            const response = await fetch('/api/me')
-            if (!response.ok) {
-                throw new Error('Failed to fetch user data')
-            }
-            
-            const data = await response.json()
-            setUserData(data.user)
+        const fetchUserData = async () => {
+            try {
+                    const response = await fetch('/api/me')
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch user data')
+                    }
+                
+                const data = await response.json()
+                setUserData(data.user)
+                
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Unknown error')
-            } finally {
-                setLoading(false)
-            }
+                    setError(err instanceof Error ? err.message : 'Unknown error')
+                
+                } finally {
+                    setLoading(false)
+                }
         }
 
         if (session) {
