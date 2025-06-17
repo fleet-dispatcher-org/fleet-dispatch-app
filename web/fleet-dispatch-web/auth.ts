@@ -45,7 +45,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               return true;
             } else {
               console.log("User exists but Google not linked - will create new account link");
-              // Let NextAuth handle the account linking
               return true;
             }
           } else {
@@ -61,9 +60,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     
-    async session({ session, user }) {
+    async session({ session, user, token }) {
       console.log("Session callback - user:", user?.email || session?.user?.email);
+      
+      // Add role and id to session from token or user
+      if (session.user) {
+        if (token) {
+          // Use token data if available (JWT strategy)
+          session.user.role = token.role as "ADMIN" | "DRIVER" | "DISPATCHER";
+          session.user.id = token.id as string;
+        } else if (user) {
+          // Use user data if available (database strategy)
+          const dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { role: true }
+          });
+          
+          session.user.role = dbUser?.role || 'DRIVER';
+          session.user.id = user.id;
+        }
+      }
+      
       return session;
+    },
+
+    async jwt({ token, user }) {
+      // Add role to JWT token
+      if (user) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { role: true }
+        });
+        token.role = dbUser?.role || 'DRIVER';
+        token.id = user.id;
+      }
+      return token;
     }
   },
   

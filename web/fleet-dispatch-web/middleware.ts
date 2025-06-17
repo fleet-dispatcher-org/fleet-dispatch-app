@@ -9,6 +9,25 @@ export default async function middleware(request: NextRequest) {
 
         const {pathname} = request.nextUrl;
 
+        const adminRoutes = ['/admin', '/admin/.*'];
+        const driverRoutes = ['/driver', '/driver/.*'];
+        const dispatcherRoutes = ['/dispatcher', '/dispatcher/.*'];
+
+        if (!session) {
+            if(pathname.startsWith('/admin') || pathname.startsWith('/dispatcher') || pathname.startsWith('/driver')) {
+                return NextResponse.redirect(new URL('/login', request.url));
+            }
+            return NextResponse.next();
+        }
+
+         const userRole = session.user?.role
+
+        if (adminRoutes.some(pattern => new RegExp(pattern).test(pathname))) {
+            if (userRole !== 'ADMIN') {
+                return NextResponse.redirect(new URL('/login', request.url));
+            }
+        }
+
         const isProtected = protectedRoutes.some((route) =>
             request.nextUrl.pathname.startsWith(route)
         );
