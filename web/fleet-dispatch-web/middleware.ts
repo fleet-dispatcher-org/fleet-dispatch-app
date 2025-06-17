@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "./auth";
+import { match } from "assert";
 
 const protectedRoutes = ["/driver", "/truck", "/dispatcher"];
 
@@ -24,7 +25,19 @@ export default async function middleware(request: NextRequest) {
 
         if (adminRoutes.some(pattern => new RegExp(pattern).test(pathname))) {
             if (userRole !== 'ADMIN') {
-                return NextResponse.redirect(new URL('/login', request.url));
+                return NextResponse.redirect(new URL('/unauthorized', request.url));
+            }
+        }
+
+        if (driverRoutes.some(pattern => new RegExp(pattern).test(pathname))) {
+            if (userRole !== 'DRIVER' && userRole !== 'ADMIN' && userRole !== 'DISPATCHER') {
+                return NextResponse.redirect(new URL('/unauthorized', request.url));
+            }
+        }
+
+        if (dispatcherRoutes.some(pattern => new RegExp(pattern).test(pathname))) {
+            if (userRole !== 'DISPATCHER' && userRole !== 'ADMIN') {
+                return NextResponse.redirect(new URL('/unauthorized', request.url));
             }
         }
 
@@ -37,4 +50,11 @@ export default async function middleware(request: NextRequest) {
         }
 
         return NextResponse.next();
+    }
+
+    export const config = {
+        matcher: [
+            // Match all routes except static files and API routes
+            '/((?!api|_next/static|_next/image|favicon.ico).*)',
+        ],
     }
