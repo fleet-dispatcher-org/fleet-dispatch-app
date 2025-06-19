@@ -32,7 +32,7 @@ export default function CalendarCombo({height, width, className, x, y, children,
                 <Button type="hollow" onClick={() => {
                     setRangeVisible(prev => !prev);
                     console.log(isVisible);
-                }}>Request Time Off</Button>
+                }}>Set Next Available</Button>
                 <Calendar type="range" id="calendarTimeOff" isVisible={rangeVisible}></Calendar>
                 </div> 
             )
@@ -43,7 +43,7 @@ export default function CalendarCombo({height, width, className, x, y, children,
                 <div>
                 <Button type="hollow" onClick={() => {
                     setSingleVisible(prev => !prev);
-                    }}>Set Next Available</Button>
+                    }}>Request Time Off</Button>
                     <Calendar type="single" id="calendarNextAvailable" isVisible={singleVisible}></Calendar>
                 </div>
             )

@@ -34,15 +34,8 @@ export default async function Driver() {
             <h4 className="text-3xl mt-0.5 ml-1 font-bold">Fleet Dispatch</h4>
         </div>
         <header className="flex flex-col mx-auto mt-15 justify-center space-x-0">
-            {/* { session.user.image && (<Image 
-            src={session.user.image} 
-            alt="driver image" 
-            width={200} height={200}
-            className="rounded-full mx-auto">
-            </Image>)}
-            <h1 className="text-4xl font-bold text-center mt-6">{session.user.name}</h1> */}
             <UserProfileCard />
-          <Location />
+            <Location />
         </header>
         <main className="flex flex-row mt-4 space-x-0">
             <div className="flex flex-col ml-10 mb-10 justify-center" id="timeOff">

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
+import RoleBadgeColor from './RoleBadgeColor';
+import Role from '@prisma/client';
 
 interface UserData {
   id: string
@@ -74,13 +76,7 @@ export default function UserProfileCard() {
       <h1 className="text-2xl font-bold text-center mb-2">{userData.name}</h1>
       <p className=" text-center mb-2">{userData.email}</p>
       <div className="flex justify-center">
-        <span className={`px-3 py-1 text-sm rounded-full ${
-          userData.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-          userData.role === 'DISPATCHER' ? 'bg-blue-100 text-blue-800' :
-          'bg-green-100 text-green-800'
-        }`}>
-          {userData.role}
-        </span>
+        <RoleBadgeColor role={userData.role }></RoleBadgeColor>
       </div>
     </div>
   )
