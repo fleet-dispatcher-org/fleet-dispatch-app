@@ -59,6 +59,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       
       return true;
     },
+
+    
     
     async session({ session, user, token }) {
       console.log("Session callback - user:", user?.email || session?.user?.email);
@@ -84,7 +86,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token, user  }) {
       // Add role to JWT token
       if (user) {
         const dbUser = await prisma.user.findUnique({
@@ -106,6 +108,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         isNewUser 
       });
     },
+
+   async signOut(params) {
+    // Type guard approach
+    if ('session' in params && params.session) {
+      console.log("SignOut event (database session):", { 
+        sessionId: params.session.sessionToken,
+        userId: params.session.userId
+      });
+    } else if ('token' in params && params.token) {
+      console.log("SignOut event (JWT token):", { 
+        email: params.token.email,
+        userId: params.token.id
+      });
+    } else {
+      console.log("SignOut event: No session or token data");
+    }
+  },
+
     async createUser({ user }) {
       console.log("User created:", user.email);
     },
