@@ -33,8 +33,8 @@ export default async function Driver() {
                         reroute="/"
                     />
             <h4 className="text-3xl mt-0.5 ml-1 font-bold">Fleet Dispatch</h4>
-            <SignOut className="mr-auto">Sign Out</SignOut>
         </div>
+          
         <header className="flex flex-col mx-auto mt-15 justify-center space-x-0">
             <UserProfileCard />
             <Location />
