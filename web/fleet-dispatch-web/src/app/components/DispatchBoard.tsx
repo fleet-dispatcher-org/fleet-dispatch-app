@@ -273,6 +273,17 @@ export default function DispatchBoard() {
             <div className='text-center py-8'>
                 <p className="text-gray-500 mt-2">No loads found.</p>
             </div>)}
+            
+            {/* Refresh Button */}
+            <div className="mt-6 flex justify-end">
+                <button
+                    onClick={fetchLoads}
+                    disabled={loading}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                >
+                    {loading ? 'Refreshing...' : 'Refresh Data'}
+                </button>
+            </div>
          </div>
     )
 }
