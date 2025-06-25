@@ -64,7 +64,7 @@ model Load {
   destination     String      @db.VarChar(20)
   weight          Decimal
   due_by          DateTime
-  status          String
+  status          Status
   started_at      DateTime?
   assigned_driver String?
   assigned_trailer Int?     @unique
@@ -155,3 +155,10 @@ enum Role {
   DISPATCHER
   DRIVER
 }
+
+enum Status {
+  TERMINATED
+  SUGGESTED
+  IN_PROGRESS
+  PENDING
+} 
