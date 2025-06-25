@@ -60,8 +60,11 @@ model Trailer {
 
 model Load {
   id              String      @id @default(cuid())
+  origin          String      @db.VarChar(20)
   destination     String      @db.VarChar(20)
+  weight          Decimal
   due_by          DateTime
+  status          String
   started_at      DateTime?
   assigned_driver String?
   assigned_trailer Int?     @unique
