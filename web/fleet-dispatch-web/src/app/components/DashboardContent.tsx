@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import type { Role } from "@prisma/client";
+import Logo from './Logo';
 
 interface User {
   id: string;
@@ -31,11 +32,14 @@ export default function AdminDashboardContent() {
                 throw new Error('Failed to fetch users');
             }
             
-            const data = await response.json() || { users: [] };
-            setUsers(data.users);
+            const data = await response.json();
+            // Add safety check and ensure users is always an array
+            setUsers(data?.users || []);
             setError(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');
+            // Ensure users is set to empty array on error
+            setUsers([]);
         } finally {
             setLoading(false);
         }
@@ -59,9 +63,11 @@ export default function AdminDashboardContent() {
             const data = await response.json();
             
             // Update the local state
-            setUsers(users.map(user => 
-                user.id === userId ? { ...user, role: data.user.role } : user
-            ));
+            setUsers(prevUsers => 
+                prevUsers.map(user => 
+                    user.id === userId ? { ...user, role: data.user.role } : user
+                )
+            );
             
             alert('User role updated successfully!');
         } catch (err) {
@@ -82,6 +88,18 @@ export default function AdminDashboardContent() {
     };
 
     const getUserStats = () => {
+        // Add safety check to ensure users is defined and is an array
+        if (!users || !Array.isArray(users)) {
+            return {
+                total: 0,
+                admins: 0,
+                dispatchers: 0,
+                drivers: 0
+            };
+        }
+
+        console.log("Users:", users);
+
         const stats = users.reduce((acc, user) => {
             acc[user.role] = (acc[user.role] || 0) + 1;
             return acc;
@@ -125,47 +143,56 @@ export default function AdminDashboardContent() {
     const stats = getUserStats();
 
     return (
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto p-6k">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-gray-600 mt-2">
+                <div className="flex flex-row mb-2">
+                <Logo 
+                path="/fleet-dispatch-logo-no-background.png"
+                alt="Inverted Logo"
+                width={38}
+                height={38}
+                reroute="/"
+            />
+                <h1 className="text-3xl mt-0.5 ml-2 font-bold text-gray-400">Admin Dashboard</h1>
+            </div>
+                <p className="text-gray-500 mt-2">
                     Welcome back, {session?.user?.name}. Manage your fleet users and roles.
                 </p>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="bg-white rounded-lg shadow p-6">
-                    <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-                    <div className="text-sm text-gray-600">Total Users</div>
+                <div className="bg-gray-900 rounded-lg shadow p-6">
+                    <div className="text-2xl font-bold text-gray-400">{stats.total}</div>
+                    <div className="text-sm text-gray-400">Total Users</div>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="bg-gray-900 rounded-lg shadow p-6">
                     <div className="text-2xl font-bold text-red-600">{stats.admins}</div>
-                    <div className="text-sm text-gray-600">Admins</div>
+                    <div className="text-sm text-gray-400">Admins</div>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="bg-gray-900 rounded-lg shadow p-6">
                     <div className="text-2xl font-bold text-blue-600">{stats.dispatchers}</div>
-                    <div className="text-sm text-gray-600">Dispatchers</div>
+                    <div className="text-sm text-gray-400">Dispatchers</div>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="bg-gray-900 rounded-lg shadow p-6">
                     <div className="text-2xl font-bold text-green-600">{stats.drivers}</div>
-                    <div className="text-sm text-gray-600">Drivers</div>
+                    <div className="text-sm text-gray-400">Drivers</div>
                 </div>
             </div>
 
             {/* Users Table */}
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">All Users</h2>
+            <div className="bg-gray-900 shadow rounded-lg overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-900">
+                    <h2 className="text-xl font-semibold text-gray-400">All Users</h2>
                     <p className="text-sm text-gray-600 mt-1">
                         Manage user roles and permissions
                     </p>
                 </div>
                 
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-gray-400">
+                        <thead className="bg-gray-900">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     User
@@ -181,7 +208,7 @@ export default function AdminDashboardContent() {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-gray-900 divide-y divide-gray-200">
                             {users.map((user) => (
                                 <tr key={user.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap">

@@ -30,6 +30,7 @@ model Driver {
   drug_test_current       Boolean?
   employment_status       String?   @db.VarChar(20)
   hire_date               DateTime? @db.Date
+  loads                   Load[]
   trucks                  Truck?   @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
 }
 
@@ -53,7 +54,24 @@ model Trailer {
   next_inspection_due       DateTime? @db.Date
   required_permits          String[]
   insurance_valid           Boolean?
+  load                      Load?
   truck_id                  Truck?   @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Load {
+  id              String      @id @default(cuid())
+  destination     String      @db.VarChar(20)
+  due_by          DateTime
+  started_at      DateTime?
+  assigned_driver String?
+  assigned_trailer Int?     @unique
+  assigned_truck   String?
+  percent_complete Int    @default(0)
+  is_active        Boolean @default(true)
+  truck            Truck? @relation(fields: [assigned_truck], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  driver           Driver? @relation(fields: [assigned_driver], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  trailer          Trailer? @relation(fields: [assigned_trailer], references: [id], onDelete: NoAction, onUpdate: NoAction)   
+
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -74,6 +92,7 @@ model Truck {
   created_at       DateTime?  @default(now()) @db.Timestamp(6)
   driver           Driver[]
   trailer          Trailer[]
+  load             Load[]
 }
 
 model Account {
