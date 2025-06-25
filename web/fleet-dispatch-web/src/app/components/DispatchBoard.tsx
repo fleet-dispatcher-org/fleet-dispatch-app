@@ -256,8 +256,12 @@ export default function DispatchBoard() {
                                             >
                                                 <option value="TERMINATED">TERMINATED</option>
                                                 <option value="IN_PROGRESS">IN PROGRESS</option>
-                                                <option value="PENDING">PENDING</option>
+                                                <option value="PENDING">PENDING</option>    
                                             </select>
+
+                                            {updatingLoadId === load.id && (
+                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                                )}
                                         </div>
                                     </td>
                                 </tr>
@@ -265,7 +269,10 @@ export default function DispatchBoard() {
                         </tbody>
                     </table> 
             </div>   
-
+        {loads.length === 0 && (
+            <div className='text-center py-8'>
+                <p className="text-gray-500 mt-2">No loads found.</p>
+            </div>)}
          </div>
     )
 }
