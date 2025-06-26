@@ -161,3 +161,7 @@ They're going to get assigned their task and important dates will need to be tak
 ### Meeting
 - Hours function off of a Log system that the truckers don't even input themselves.
 - Manual inputs will have to be sudden stuff. Like if someone needs to go home immediately in New York and someone is already in New York with an empty trailer. 
+
+
+# Late Game Strats: 
+If we could standardize the BOLs process. We would be helping truckers get paid quicker and they wouldn't have to use a factor service. A factor service the factors pay the truckers and wait for a fee. We wouldn't need a fee we would just change the transfer service and expediting it. 

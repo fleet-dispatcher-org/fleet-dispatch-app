@@ -183,9 +183,9 @@ export default function DispatchBoard() {
             <div className="bg-gray-900 shadow rounded-lg overflow-hidden">
                 {/* Table Header */}
                 <div className="px-6 py-4 border-b border-gray-900">
-                    <h2 className="text-xl font-semibold text-gray-400">All Users</h2>
+                    <h2 className="text-xl font-semibold text-gray-400">All Active Loads</h2>
                     <p className="text-sm text-gray-600 mt-1">
-                        Manage user roles and permissions
+                        Manage Drivers and Loads here
                     </p>
                 </div>
             </div>
