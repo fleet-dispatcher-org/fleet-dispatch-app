@@ -77,9 +77,12 @@ model Load {
 
 }
 
-// model CustomerRequest {
-
-// }
+model CustomerRequest {
+  id              String      @id @default(cuid())
+  origin          String      @db.VarChar(20)
+  destination     String      @db.VarChar(20)
+  status          Status
+}
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model Truck {
@@ -165,4 +168,5 @@ enum Status {
   SUGGESTED
   IN_PROGRESS
   PENDING
+  REQUESTED
 } 
