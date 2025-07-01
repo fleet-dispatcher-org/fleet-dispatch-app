@@ -28,15 +28,17 @@ model Driver {
   last_rest_period        Int?
   certifications          String[]
   drug_test_current       Boolean?
-  employment_status       String?   @db.VarChar(20)
+  employment_status       Employment_Status @default(HIRED)
   hire_date               DateTime? @db.Date
+  user_id                 String   @unique
   loads                   Load[]
+  user                    User     @relation(fields: [user_id], references: [id], onUpdate: NoAction)
   trucks                  Truck?   @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model Trailer {
-  id                        Int       @id @default(autoincrement())
+  id                        String       @id  @default(cuid())
   assigned_truck_id         String?
   current_location          String?   @db.VarChar(20)
   has_registration          Boolean?  @default(true)
@@ -63,11 +65,11 @@ model Load {
   origin          String      @db.VarChar(20)
   destination     String      @db.VarChar(20)
   weight          Decimal
-  due_by          DateTime
+  due_by          DateTime    @default(now())
   status          Status
   started_at      DateTime?
   assigned_driver String?
-  assigned_trailer Int?     @unique
+  assigned_trailer String?     @unique
   assigned_truck   String?
   percent_complete Int    @default(0)
   is_active        Boolean @default(true)
@@ -96,9 +98,9 @@ model Truck {
   is_active        Boolean?   @default(true)
   current_location String?    @db.VarChar(20)
   assigned_driver  Boolean?   @default(false)
-  driver_id        Int?
+  driver_id        String?
   assigned_trailer Boolean?   @default(false)
-  trailer_id       Int?
+  trailer_id       String?
   created_at       DateTime?  @default(now()) @db.Timestamp(6)
   driver           Driver[]
   trailer          Trailer[]
@@ -144,6 +146,7 @@ model User {
   role          Role      @default(DRIVER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  driver        Driver?
   accounts      Account[]
   sessions      Session[]
 }
@@ -169,4 +172,13 @@ enum Status {
   IN_PROGRESS
   PENDING
   REQUESTED
+  DELIVERED
 } 
+
+enum Employment_Status {
+  HIRED
+  SUSPENDED_WITH_PAY
+  SUSPENDED_NO_PAY
+  TERMINATED
+  ON_CONTRACT
+}
