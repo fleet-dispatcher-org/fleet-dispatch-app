@@ -112,3 +112,5 @@ next-env.d.ts
 
 __pycache__/
 .pytest_cache/
+
+.env.local
