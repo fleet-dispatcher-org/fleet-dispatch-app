@@ -1,6 +1,6 @@
 "use client"; 
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DayPicker, DateRange } from 'react-day-picker';
 import 'react-day-picker/dist/style.css'; // Default styles
 
@@ -18,14 +18,26 @@ interface CalendarProps {
 
 export default function Calendar({height, width, className, x, y, children, type, id, isVisible=false}: CalendarProps) {
     const [selected, setSelected] = useState<Date | undefined>();
-    const [range, setRange] = useState<DateRange | undefined>({
+    const [range, setRange] = useState<DateRange | undefined>();
+    const [mounted, setMounted] = useState(false);
+
+    // Initialize dates on client side only to prevent hydration mismatch
+    useEffect(() => {
+        setMounted(true);
+        setRange({
             from: new Date(),
             to: new Date(),
         });
+    }, []);
 
-      if (type === "single" && isVisible) {
+    // Don't render anything until mounted to prevent hydration mismatch
+    if (!mounted) {
+        return null;
+    }
+
+    if (type === "single" && isVisible) {
         return (
-                <div className="p-4">
+            <div className="p-4">
                 <DayPicker
                     mode="single"
                     selected={selected}
@@ -34,14 +46,14 @@ export default function Calendar({height, width, className, x, y, children, type
                 />
                 {selected && (
                     <p className="mt-2 text-sm">
-                    You picked {selected.toLocaleDateString()}
+                        You picked {selected.toLocaleDateString('en-US')}
                     </p>
                 )}
-                </div>
-            );   
-      } else if (type === "range" && isVisible) {
+            </div>
+        );   
+    } else if (type === "range" && isVisible) {
         return (
-                <div className="p-4">
+            <div className="p-4">
                 <DayPicker
                     mode="range"
                     selected={range}
@@ -50,10 +62,13 @@ export default function Calendar({height, width, className, x, y, children, type
                 />
                 {range?.from && range?.to && (
                     <p className="mt-2 text-sm">
-                    You picked from {range?.from.toLocaleDateString()} to {range?.to.toLocaleDateString()}
+                        You picked from {range.from.toLocaleDateString('en-US')} to {range.to.toLocaleDateString('en-US')}
                     </p>
                 )}
-                </div>
-            );   
-      }
+            </div>
+        );   
+    }
+
+    // Return null for all other cases to prevent hydration issues
+    return null;
 }
