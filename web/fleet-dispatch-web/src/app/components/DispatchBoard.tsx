@@ -288,7 +288,7 @@ export default function DispatchBoard() {
                                     <td className='px-6 py-4 whitespace-nowrap'>
                                         <div className='flex items-center'>
                                             <div className='flex-shrink-0 h-10 w-10'>
-                                                <div className='h-10 w-10 rounded-full flex items-center justify-left'>
+                                                <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer'>
                                                     <span>
                                                         {load.origin}
                                                     </span>
@@ -296,16 +296,16 @@ export default function DispatchBoard() {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { driverNames[load.assigned_driver]  ?? "No Driver Assigned"}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { trucks[load.assigned_truck] ?? "No Truck Assigned"}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { load.assigned_trailer?.charAt(0).toUpperCase() ?? "No Trailer Assigned"}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { new Date(load.due_date).toLocaleDateString('en-US', {
                                             year: 'numeric',
                                             month: 'short',
