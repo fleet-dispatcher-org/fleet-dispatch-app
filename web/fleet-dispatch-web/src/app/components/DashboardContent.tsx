@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import type { Role } from "@prisma/client";
 import Logo from './Logo';
+import Image from 'next/image'
 
 interface User {
   id: string;
   name: string;
   email: string;
+  image: string;
   role: Role;
   createdAt: string;
 }
@@ -34,7 +36,7 @@ export default function AdminDashboardContent() {
             
             const data = await response.json();
             // Add safety check and ensure users is always an array
-            setUsers(data?.users || []);
+            setUsers(data || []);
             setError(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');
@@ -210,18 +212,29 @@ export default function AdminDashboardContent() {
                         </thead>
                         <tbody className="bg-gray-900 divide-y divide-gray-200">
                             {users.map((user) => (
-                                <tr key={user.id} className="hover:bg-gray-50">
+                                <tr key={user.id} className="hover:bg-gray-700">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <div className="flex-shrink-0 h-10 w-10">
                                                 <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                                    <span className="text-sm font-medium text-gray-700">
-                                                        {user.name?.charAt(0).toUpperCase() || 'U'}
-                                                    </span>
+                                                    {user.image ? (
+                                                        <Image
+                                                            src={user.image}
+                                                            alt={user.name || 'User'}
+                                                            height={10}
+                                                            width={10} 
+                                                            className="h-10 w-10 rounded-full"
+                                                        />
+                                                    ) : (
+                                                        <span className="text-sm font-medium text-gray-900">
+                                                            {user.name?.charAt(0).toUpperCase() || 'U'}
+                                                        </span>
+                                                    )
+                                                    }
                                                 </div>
                                             </div>
                                             <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-900">
+                                                <div className="text-sm font-medium text-gray-300 hover:cursor-pointer">
                                                     {user.name || 'No name'}
                                                 </div>
                                                 <div className="text-sm text-gray-500">
@@ -243,12 +256,12 @@ export default function AdminDashboardContent() {
                                         })}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div className="flex items-center space-x-3">
+                                        <div className="flex items-center space-x-3 hover:cursor-pointer">
                                             <select
                                                 value={user.role}
                                                 onChange={(e) => updateUserRole(user.id, e.target.value as Role)}
                                                 disabled={updatingUserId === user.id}
-                                                className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+                                                className="text-sm bg-gray-900 border-gray-700 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                                             >
                                                 <option value="DRIVER">Driver</option>
                                                 <option value="DISPATCHER">Dispatcher</option>

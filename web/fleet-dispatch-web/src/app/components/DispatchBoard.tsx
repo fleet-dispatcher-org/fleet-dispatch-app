@@ -36,6 +36,8 @@ export default function DispatchBoard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [updatingLoadId, setUpdatingLoadId] = useState<string | null>(null);
+    const [driverNames, setDriverNames] = useState<Record<string, string>>({});
+    const [trucks, setTrucks] = useState<Record<string, string>>({});
 
     useEffect(() => {
         fetchLoads();
@@ -51,7 +53,20 @@ export default function DispatchBoard() {
             }
 
             const data = await response.json();
-            setLoads(data?.loads || []);
+            const driverIds = new Set<string>((data || []).map((load: Load) => load.assigned_driver));
+            
+            driverIds.forEach((id: string) => {if(id) {
+                getDriverName(id)
+            }});
+            
+            const truckIds = new Set<string>((data || []).map((load: Load) => load.assigned_truck));
+            
+            truckIds.forEach((id: string) => {if(id) {
+                getTruckMakeModel(id)
+            }});
+            
+            console.log(driverIds);
+            setLoads(data || []);
             setError(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error');
@@ -91,6 +106,56 @@ export default function DispatchBoard() {
             }
         }
         setUpdatingLoadId(null);
+    }
+
+    const getDriverName = async (driverId: string) => {
+        try {
+            const response = await fetch(`/api/admin/users/${driverId}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch driver name');
+            }
+            const data = await response.json();
+            const fullname= `${data.first_name} ${data.last_name}`;
+
+            setDriverNames(prevDriverNames => ({
+                ...prevDriverNames,
+                [driverId]: fullname
+            }));
+        } catch (err) {
+            console.error('Error fetching driver name:', err);
+            setDriverNames(prevDriverNames => ({
+                ...prevDriverNames,
+                [driverId]: 'Unknown'
+            }))
+        }
+    }
+
+    const getTruckMakeModel = async (truckId: string) => {
+        try {
+            const response = await fetch(`/api/trucks/${truckId}`);
+            
+            // This is a checker. Most of the time the error you'll get is an unauthorized. 
+            // Make sure you're authenticated and or have the correct role.
+            if (!response.ok) {
+                throw new Error('Failed to fetch truck name');
+            }
+            const data = await response.json();
+
+            // This is the actual data you want
+            setTrucks(prevTrucks => ({
+                ...prevTrucks,
+                [truckId]: `${data.make}, ${data.model}`
+            }))
+            
+        } catch (err) {
+            console.error('Error fetching driver name:', err);
+            // If there's an error it'll set the trucks as Unknown. 
+            // In order to check the actual error you'll need to look at the router.
+            setTrucks(prevTrucks => ({
+                ...prevTrucks,
+                [truckId]: 'Unknown'
+            }))
+        }
     }
 
     const terminateLoad = async (loadId: string) => {
@@ -157,7 +222,7 @@ export default function DispatchBoard() {
             </div>
         );
     }
-
+    console.log(loads);
     return (
          <div className="max-w-7xl mx-auto p-6k">
             {/* Outer Container ^*/}
@@ -196,7 +261,7 @@ export default function DispatchBoard() {
                         <thead className="bg-gray-800">
                              <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Load ID
+                                    Origin
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Driver
@@ -219,28 +284,28 @@ export default function DispatchBoard() {
                         {/* Table Body */}
                         <tbody className="bg-gray-800 divide-y divide-gray-200">
                             {loads.map((load) => (
-                                <tr key={load.id} className="hover:bg-gray-50">
+                                <tr key={load.id} className="hover:bg-gray-700">
                                     <td className='px-6 py-4 whitespace-nowrap'>
                                         <div className='flex items-center'>
                                             <div className='flex-shrink-0 h-10 w-10'>
-                                                <div className='h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center'>
+                                                <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer'>
                                                     <span>
-                                                        {load.id}
+                                                        {load.origin}
                                                     </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        { load.assigned_driver?.charAt(0).toUpperCase() ?? "No Driver Assigned"}
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
+                                        { driverNames[load.assigned_driver]  ?? "No Driver Assigned"}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        { load.assigned_truck?.charAt(0).toUpperCase() ?? "No Truck Assigned"}
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
+                                        { trucks[load.assigned_truck] ?? "No Truck Assigned"}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { load.assigned_trailer?.charAt(0).toUpperCase() ?? "No Trailer Assigned"}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { new Date(load.due_date).toLocaleDateString('en-US', {
                                             year: 'numeric',
                                             month: 'short',

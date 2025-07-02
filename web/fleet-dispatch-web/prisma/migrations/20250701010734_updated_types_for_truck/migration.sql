@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Truck" ALTER COLUMN "driver_id" SET DATA TYPE TEXT,
+ALTER COLUMN "trailer_id" SET DATA TYPE TEXT;
