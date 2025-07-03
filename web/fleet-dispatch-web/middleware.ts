@@ -21,6 +21,7 @@ export default async function middleware(request: NextRequest) {
             return NextResponse.next();
         }
 
+        
          const userRole = session.user?.role
 
         if (adminRoutes.some(pattern => new RegExp(pattern).test(pathname))) {
@@ -49,6 +50,8 @@ export default async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL("/login", request.url));
         }
 
+        console.log("Middleware Triggered");
+
         return NextResponse.next();
     }
 
@@ -58,3 +61,15 @@ export default async function middleware(request: NextRequest) {
             '/((?!api|_next/static|_next/image|favicon.ico).*)',
         ],
     }
+
+// import { NextResponse } from "next/server";
+// import type { NextRequest } from "next/server";
+
+// export default function middleware(request: NextRequest) {
+//     // This should cause a visible error if middleware runs
+//     throw new Error("MIDDLEWARE IS RUNNING - FORCED ERROR TEST");
+    
+//     return NextResponse.next();
+// }
+
+// // No config - should run on all requests

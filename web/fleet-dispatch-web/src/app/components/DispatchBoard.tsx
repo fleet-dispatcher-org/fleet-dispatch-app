@@ -321,7 +321,8 @@ export default function DispatchBoard() {
                                             >
                                                 <option value="TERMINATED">TERMINATED</option>
                                                 <option value="IN_PROGRESS">IN PROGRESS</option>
-                                                <option value="PENDING">PENDING</option>    
+                                                <option value="PENDING">PENDING</option> 
+                                                <option value="DELIVERED">DELIVERED</option>   
                                             </select>
 
                                             {updatingLoadId === load.id && (
