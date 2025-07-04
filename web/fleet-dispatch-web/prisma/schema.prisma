@@ -8,37 +8,37 @@ datasource db {
 }
 
 model Driver {
-  id                      String    @id @default(cuid())
-  first_name              String?   @db.VarChar(20)
-  last_name               String?   @db.VarChar(20)
-  license_number          String?   @db.VarChar(20)
-  license_expiration      String?   @db.VarChar(20)
-  license_class           String?   @db.VarChar(1)
-  current_location        String?   @db.VarChar(20)
-  in_range                Boolean?  @default(false)
-  is_available            Boolean?  @default(true)
-  driver_reports_ready    Boolean?  @default(false)
-  has_home_need           Boolean?  @default(false)
+  id                      String            @id @default(cuid())
+  first_name              String?           @db.VarChar(20)
+  last_name               String?           @db.VarChar(20)
+  license_number          String?           @db.VarChar(20)
+  license_expiration      String?           @db.VarChar(20)
+  license_class           String?           @db.VarChar(1)
+  current_location        String?           @db.VarChar(20)
+  in_range                Boolean?          @default(false)
+  is_available            Boolean?          @default(true)
+  driver_reports_ready    Boolean?          @default(false)
+  has_home_need           Boolean?          @default(false)
   assigned_truck_id       String?
-  phone_number            String?   @db.VarChar(15)
-  emergency_contact       String    @db.VarChar(20)
-  emergency_contact_phone String    @db.VarChar(15)
+  phone_number            String?           @db.VarChar(15)
+  emergency_contact       String            @db.VarChar(20)
+  emergency_contact_phone String            @db.VarChar(15)
   hours_driven_today      Int?
   hours_driven_week       Int?
   last_rest_period        Int?
   certifications          String[]
   drug_test_current       Boolean?
   employment_status       Employment_Status @default(HIRED)
-  hire_date               DateTime? @db.Date
-  user_id                 String   @unique
+  hire_date               DateTime?         @db.Date
+  user_id                 String            @unique
   loads                   Load[]
-  user                    User     @relation(fields: [user_id], references: [id], onUpdate: NoAction)
-  trucks                  Truck?   @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
+  user                    User              @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+  trucks                  Truck?            @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model Trailer {
-  id                        String       @id  @default(cuid())
+  id                        String    @id @default(cuid())
   assigned_truck_id         String?
   current_location          String?   @db.VarChar(20)
   has_registration          Boolean?  @default(true)
@@ -55,60 +55,77 @@ model Trailer {
   last_inspection_date      DateTime? @db.Date
   next_inspection_due       DateTime? @db.Date
   required_permits          String[]
+  assigned_fleet            String? 
   insurance_valid           Boolean?
   load                      Load?
-  truck_id                  Truck?   @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  truck_id                  Truck?    @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fleet                     Fleet?      @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction) 
 }
 
 model Load {
-  id              String      @id @default(cuid())
-  origin          String      @db.VarChar(20)
-  destination     String      @db.VarChar(20)
-  weight          Decimal
-  due_by          DateTime    @default(now())
-  status          Status
-  started_at      DateTime?
-  assigned_driver String?
-  assigned_trailer String?     @unique
+  id               String    @id @default(cuid())
+  origin           String    @db.VarChar(20)
+  destination      String    @db.VarChar(20)
+  weight           Decimal
+  due_by           DateTime  @default(now())
+  status           Status
+  started_at       DateTime?
+  assigned_driver  String?
+  assigned_trailer String?   @unique
   assigned_truck   String?
-  percent_complete Int    @default(0)
-  is_active        Boolean @default(true)
-  truck            Truck? @relation(fields: [assigned_truck], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  driver           Driver? @relation(fields: [assigned_driver], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  trailer          Trailer? @relation(fields: [assigned_trailer], references: [id], onDelete: NoAction, onUpdate: NoAction)   
-
+  percent_complete Int       @default(0)
+  is_active        Boolean   @default(true)
+  assigned_fleet   String?
+  truck            Truck?    @relation(fields: [assigned_truck], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  driver           Driver?   @relation(fields: [assigned_driver], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  trailer          Trailer?  @relation(fields: [assigned_trailer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fleet            Fleet?     @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model CustomerRequest {
-  id              String      @id @default(cuid())
-  origin          String      @db.VarChar(20)
-  destination     String      @db.VarChar(20)
-  status          Status
+  id          String @id @default(cuid())
+  origin      String @db.VarChar(20)
+  destination String @db.VarChar(20)
+  status      Status
+}
+
+model Fleet {
+  id             String  @id @default(cuid())
+  fleet_name     String?
+  fleet_homebase String?
+
+  Truck Truck[]
+  User User[]
+  Load Load[]
+
+  Trailer Trailer[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model Truck {
-  id               String     @id @default(cuid())
-  license_plate    String     @unique @db.VarChar(20)
-  make             String     @db.VarChar(20)
-  model            String     @db.VarChar(20)
+  id               String    @id @default(cuid())
+  license_plate    String    @unique @db.VarChar(20)
+  make             String    @db.VarChar(20)
+  model            String    @db.VarChar(20)
   year             Int?
-  capacity_tons    Decimal?   @db.Decimal(5, 2)
+  capacity_tons    Decimal?  @db.Decimal(5, 2)
   mileage          Int?
-  is_active        Boolean?   @default(true)
-  current_location String?    @db.VarChar(20)
-  assigned_driver  Boolean?   @default(false)
+  is_active        Boolean?  @default(true)
+  current_location String?   @db.VarChar(20)
+  assigned_driver  Boolean?  @default(false)
   driver_id        String?
-  assigned_trailer Boolean?   @default(false)
+  assigned_trailer Boolean?  @default(false)
   trailer_id       String?
-  created_at       DateTime?  @default(now()) @db.Timestamp(6)
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
   driver           Driver[]
   trailer          Trailer[]
   load             Load[]
+  assigned_fleet_id String?
+  fleet   Fleet? @relation(fields: [assigned_fleet_id], references: [id], onDelete: NoAction)
 }
 
 model Account {
-  id                String    @id @default(cuid())
+  id                String   @id @default(cuid())
   userId            String
   type              String
   provider          String
@@ -120,9 +137,9 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -149,6 +166,8 @@ model User {
   driver        Driver?
   accounts      Account[]
   sessions      Session[]
+  assigned_fleet  String?
+  fleet      Fleet? @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction)
 }
 
 model VerificationToken {
@@ -173,7 +192,7 @@ enum Status {
   PENDING
   REQUESTED
   DELIVERED
-} 
+}
 
 enum Employment_Status {
   HIRED

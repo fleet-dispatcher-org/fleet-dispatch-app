@@ -59,7 +59,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       
       return true;
     },
-
     async session({ session, user }) {
       console.log("Session callback - user:", user?.email || session?.user?.email);
       
