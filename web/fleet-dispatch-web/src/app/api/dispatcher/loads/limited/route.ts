@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
 
     try {
         const session = await auth();
-        if(!session || session.user?.role != "DISPATCHER" ) 
+        if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const loads = await prisma.load.findMany({ 
