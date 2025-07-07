@@ -7,6 +7,7 @@ import Image from "next/image";
 import RoleGuard from "../components/RoleGuard";
 import UserProfileCard from "../components/UserProfileCard";
 import SignOut from "../components/Sign-Out";
+import MiniDashboard from "../components/MiniDashboard";
 
 
 export default async function Profile() {
@@ -34,11 +35,14 @@ export default async function Profile() {
                     <UserProfileCard />
                     <Location />
                 </header>
-                <main className="flex flex-row mt-4">
-                    <div className="flex flex-col ml-10 mb-10 justify-center" id="timeOff">
-                                    <h1 className="text-2xl font-bold text-left mt-6">Requested Time Off: </h1>
-                                    <CalendarCombo type="range"/>
-                                </div>
+                <main className="grid grid-cols-3 mt-4 gap-10">
+                    <div className="flex flex-col mb-10 justify-center" id="timeOff">
+                        <h1 className="text-2xl ml-10 font-bold text-center mt-6">Requested Time Off: </h1>
+                        <CalendarCombo type="range"/>
+                    </div>
+                    <div className="flex flex-col mx-auto mb-10 justify-center" id="users">
+                        <MiniDashboard />
+                    </div>
                 </main>
             </RoleGuard>
         );
