@@ -115,6 +115,7 @@ export default function MiniDashboard() {
 
     return (
         <div className='max-w-4xl mx-auto p-6'>
+            <a href="/admin/dashboard" className="flex items-center px-1 pt-1 font-medium hover:underline">See All Users &rarr;</a>
             <div className="grid grid-cols-2 gap-4">
             {users.map((user) => (
                 <div key={user.id} className="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:bg-gray-700 transition-colors">

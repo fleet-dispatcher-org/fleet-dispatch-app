@@ -27,6 +27,9 @@ export async function GET(req: NextRequest) {
                 },
                 take: limit,
                 skip: random ? Math.floor(Math.random() * (await prisma.user.count())) : 0,
+                where: {
+                    id: { not: session.user.id }
+                }
              });
 
             return NextResponse.json(users);

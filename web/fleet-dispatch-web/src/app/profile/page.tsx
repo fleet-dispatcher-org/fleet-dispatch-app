@@ -3,11 +3,10 @@ import { auth } from "../../../auth";
 import Logo from "../components/Logo";
 import Location from "../components/Location";
 import CalendarCombo from "../components/CalendarCombo";
-import Image from "next/image";
 import RoleGuard from "../components/RoleGuard";
 import UserProfileCard from "../components/UserProfileCard";
-import SignOut from "../components/Sign-Out";
 import MiniDashboard from "../components/MiniDashboard";
+import MiniLoadsBoard from "../components/MiniLoadsBoard";
 
 
 export default async function Profile() {
@@ -37,11 +36,16 @@ export default async function Profile() {
                 </header>
                 <main className="grid grid-cols-3 mt-4 gap-10">
                     <div className="flex flex-col mb-10 justify-center" id="timeOff">
-                        <h1 className="text-2xl ml-10 font-bold text-center mt-6">Requested Time Off: </h1>
-                        <CalendarCombo type="range"/>
+                        <div className="border border-gray-700 rounded bg-gray-900">
+                            <h1 className="text-2xl ml-10 font-bold text-center mt-6">Request Time Off: </h1>
+                            <CalendarCombo type="range"/>
+                        </div>
                     </div>
                     <div className="flex flex-col mx-auto mb-10 justify-center" id="users">
                         <MiniDashboard />
+                    </div>
+                    <div>
+                        <MiniLoadsBoard />
                     </div>
                 </main>
             </RoleGuard>
