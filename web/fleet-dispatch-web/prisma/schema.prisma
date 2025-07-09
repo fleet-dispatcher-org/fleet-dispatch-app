@@ -12,7 +12,7 @@ model Driver {
   first_name              String?           @db.VarChar(20)
   last_name               String?           @db.VarChar(20)
   license_number          String?           @db.VarChar(20)
-  license_expiration      String?           @db.VarChar(20)
+  license_expiration      String?           @db.VarChar(20)   
   license_class           String?           @db.VarChar(1)
   current_location        String?           @db.VarChar(20)
   in_range                Boolean?          @default(false)
@@ -30,9 +30,9 @@ model Driver {
   drug_test_current       Boolean?
   employment_status       Employment_Status @default(HIRED)
   hire_date               DateTime?         @db.Date
-  user_id                 String            @unique
+  // Remove user_id field since id now serves this purpose
   loads                   Load[]
-  user                    User              @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+  user                    User              @relation(fields: [id], references: [id], onUpdate: NoAction)
   trucks                  Truck?            @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
 }
 
@@ -163,7 +163,7 @@ model User {
   role          Role      @default(DRIVER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  driver        Driver?
+  attached_driver        Driver?
   accounts      Account[]
   sessions      Session[]
   assigned_fleet  String?

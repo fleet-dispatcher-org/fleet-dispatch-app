@@ -119,12 +119,7 @@ export default function MiniDashboard() {
             <a href="/admin/dashboard" className="flex items-center px-1 pt-1 font-medium hover:underline">See All Users &rarr;</a>
             <div className="grid grid-cols-2 gap-4">
             {users.map((user) => (
-                <Link 
-                    key={user.id} 
-                    href={`/admin/users/${user.id}`}
-                    className="group"
-                >
-                    <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+                    <div key={user.id} className="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:bg-gray-700 transition-colors">
                         {/* User Section */}
                         <div className="mb-4">
                             <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
@@ -132,14 +127,19 @@ export default function MiniDashboard() {
                             </h3>
                             <div className="flex items-center">
                                 <div className="flex-shrink-0 h-10 w-10 bg-gray-800 rounded-full flex items-center justify-center">
-                                    <span className="text-sm font-medium text-gray-300">
+                                    <span className="text-sm font-medium text-gray-300 hover:underline hover:cursor-pointer">
                                     {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                     </span>
                                 </div>
                                 <div className="ml-3">
-                                    <span className="text-sm font-medium text-gray-300">
-                                    {user.name || 'Unknown User'}
-                                    </span>
+                                    <Link 
+                                        href={`/admin/users/${user.id}`}
+                                        className="group"
+                                    >
+                                        <span className="text-sm font-medium text-gray-300 hover:underline">
+                                        {user.name || 'Unknown User'}
+                                        </span>
+                                    </Link>
                                 </div>
                             </div>
                         </div>
@@ -156,7 +156,6 @@ export default function MiniDashboard() {
                             </div>
                         </div>
                     </div>
-                </Link>
             ))}
             </div>
             

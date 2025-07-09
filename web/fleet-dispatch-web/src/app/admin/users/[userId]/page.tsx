@@ -94,6 +94,7 @@ export default async function UserView({ params }: UserViewProps) {
         getLoadsbyUser(userId)
     ]);
 
+    console.log("Loads:", loads);
     const fleetUsers = await getFleetUsers(user?.assigned_fleet || '');
 
     if (!user) {
