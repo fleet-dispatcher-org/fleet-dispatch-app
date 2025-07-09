@@ -13,18 +13,18 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
         const session = await auth();
-        
+        console.log("Session:", session?.user?.role || "User not logged in");
         // This one is going to be pretty much open to anyone. It's still a private route but any role can use it. 
         // This may be a problem in the future.
         // The idea is that both dispatchers and admins can use it.
-        if(!session) {
+        if(session?.user?.role != "ADMIN" && session?.user?.role != "DISPATCHER") {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         } 
 
         const userId = params.userId;
         
         // This is essentially the SQL query here.
-        const user = await prisma.driver.findUnique({ where: { id: userId }, select: { id: true, first_name: true, last_name: true} });
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, name:true, email: true, role: true} });
 
         if (!user) {
             return NextResponse.json({ message: "User not found" }, { status: 404 });

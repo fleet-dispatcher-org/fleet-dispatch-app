@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import type { Role } from "@prisma/client";
 import Logo from './Logo';
 import Image from 'next/image'
+import Link from 'next/link';
 
 interface User {
   id: string;
@@ -118,51 +119,52 @@ export default function MiniDashboard() {
             <a href="/admin/dashboard" className="flex items-center px-1 pt-1 font-medium hover:underline">See All Users &rarr;</a>
             <div className="grid grid-cols-2 gap-4">
             {users.map((user) => (
-                <div key={user.id} className="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:bg-gray-700 transition-colors">
-                {/* User Section */}
-                <div className="mb-4">
-                    <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                    User
-                    </h3>
-                    <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-gray-800 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-300">
-                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                        </span>
-                    </div>
-                    <div className="ml-3">
-                        <span className="text-sm font-medium text-gray-300">
-                        {user.name || 'Unknown User'}
-                        </span>
-                    </div>
-                    </div>
-                </div>
+                <Link 
+                    key={user.id} 
+                    href={`/admin/users/${user.id}`}
+                    className="group"
+                >
+                    <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 hover:bg-gray-700 transition-colors cursor-pointer">
+                        {/* User Section */}
+                        <div className="mb-4">
+                            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                            User
+                            </h3>
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0 h-10 w-10 bg-gray-800 rounded-full flex items-center justify-center">
+                                    <span className="text-sm font-medium text-gray-300">
+                                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                                    </span>
+                                </div>
+                                <div className="ml-3">
+                                    <span className="text-sm font-medium text-gray-300">
+                                    {user.name || 'Unknown User'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
 
-                {/* Role Section */}
-                <div>
-                    <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                    Role
-                    </h3>
-                    <div className="flex items-center space-x-3">
-                    <select
-                        value={user.role}
-                        onChange={(e) => updateUserRole(user.id, e.target.value as Role)}
-                        disabled={updatingUserId === user.id}
-                        className="text-sm bg-gray-800 border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 hover:cursor-pointer px-3 py-1"
-                    >
-                        <option value="DRIVER">Driver</option>
-                        <option value="DISPATCHER">Dispatcher</option>
-                        <option value="ADMIN">Admin</option>
-                    </select>
-                    
-                    {updatingUserId === user.id && (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    )}
+                        {/* Role Section */}
+                        <div>
+                            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                            Role
+                            </h3>
+                            <div className="flex items-center space-x-3">
+                                <span className="text-sm bg-gray-800 border border-gray-600 rounded-md px-3 py-1 text-gray-300">
+                                    {user.role}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                </div>
+                </Link>
             ))}
             </div>
+            
+            {users.length === 0 && (
+                <div className="text-center py-12">
+                    <p className="text-gray-500">No users found</p>
+                </div>
+            )}
         </div>
-    )
+    );
 }
