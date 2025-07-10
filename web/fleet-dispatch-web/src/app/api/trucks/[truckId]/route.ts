@@ -15,7 +15,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-        const truckId = params.truckId;
+        const { truckId } = await params;
 
         // This is essentially the SQL query here. 
         const truck = await prisma.truck.findUnique({ where: { id: truckId }, select: { id: true, make: true, model: true, year: true, license_plate: true, capacity_tons: true} });

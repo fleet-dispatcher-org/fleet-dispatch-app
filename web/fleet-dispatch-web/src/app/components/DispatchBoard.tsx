@@ -5,6 +5,7 @@ import { Role, Status } from "@prisma/client";
 import Logo from './Logo';
 import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
 import { tr } from 'react-day-picker/locale';
+import Link from 'next/link';
 
 
 interface Load {
@@ -115,7 +116,7 @@ export default function DispatchBoard() {
                 throw new Error('Failed to fetch driver name');
             }
             const data = await response.json();
-            const fullname= `${data.first_name} ${data.last_name}`;
+            const fullname= `${data.name}`;
 
             setDriverNames(prevDriverNames => ({
                 ...prevDriverNames,
@@ -144,7 +145,7 @@ export default function DispatchBoard() {
             // This is the actual data you want
             setTrucks(prevTrucks => ({
                 ...prevTrucks,
-                [truckId]: `${data.make}, ${data.model}`
+                [truckId]: `${data.year} ${data.make}, ${data.model} `
             }))
             
         } catch (err) {
@@ -296,9 +297,16 @@ export default function DispatchBoard() {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                        { driverNames[load.assigned_driver]  ?? "No Driver Assigned"}
-                                    </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
+                                            <Link 
+                                            href={`/admin/users/${load.assigned_driver}`}
+                                            className="group"
+                                        >
+                                            <span className='text-sm font-medium text-gray-300 hover:underline'>
+                                                { driverNames[load.assigned_driver]  ?? "No Driver Assigned"}
+                                            </span>
+                                            </Link>
+                                        </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { trucks[load.assigned_truck] ?? "No Truck Assigned"}
                                     </td>
