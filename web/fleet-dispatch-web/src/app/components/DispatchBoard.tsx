@@ -279,6 +279,9 @@ export default function DispatchBoard() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Status
                                 </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Info
+                                </th>
                             </tr>
                         </thead>
 
@@ -325,8 +328,13 @@ export default function DispatchBoard() {
                                             <select 
                                                 value={load.status}
                                                 onChange={(e) => updateLoad(load.id, e.target.value)}
-                                                className='text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
-                                            >
+                                                className={`text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed
+                                                    ${
+                                                        load.status === 'DELIVERED' ? 'bg-green-800 text-green-200' :
+                                                        load.status === 'IN_PROGRESS' ? 'bg-blue-800 text-blue-200' :
+                                                        load.status === 'PENDING' ? 'bg-yellow-800 text-yellow-200' :
+                                                        load.status === 'TERMINATED' ? 'bg-red-800 text-red-200' : 'bg-gray-800 text-gray-200'}`}
+                                                >
                                                 <option value="TERMINATED">TERMINATED</option>
                                                 <option value="IN_PROGRESS">IN PROGRESS</option>
                                                 <option value="PENDING">PENDING</option> 
@@ -337,6 +345,16 @@ export default function DispatchBoard() {
                                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                                                 )}
                                         </div>
+                                    </td>
+                                    <td>
+                                        <Link 
+                                            href={`/load/${load.id}`}
+                                            className="group"
+                                        >
+                                            <span className='text-sm font-medium text-gray-300 hover:underline mx-auto'>
+                                                View
+                                            </span>
+                                        </Link>
                                     </td>
                                 </tr>
                         ))}

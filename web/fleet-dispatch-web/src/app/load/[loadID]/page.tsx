@@ -1,11 +1,10 @@
 import { auth } from "@/auth";
 import { notFound } from "next/navigation";
 import Logo from "@/src/app/components/Logo";
-import { NextResponse } from "next/server";
-import AdminUserProfileCard from "@/src/app/components/AdminUserProfileCard";
-import AdminUserLoads from "@/src/app/components/AdminUserLoads";
-import AdminFleetUsers from "@/src/app/components/AdminFleetUsers";
+import LoadStatus from "../../components/LoadStatus";
 import prisma  from "@/prisma/prisma";
+import { Load } from "@prisma/client";
+import { Suspense } from "react";
 
 interface LoadViewProps {
     params: Promise<{
@@ -32,9 +31,45 @@ export default async function Page({ params }: any) {
             return null;
         }
     }
+    
+    async function getAssignedDriver(load: Load) {
+        try {
+            if (!load.assigned_driver) {
+                return null;
+            } else {
+                const driver = await prisma.driver?.findUnique({ where: { id: load.assigned_driver } });
+                if (!driver) {
+                    throw new Error('Driver not found');
+                }
+                return driver;    
+            }
+            
+        } catch (error) {
+            console.error('Error fetching driver:', error);
+            return null;
+        }
+    }
+
+    async function getAssignedTruck(load: Load) {
+        try {
+            if (!load.assigned_truck) {
+                return null;
+            } else {
+                const truck = await prisma.truck?.findUnique({ where: { id: load.assigned_truck } });
+                if (!truck) {
+                    throw new Error('Truck not found');
+                }
+                return truck;    
+            }
+            
+        } catch (error) {
+            console.error('Error fetching driver:', error);
+            return null;
+        }
+    }
 
     const { loadId } = await params;
-    const load = Promise.all([
+    const [load] = await Promise.all([
         getLoad(loadId),
     ]);
     
@@ -54,6 +89,11 @@ export default async function Page({ params }: any) {
                 />
                 <h4 className="text-3xl mt-0.5 ml-1 font-bold">Fleet Dispatch</h4>
             </div>
+            <main>
+                <Suspense fallback={<div>Loading...</div>}>
+                    <LoadStatus load={load} />
+                </Suspense>
+            </main>
         </div>
     )
     

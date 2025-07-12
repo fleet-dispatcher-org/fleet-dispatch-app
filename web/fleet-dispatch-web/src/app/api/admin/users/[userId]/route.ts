@@ -21,7 +21,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         } 
 
-        const userId = params.userId;
+        const { userId } = await params;
         
         // This is essentially the SQL query here.
         const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, name:true, email: true, role: true} });
