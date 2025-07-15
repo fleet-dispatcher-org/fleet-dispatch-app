@@ -59,26 +59,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       
       return true;
     },
-
-    
-    
-    async session({ session, user, token }) {
+    async session({ session, user }) {
       console.log("Session callback - user:", user?.email || session?.user?.email);
       
-      // Add role and id to session from token or user
-      if (session.user) {
-        if (token) {
-          // Use token data if available (JWT strategy)
-          session.user.role = token.role as "ADMIN" | "DRIVER" | "DISPATCHER";
-          session.user.id = token.id as string;
-        } else if (user) {
-          // Use user data if available (database strategy)
+      // Since you're using PrismaAdapter, you should have access to the user parameter
+      if (session.user && user) {
+        try {
+          // Fetch the full user data including role
           const dbUser = await prisma.user.findUnique({
             where: { id: user.id },
-            select: { role: true }
+            select: { role: true, id: true }
           });
           
-          session.user.role = dbUser?.role || 'DRIVER';
+          console.log("DB User found:", dbUser); // Add this log to debug
+          
+          session.user.role = dbUser?.role || 'USER';
+          session.user.id = user.id;
+          
+          console.log("Session user role set to:", session.user.role); // Add this log
+        } catch (error) {
+          console.error("Error fetching user role:", error);
+          session.user.role = 'USER'; // fallback
           session.user.id = user.id;
         }
       }
@@ -86,15 +87,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
 
-    async jwt({ token, user  }) {
-      // Add role to JWT token
+    // With PrismaAdapter, JWT callback might not be necessary, but keeping it for safety
+    async jwt({ token, user }) {
       if (user) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { role: true }
-        });
-        token.role = dbUser?.role || 'DRIVER';
-        token.id = user.id;
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { role: true }
+          });
+          token.role = dbUser?.role || 'USER';
+          token.id = user.id;
+          console.log("JWT token role set to:", token.role); // Add this log
+        } catch (error) {
+          console.error("Error in JWT callback:", error);
+          token.role = 'USER';
+          token.id = user.id;
+        }
       }
       return token;
     }
@@ -109,22 +117,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       });
     },
 
-   async signOut(params) {
-    // Type guard approach
-    if ('session' in params && params.session) {
-      console.log("SignOut event (database session):", { 
-        sessionId: params.session.sessionToken,
-        userId: params.session.userId
-      });
-    } else if ('token' in params && params.token) {
-      console.log("SignOut event (JWT token):", { 
-        email: params.token.email,
-        userId: params.token.id
-      });
-    } else {
-      console.log("SignOut event: No session or token data");
-    }
-  },
+    async signOut(params) {
+      // Type guard approach
+      if ('session' in params && params.session) {
+        console.log("SignOut event (database session):", { 
+          sessionId: params.session.sessionToken,
+          userId: params.session.userId
+        });
+      } else if ('token' in params && params.token) {
+        console.log("SignOut event (JWT token):", { 
+          email: params.token.email,
+          userId: params.token.id
+        });
+      } else {
+        console.log("SignOut event: No session or token data");
+      }
+    },
 
     async createUser({ user }) {
       console.log("User created:", user.email);

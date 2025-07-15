@@ -37,7 +37,7 @@ export default function Calendar({height, width, className, x, y, children, type
 
     if (type === "single" && isVisible) {
         return (
-            <div className="p-4">
+            <div className="p-4 mb-4">
                 <DayPicker
                     mode="single"
                     selected={selected}
@@ -53,7 +53,7 @@ export default function Calendar({height, width, className, x, y, children, type
         );   
     } else if (type === "range" && isVisible) {
         return (
-            <div className="p-4">
+            <div className="p-4 mb-10">
                 <DayPicker
                     mode="range"
                     selected={range}

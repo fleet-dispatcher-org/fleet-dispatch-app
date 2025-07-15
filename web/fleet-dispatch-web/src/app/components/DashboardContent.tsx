@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import type { Role } from "@prisma/client";
 import Logo from './Logo';
 import Image from 'next/image'
+import Link from 'next/link';
 
 interface User {
   id: string;
@@ -234,9 +235,14 @@ export default function AdminDashboardContent() {
                                                 </div>
                                             </div>
                                             <div className="ml-4">
-                                                <div className="text-sm font-medium text-gray-300 hover:cursor-pointer">
-                                                    {user.name || 'No name'}
-                                                </div>
+                                                <Link 
+                                                    href={`/admin/users/${user.id}`}
+                                                    className="group"
+                                                    >
+                                                    <div className="text-sm font-medium text-gray-300 hover:cursor-pointer hover:underline">
+                                                        {user.name || 'No name'}
+                                                    </div>
+                                                </Link>
                                                 <div className="text-sm text-gray-500">
                                                     {user.email}
                                                 </div>

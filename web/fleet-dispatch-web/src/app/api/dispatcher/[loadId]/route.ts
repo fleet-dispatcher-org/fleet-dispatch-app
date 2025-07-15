@@ -8,14 +8,17 @@ interface RouteParams {
          };
     }
 
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(request: NextRequest) {
     try {
         const session = await auth();
         if(!session || session.user?.role != "DISPATCHER" ) 
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-
+        const searchParams = new URL(request.url).searchParams;
+        
+        // This might not be the best way to ensure this isnt null
+        const loadId = searchParams.get('loadId') as string;
         const body = await request.json();
-        const loadId = params.loadId;
+        
 
         const updatedLoad = await prisma.load.update({
             where: { id: loadId },

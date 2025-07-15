@@ -5,6 +5,7 @@ import { Role, Status } from "@prisma/client";
 import Logo from './Logo';
 import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
 import { tr } from 'react-day-picker/locale';
+import Link from 'next/link';
 
 
 interface Load {
@@ -38,6 +39,7 @@ export default function DispatchBoard() {
     const [updatingLoadId, setUpdatingLoadId] = useState<string | null>(null);
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
     const [trucks, setTrucks] = useState<Record<string, string>>({});
+    const [trailers, setTrailers] = useState<Record<string, string>>({});
 
     useEffect(() => {
         fetchLoads();
@@ -64,8 +66,13 @@ export default function DispatchBoard() {
             truckIds.forEach((id: string) => {if(id) {
                 getTruckMakeModel(id)
             }});
+
+            const trailerIds = new Set<string>((data || []).map((load: Load) => load.assigned_trailer));
             
-            console.log(driverIds);
+            trailerIds.forEach((id: string) => {if(id) {
+                getTrailerMakeModel(id)
+            }});
+            
             setLoads(data || []);
             setError(null);
         } catch (err) {
@@ -115,7 +122,7 @@ export default function DispatchBoard() {
                 throw new Error('Failed to fetch driver name');
             }
             const data = await response.json();
-            const fullname= `${data.first_name} ${data.last_name}`;
+            const fullname= `${data.name}`;
 
             setDriverNames(prevDriverNames => ({
                 ...prevDriverNames,
@@ -144,7 +151,7 @@ export default function DispatchBoard() {
             // This is the actual data you want
             setTrucks(prevTrucks => ({
                 ...prevTrucks,
-                [truckId]: `${data.make}, ${data.model}`
+                [truckId]: `${data.year} ${data.make}, ${data.model} `
             }))
             
         } catch (err) {
@@ -157,6 +164,36 @@ export default function DispatchBoard() {
             }))
         }
     }
+
+    const getTrailerMakeModel = async(trailerId: string) => {
+    // Check if trailerId exists and is not empty
+    if (!trailerId || trailerId.trim() === '') {
+        console.log('No trailer ID provided, skipping API call');
+        setTrailers(prevTrailers => ({
+            ...prevTrailers,
+            [trailerId]: 'No Trailer Assigned'
+        }));
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/trailers/${trailerId}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch trailer name');
+        }
+        const data = await response.json();
+        setTrailers(prevTrailers => ({
+            ...prevTrailers,
+            [trailerId]: `${data.year} ${data.make}, ${data.model} `
+        }))
+    } catch (err) {
+        console.error('Error fetching trailer name:', err);
+        setTrailers(prevTrailers => ({
+            ...prevTrailers,
+            [trailerId]: 'Unknown'
+        }))
+    }
+}
 
     const terminateLoad = async (loadId: string) => {
         setUpdatingLoadId(loadId);
@@ -278,6 +315,9 @@ export default function DispatchBoard() {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Status
                                 </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Info
+                                </th>
                             </tr>
                         </thead>
 
@@ -296,14 +336,21 @@ export default function DispatchBoard() {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                        { driverNames[load.assigned_driver]  ?? "No Driver Assigned"}
-                                    </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
+                                            <Link 
+                                            href={`/admin/users/${load.assigned_driver}`}
+                                            className="group"
+                                        >
+                                            <span className='text-sm font-medium text-gray-300 hover:underline'>
+                                                { driverNames[load.assigned_driver]  ?? "No Driver Assigned"}
+                                            </span>
+                                            </Link>
+                                        </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { trucks[load.assigned_truck] ?? "No Truck Assigned"}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                        { load.assigned_trailer?.charAt(0).toUpperCase() ?? "No Trailer Assigned"}
+                                        { trailers[load.assigned_trailer] ?? "No Trailer Assigned"}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { new Date(load.due_date).toLocaleDateString('en-US', {
@@ -317,17 +364,33 @@ export default function DispatchBoard() {
                                             <select 
                                                 value={load.status}
                                                 onChange={(e) => updateLoad(load.id, e.target.value)}
-                                                className='text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
-                                            >
+                                                className={`text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed
+                                                    ${
+                                                        load.status === 'DELIVERED' ? 'bg-green-800 text-green-200' :
+                                                        load.status === 'IN_PROGRESS' ? 'bg-blue-800 text-blue-200' :
+                                                        load.status === 'PENDING' ? 'bg-yellow-800 text-yellow-200' :
+                                                        load.status === 'TERMINATED' ? 'bg-red-800 text-red-200' : 'bg-gray-800 text-gray-200'}`}
+                                                >
                                                 <option value="TERMINATED">TERMINATED</option>
                                                 <option value="IN_PROGRESS">IN PROGRESS</option>
-                                                <option value="PENDING">PENDING</option>    
+                                                <option value="PENDING">PENDING</option> 
+                                                <option value="DELIVERED">DELIVERED</option>   
                                             </select>
 
                                             {updatingLoadId === load.id && (
                                                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                                                 )}
                                         </div>
+                                    </td>
+                                    <td>
+                                        <Link 
+                                            href={`/load/${load.id}`}
+                                            className="group"
+                                        >
+                                            <span className='text-sm font-medium text-gray-300 hover:underline mx-auto'>
+                                                View
+                                            </span>
+                                        </Link>
                                     </td>
                                 </tr>
                         ))}

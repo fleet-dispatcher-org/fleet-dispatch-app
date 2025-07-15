@@ -41,7 +41,11 @@ export default function CalendarCombo({height, width, className, x, y, children,
     if (type === "single") {
         return (
             <div>
-                <Button type="hollow" onClick={() => {
+                <Button type="hollow"
+                className="bg-gray-900 text-white border-white rounded-full border border-solid transition-colors 
+                flex items-center justify-center hover:bg-gray-50 hover:text-black mt-3 cursor-pointer 
+                gap-2 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
+                onClick={() => {
                     setRangeVisible(prev => !prev);
                     console.log(isVisible);
                 }}>Set Next Available</Button>
@@ -51,9 +55,13 @@ export default function CalendarCombo({height, width, className, x, y, children,
     } else if (type === "range") {
         return (
             <div>
-                <Button type="hollow" onClick={() => {
+                <Button type="hollow" 
+                className="bg-gray-900 text-white border-white rounded-full border border-solid transition-colors 
+                flex items-center justify-center hover:bg-gray-50 hover:text-black mt-3 cursor-pointer 
+                gap-2 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto mx-auto"
+                onClick={() => {
                     setSingleVisible(prev => !prev);
-                }}>Request Time Off</Button>
+                }}>Create Request: </Button>
                 <Calendar type="single" id="calendarNextAvailable" isVisible={singleVisible}></Calendar>
             </div>
         )
