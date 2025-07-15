@@ -39,6 +39,7 @@ export default function DispatchBoard() {
     const [updatingLoadId, setUpdatingLoadId] = useState<string | null>(null);
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
     const [trucks, setTrucks] = useState<Record<string, string>>({});
+    const [trailers, setTrailers] = useState<Record<string, string>>({});
 
     useEffect(() => {
         fetchLoads();
@@ -65,8 +66,13 @@ export default function DispatchBoard() {
             truckIds.forEach((id: string) => {if(id) {
                 getTruckMakeModel(id)
             }});
+
+            const trailerIds = new Set<string>((data || []).map((load: Load) => load.assigned_trailer));
             
-            console.log(driverIds);
+            trailerIds.forEach((id: string) => {if(id) {
+                getTrailerMakeModel(id)
+            }});
+            
             setLoads(data || []);
             setError(null);
         } catch (err) {
@@ -158,6 +164,36 @@ export default function DispatchBoard() {
             }))
         }
     }
+
+    const getTrailerMakeModel = async(trailerId: string) => {
+    // Check if trailerId exists and is not empty
+    if (!trailerId || trailerId.trim() === '') {
+        console.log('No trailer ID provided, skipping API call');
+        setTrailers(prevTrailers => ({
+            ...prevTrailers,
+            [trailerId]: 'No Trailer Assigned'
+        }));
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/trailers/${trailerId}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch trailer name');
+        }
+        const data = await response.json();
+        setTrailers(prevTrailers => ({
+            ...prevTrailers,
+            [trailerId]: `${data.year} ${data.make}, ${data.model} `
+        }))
+    } catch (err) {
+        console.error('Error fetching trailer name:', err);
+        setTrailers(prevTrailers => ({
+            ...prevTrailers,
+            [trailerId]: 'Unknown'
+        }))
+    }
+}
 
     const terminateLoad = async (loadId: string) => {
         setUpdatingLoadId(loadId);
@@ -314,7 +350,7 @@ export default function DispatchBoard() {
                                         { trucks[load.assigned_truck] ?? "No Truck Assigned"}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                        { load.assigned_trailer?.charAt(0).toUpperCase() ?? "No Trailer Assigned"}
+                                        { trailers[load.assigned_trailer] ?? "No Trailer Assigned"}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { new Date(load.due_date).toLocaleDateString('en-US', {
