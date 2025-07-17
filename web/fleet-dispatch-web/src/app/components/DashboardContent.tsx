@@ -36,12 +36,32 @@ export default function AdminDashboardContent() {
             }
             
             const data = await response.json();
-            // Add safety check and ensure users is always an array
-            setUsers(data || []);
+            
+            // More robust data handling
+            let usersArray: User[] = [];
+            if (Array.isArray(data)) {
+                usersArray = data;
+            } else if (data && Array.isArray(data.users)) {
+                usersArray = data.users;
+            } else if (data && typeof data === 'object') {
+                // Handle other possible response structures
+                usersArray = data.data || data.result || [];
+            }
+            
+            // Filter out any undefined/null values and ensure all required properties exist
+            const validUsers = usersArray.filter((user): user is User => 
+                user != null && 
+                typeof user === 'object' && 
+                'id' in user && 
+                'role' in user &&
+                'email' in user
+            );
+            
+            setUsers(validUsers);
             setError(null);
         } catch (err) {
+            console.error('Error fetching users:', err);
             setError(err instanceof Error ? err.message : 'Unknown error');
-            // Ensure users is set to empty array on error
             setUsers([]);
         } finally {
             setLoading(false);
@@ -91,8 +111,8 @@ export default function AdminDashboardContent() {
     };
 
     const getUserStats = () => {
-        // Add safety check to ensure users is defined and is an array
-        if (!users || !Array.isArray(users)) {
+        // Enhanced safety checks
+        if (!users || !Array.isArray(users) || users.length === 0) {
             return {
                 total: 0,
                 admins: 0,
@@ -104,7 +124,10 @@ export default function AdminDashboardContent() {
         console.log("Users:", users);
 
         const stats = users.reduce((acc, user) => {
-            acc[user.role] = (acc[user.role] || 0) + 1;
+            // Additional safety check for each user
+            if (user && user.role) {
+                acc[user.role] = (acc[user.role] || 0) + 1;
+            }
             return acc;
         }, {} as Record<Role, number>);
         

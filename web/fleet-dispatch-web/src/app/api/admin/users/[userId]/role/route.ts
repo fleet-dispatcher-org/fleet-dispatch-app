@@ -14,7 +14,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const body = await request.json();
-        const userId = params.userId;
+        const { userId } = await params 
         const role = body.role;
 
         if (!['ADMIN', 'DRIVER', 'DISPATCHER'].includes(role)) {
