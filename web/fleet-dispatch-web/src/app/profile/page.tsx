@@ -8,6 +8,9 @@ import UserProfileCard from "../components/UserProfileCard";
 import MiniDashboard from "../components/MiniDashboard";
 import MiniLoadsBoard from "../components/MiniLoadsBoard";
 import MiniTrucksBoard from "../components/MiniTrucksBoard";
+import DriverLoads from "../components/DriverLoadsClient";
+import { User } from "@prisma/client";
+import DriverLoadsWrapper from "../components/DriverLoadsWrapper";
 
 
 export default async function Profile() {
@@ -114,7 +117,7 @@ export default async function Profile() {
                         </div>
                     </div>
                     <div className="flex flex-col mx-auto mb-10 justify-center" id="users">
-                        <MiniLoadsBoard />
+                        <DriverLoadsWrapper userId={session.user.id} />
                     </div>
                     <div>
                         <MiniTrucksBoard />
