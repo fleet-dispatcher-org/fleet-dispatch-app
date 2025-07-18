@@ -36,6 +36,30 @@ model Driver {
   trucks                  Truck?            @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
 }
 
+model Week {
+  id                      String @id @default(cuid())
+  week_start              DateTime
+  week_end                DateTime
+  day_1_hours             String?
+  day_2_hours             String?
+  day_3_hours             String?
+  day_4_hours             String?
+  day_5_hours             String?
+  day_6_hours             String?
+  day_7_hours             String?
+  day_1_stop             String?
+  day_2_stop             String?
+  day_3_stop             String?
+  day_4_stop             String?
+  day_5_stop             String?
+  day_6_stop             String?
+  day_7_stop             String?
+
+
+  userId                String
+  user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model Trailer {
   id                        String    @id @default(cuid())
@@ -164,6 +188,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   attached_driver        Driver?
+  weeks          Week[] 
   accounts      Account[]
   sessions      Session[]
   assigned_fleet  String?
