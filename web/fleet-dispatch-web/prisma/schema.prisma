@@ -47,13 +47,13 @@ model Week {
   day_5_hours             String?
   day_6_hours             String?
   day_7_hours             String?
-  day_1_stop             String?
-  day_2_stop             String?
-  day_3_stop             String?
-  day_4_stop             String?
-  day_5_stop             String?
-  day_6_stop             String?
-  day_7_stop             String?
+  day_1_stop              String?
+  day_2_stop              String?
+  day_3_stop              String?
+  day_4_stop              String?
+  day_5_stop              String?
+  day_6_stop              String?
+  day_7_stop              String?
 
 
   userId                String
