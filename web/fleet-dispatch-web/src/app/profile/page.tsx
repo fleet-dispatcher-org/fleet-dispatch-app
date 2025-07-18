@@ -87,4 +87,40 @@ export default async function Profile() {
             </RoleGuard>
         );
     }
+
+    else if (session?.user.role === "DRIVER") {
+        return (
+            <RoleGuard allowedRoles={['DRIVER']}>
+                <div className="flex flex-row space-x-0">
+                    <Logo
+                        path="/fleet-dispatch-logo-no-background.png"
+                        alt="Inverted Logo"
+                        width={38}
+                        height={38}
+                        reroute="/"
+                    />
+                    <h4 className="text-3xl mt-0.5 ml-1 font-bold">Fleet Dispatch</h4>
+                </div>
+
+                <header className="flex flex-col mx-auto mt-15 justify-center space-x-0">
+                    <UserProfileCard />
+                    <Location />
+                </header>
+                <main className="grid grid-cols-3 mt-4 gap-10 mr-4 mb-4">
+                    <div className="flex flex-col mb-10 justify-center" id="timeOff">
+                        <div className="border border-gray-700 rounded bg-gray-900">
+                            <h1 className="text-2xl ml-10 font-bold text-center mt-6">Request Time Off: </h1>
+                            <CalendarCombo type="range"/>
+                        </div>
+                    </div>
+                    <div className="flex flex-col mx-auto mb-10 justify-center" id="users">
+                        <MiniLoadsBoard />
+                    </div>
+                    <div>
+                        <MiniTrucksBoard />
+                    </div>
+                </main>
+            </RoleGuard>
+        );
+    }
 }
