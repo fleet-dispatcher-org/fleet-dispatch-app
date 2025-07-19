@@ -1,12 +1,14 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { Truck } from '@prisma/client';
+import { useSession } from 'next-auth/react';
 
 
 export default function MiniTrucksBoard() {
     const [trucks, setTrucks] = useState<Truck[]>([]);
     const [trucksLoading, setTrucksLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const session = useSession();
 
     useEffect(() => {
         fetchTrucks();
@@ -66,7 +68,10 @@ export default function MiniTrucksBoard() {
     
     return (
         <div className='overflow-x-auto'>
-            <a href="/trucks" className='text-white hover:underline mb-2'>See all trucks &rarr;</a>
+            { session.data?.user.role != 'DRIVER' && 
+                <a href="/trucks" className='text-white hover:underline mb-2'>See all trucks &rarr;</a>
+            }
+            
             <table className="table-auto w-full border-collapse">
                 <thead className="bg-gray-800">
                     <tr>
