@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, status, Query
+from fastapi import FastAPI, HTTPException, status, Query, BackgroundTasks
 from typing import List, Dict, Any, Optional
 import httpx 
 import hmac
@@ -9,6 +9,10 @@ import logging
 from datetime import datetime
 import os
 import webhook_sender
+import driver
+import truck
+import trailer
+import load
 
 # Import storage functions
 import storage
@@ -31,6 +35,25 @@ webhook_sender = webhook_sender.WebhookSender(
 
 async def send_webhook_background(event: str, data: Dict[str, Any]):
     await webhook_sender.send_webhook(event, data)
+
+# Webhook endpoints
+@app.post("/api/webhooks/check", tags=["Webhooks"])
+async def check_webhook(event: str, data: Dict[str, Any]):
+    await send_webhook_background(event, data)
+    return {"status": "success"}
+
+# This is not going to work the way I think it will. 
+@app.post("/api/webhooks/{load_id}", tags=["Webhooks"])
+async def update_load(load, background_tasks: BackgroundTasks):
+    webhook_data = {
+        "id": load.id,
+        "assigned_driver": load.assigned_driver,
+        "assigned_truck": load.assigned_truck,
+        "assigned_trailer": load.assigned_trailer
+    }
+
+    background_tasks.add_task(send_webhook_background, "load_assigned", webhook_data)
+    return {"status": "success"}
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])

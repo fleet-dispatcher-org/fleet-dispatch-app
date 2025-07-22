@@ -8,6 +8,7 @@ import httpx
 import asyncio
 import logging
 import generate_secret 
+import requests
 
 # Get logger
 logger = logging.getLogger('dispatch_logger')
@@ -49,7 +50,9 @@ class WebhookSender:
                     else:
                         logger.error(f"Failed to send webhook. Status code: {response.status_code}")
                         return False
+            
             except httpx.HTTPError as e:
+                
                 if attempt < retry_count - 1:
                     logger.warning(f"Failed to send webhook. Retrying in 5 seconds. Error: {e}")
                     await asyncio.sleep(5)
@@ -59,3 +62,22 @@ class WebhookSender:
 
         return False
 
+    async def query_webhook(self, data: Dict[Any, Any], retry_count: Optional[int] = 3, timeout: Optional[float] = 10.0) -> Dict[Any, Any]:
+        url = os.getenv("NEXT_JS_API_URL", "http://localhost:3000/api/")
+        
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Fleet Dispatch Assistant",
+            "x-webhook-secret": os.getenv("WEBHOOK_SECRET_KEY")
+        }
+        
+        payload = {
+            "event": self.event,
+            "data": data
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception(f"Failed to query webhook. Status code: {response.status_code}; Response: {response.text}")

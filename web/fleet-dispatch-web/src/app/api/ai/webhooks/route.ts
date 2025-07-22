@@ -38,6 +38,10 @@ export async function POST(req: Request, res: Response) {
                 await getAvailableTrailers(payload);
                 break;
             
+            case "get_available_loads":
+                await getAvaliableLoads(payload);
+                break;
+            
             default:
                 console.log(`Unknown event: ${payload.event}`);
                 return new Response('Unknown event type', { status: 400 });
@@ -91,6 +95,17 @@ export async function POST(req: Request, res: Response) {
     async function getAvailableTrailers(payload: any) {
         const trailers = await prisma.trailer.findMany({ where: { trailer_status: "AVAILABLE" } });
         return NextResponse.json({ trailers });
+    }
+
+    async function getAvaliableLoads(payload: any) {
+        const loads = await prisma.load.findMany({ where: { 
+                assigned_driver: null,
+                assigned_truck: null,
+                assigned_trailer: null,
+                status: "UNASSIGNED" 
+            } 
+        });
+        return NextResponse.json({ loads });
     }
 
     async function handleLoadStatusChange(data: any) {
