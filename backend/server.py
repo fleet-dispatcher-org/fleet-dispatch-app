@@ -1,8 +1,14 @@
 from fastapi import FastAPI, HTTPException, status, Query
 from typing import List, Dict, Any, Optional
+import httpx 
+import hmac
+import hashlib
+import json
+from pydantic import BaseModel
 import logging
 from datetime import datetime
 import os
+import webhook_sender
 
 # Import storage functions
 import storage
@@ -16,6 +22,15 @@ logger = logging.getLogger('dispatch_server')
 app = FastAPI(
     title="Fleet Dispatch API",
 )
+
+# Webhook sender initialization
+webhook_sender = webhook_sender.WebhookSender(
+    base_url=os.getenv('NEXTJS_BASE_URL') or 'http://localhost:3000/api', 
+    secret_key=os.getenv('WEBHOOK_SECRET_KEY')
+)
+
+async def send_webhook_background(event: str, data: Dict[str, Any]):
+    await webhook_sender.send_webhook(event, data)
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])
