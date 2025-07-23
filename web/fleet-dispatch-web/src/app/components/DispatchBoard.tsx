@@ -187,7 +187,6 @@ export default function DispatchBoard() {
     const getTrailerMakeModel = async(trailerId: string) => {
     // Check if trailerId exists and is not empty
     if (!trailerId || trailerId.trim() === '') {
-        console.log('No trailer ID provided, skipping API call');
         setTrailers(prevTrailers => ({
             ...prevTrailers,
             [trailerId]: 'No Trailer Assigned'
@@ -278,7 +277,6 @@ export default function DispatchBoard() {
             </div>
         );
     }
-    console.log(loads);
     return (
          <div className="max-w-7xl mx-auto p-6k">
             {/* Outer Container ^*/}
@@ -358,15 +356,18 @@ export default function DispatchBoard() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                             <Link 
                                             href={`/admin/users/${load.assigned_driver}`}
-                                            className="group"
-                                        >
-                                            <span className='text-sm font-medium text-gray-300 hover:underline'>
-                                                { driverNames[load.assigned_driver || ""]  ?? "No Driver Assigned"}
-                                            </span>
+                                            className="group">
+                                                <span className='text-sm font-medium text-gray-300 hover:underline'>
+                                                    { driverNames[load.assigned_driver || ""]  ?? "No Driver Assigned"}
+                                                </span>
                                             </Link>
                                         </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                        { trucks[load.assigned_truck || ""] ?? "No Truck Assigned"}
+                                        <Link 
+                                            href={`/trucks/${load.assigned_truck}`}
+                                            className="group">
+                                                {trucks[load.assigned_truck || ""] ?? "No Truck Assigned"}
+                                        </Link>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         { trailers[load.assigned_trailer || ""] ?? "No Trailer Assigned"}

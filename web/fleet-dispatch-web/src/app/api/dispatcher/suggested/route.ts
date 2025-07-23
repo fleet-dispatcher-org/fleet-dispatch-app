@@ -15,6 +15,9 @@ export async function GET() {
 
    try {
     const suggestedLoads = await prisma.load.findMany({
+        where: {
+            status: "SUGGESTED"
+        },
         select: {
             id: true,
             origin: true,
@@ -31,9 +34,6 @@ export async function GET() {
         orderBy: {
             started_at: 'desc'
         },
-        where: {
-            status: "SUGGESTED"
-    }
     })
 
     return NextResponse.json(suggestedLoads)        
