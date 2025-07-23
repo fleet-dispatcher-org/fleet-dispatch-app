@@ -8,7 +8,7 @@ logger = logging.getLogger('dispatch_logger')
 
 
 class Driver(BaseModel):
-    id: str
+    driver_id: str
     first_name: str
     last_name: str
     license_number: str

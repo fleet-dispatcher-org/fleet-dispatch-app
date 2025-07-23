@@ -1,23 +1,38 @@
-const crypto = require('crypto');
-const { generateSecret } = require('./generateSecret.js');
+import crypto from 'crypto';
+import generateSecret from './generateSecret';
+
+interface WebhookPayload {
+    event: string;
+    data: any;
+    timestamp?: string;
+}
+
+interface WebhookResponse {
+    success: boolean;
+    response?: any;
+    error?: string;
+}
 
 class WebhookSender {
-    constructor(baseUrl, secretKey) {
+    private baseUrl: string;
+    private secretKey: string;
+
+    constructor(baseUrl?: string, secretKey?: string) {
         this.baseUrl = baseUrl || process.env.FASTAPI_BASE_URL || 'http://localhost:8000/api/ai/receive-webhook';
-        this.secretKey = secretKey || process.env.WEBHOOK_SECRET_KEY;
+        this.secretKey = secretKey || process.env.WEBHOOK_SECRET_KEY || '';
     }
 
     /**
      * Generate a secret if one doesn't exist
      */
-    generateSecret(length = 32) {
+    generateSecret(length: number = 32): string {
         return generateSecret(length);
     }
 
     /**
      * Create HMAC signature for webhook payload
      */
-    getSignature(payload) {
+    getSignature(payload: WebhookPayload | string): string {
         const payloadString = typeof payload === 'string' ? payload : JSON.stringify(payload);
         return crypto
             .createHmac('sha256', this.secretKey)
@@ -28,15 +43,20 @@ class WebhookSender {
     /**
      * Send webhook to FastAPI server Might not be needed or YES? lol 
      */
-    async sendWebhook(event, data, retryCount = 3, timeout = 10000) {
-        const payload = {
+    async sendWebhook(
+        event: string, 
+        data: any, 
+        retryCount: number = 3, 
+        timeout: number = 10000
+    ): Promise<WebhookResponse> {
+        const payload: WebhookPayload = {
             event,
             data,
             timestamp: new Date().toISOString()
         };
 
         const signature = this.getSignature(payload);
-        const headers = {
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             'X-Webhook-Signature': signature,
             'User-Agent': 'Fleet Dispatch Assistant'
@@ -63,7 +83,7 @@ class WebhookSender {
                     console.error(`Failed to send webhook. Status: ${response.status}`);
                     return { success: false, error: `HTTP ${response.status}` };
                 }
-            } catch (error) {
+            } catch (error: any) {
                 if (attempt < retryCount - 1) {
                     console.warn(`Failed to send webhook. Retrying in 5 seconds. Error: ${error.message}`);
                     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -80,16 +100,20 @@ class WebhookSender {
     /**
      * Query webhook (expects response)
      */
-    async queryWebhook(data, retryCount = 3, timeout = 10000) {
+    async queryWebhook(
+        data: any, 
+        retryCount: number = 3, 
+        timeout: number = 10000
+    ): Promise<any> {
         const url = process.env.FASTAPI_API_URL || 'http://localhost:8000/api/ai/receive-webhook';
         
-        const headers = {
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             'User-Agent': 'Fleet Dispatch Assistant',
             'x-webhook-secret': this.secretKey
         };
         
-        const payload = {
+        const payload: WebhookPayload = {
             event: 'query',
             data
         };
@@ -112,10 +136,10 @@ class WebhookSender {
             } else {
                 throw new Error(`Failed to query webhook. Status: ${response.status}; Response: ${await response.text()}`);
             }
-        } catch (error) {
+        } catch (error: any) {
             throw new Error(`Failed to query webhook. Error: ${error.message}`);
         }
     }
 }
 
-module.exports = { WebhookSender };
+export { WebhookSender };
