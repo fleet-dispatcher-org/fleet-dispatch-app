@@ -32,7 +32,7 @@ summary_agent = Agent(
         
         "Respond naturally to user requests and choose the appropriate tools to fulfill their needs."
     ),
-    tools=[delete_order, read_orders_from_csv, send_webhook, query_webhook],
+    tools=[send_webhook, query_webhook],
 )
 
 

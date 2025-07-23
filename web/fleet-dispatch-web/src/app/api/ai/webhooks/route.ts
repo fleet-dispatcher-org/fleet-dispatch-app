@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { Driver } from "@prisma/client";
 
 // Import webhook sender
-import { WebhookSender } from './webhookSender.js';
+import { WebhookSender } from './webhookSender';
 const webhookSender = new WebhookSender();
 
 export async function POST(req: Request, res: Response) {
@@ -45,6 +45,9 @@ export async function POST(req: Request, res: Response) {
             case "get_available_loads":
                 await getAvaliableLoads(payload);
                 break;
+            
+            case "test_connection":
+                return NextResponse.json({ message: "Success" }, { status: 200 });
             
             default:
                 console.log(`Unknown event: ${payload.event}`);
