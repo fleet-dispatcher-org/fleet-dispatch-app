@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, status, Query, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Any, Optional
 import httpx 
 import hmac
@@ -28,8 +29,17 @@ app = FastAPI(
     title="Fleet Dispatch API",
 )
 
-# Webhook endpoint
-@app.post("/api/ai/receive-webhook", tags=["AI"])
+# Add CORS middleware to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+# Webhook endpoint # This does not have the signature verification yet and I dont know if it will be needed
+@app.post("/api/ai/receive-webhook")
 async def receive_webhook(request: Request):
     """This is the webhook endpoint that will be used to receive webhooks from the Next.js frontend."""
     try:
