@@ -23,7 +23,8 @@ class WebhookSender {
     }
 
     /**
-     * Generate a secret if one doesn't exist
+     * Generate a secret if one doesn't exist THIS IS DEAD CODE? I think we are not using this because we already have the secret in the .env file
+     * 
      */
     generateSecret(length: number = 32): string {
         return generateSecret(length);
@@ -105,17 +106,18 @@ class WebhookSender {
         retryCount: number = 3, 
         timeout: number = 10000
     ): Promise<any> {
-        const url = process.env.FASTAPI_API_URL || 'http://localhost:8000/api/ai/receive-webhook';
+        const url = process.env.FASTAPI_BASE_URL || 'http://localhost:8000/api/ai/receive-webhook';
         
+        // Simplified headers - no signature needed since FastAPI doesn't validate
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
-            'User-Agent': 'Fleet Dispatch Assistant',
-            'x-webhook-secret': this.secretKey
+            'User-Agent': 'Fleet Dispatch Assistant'
         };
         
         const payload: WebhookPayload = {
             event: 'query',
-            data
+            data,
+            timestamp: new Date().toISOString()
         };
 
         try {

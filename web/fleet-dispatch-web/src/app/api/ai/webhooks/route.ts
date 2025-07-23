@@ -2,20 +2,20 @@ import prisma from "@/prisma/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { Driver } from "@prisma/client";
+import crypto from 'crypto';
 
 // Import webhook sender
 import { WebhookSender } from './webhookSender';
 const webhookSender = new WebhookSender();
 
 export async function POST(req: Request, res: Response) {
-    // const session = await auth();
-    // if (!session) {
-    //     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    // }
+    const session = await auth();
+    if (!session) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
 
     try {
         const payload = await req.json();
-
         const signatures = req.headers.get("x-webhook-signature");
         if(!verifyWebhookSignature(payload, signatures)) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -90,15 +90,15 @@ export async function POST(req: Request, res: Response) {
     }
     
     async function handleDriverStatusUpdate(payload: any) {
-        const { driverId, driver_status } = payload.data;
+        const { driverId, is_available } = payload.data;
         await prisma.driver.update({
             where: { id: driverId },
-            data: { driver_status },
+            data: { is_available },
         });
     }
 
     async function getAvailableDrivers(payload: any) {
-        const drivers = await prisma.driver.findMany({ where: { driver_status: "AVAILABLE" } });
+        const drivers = await prisma.driver.findMany({ where: { is_available: true } });
         return NextResponse.json({ drivers });
     }
 
@@ -117,7 +117,7 @@ export async function POST(req: Request, res: Response) {
                 assigned_driver: null,
                 assigned_truck: null,
                 assigned_trailer: null,
-                status: "UNASSIGNED" 
+                status: "UNASSIGNED" as any
             } 
         });
         return NextResponse.json({ loads });
@@ -156,8 +156,18 @@ export async function POST(req: Request, res: Response) {
         console.log(`Load ${load_id} status changed to ${status}`);
     }
 
-    // Simple signature verification
+    // HMAC signature verification
     function verifyWebhookSignature(payload: any, signature: string | null) {
-        const expectedSignature = process.env.WEBHOOK_SECRET;
+        if (!signature) return false;
+        
+        const secretKey = process.env.WEBHOOK_SECRET_KEY || process.env.WEBHOOK_SECRET;
+        if (!secretKey) return false;
+        
+        const payloadString = JSON.stringify(payload);
+        const expectedSignature = crypto
+            .createHmac('sha256', secretKey)
+            .update(payloadString)
+            .digest('hex');
+        
         return signature === expectedSignature;
     }
