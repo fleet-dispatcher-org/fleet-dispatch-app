@@ -4,7 +4,11 @@ import React from "react";
 import { useEffect, useState, useRef } from "react";
 import Button from "./Button";
 
-export default function Location() {
+interface LocationProps {
+    className?: string
+}
+
+export default function Location({className}: LocationProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [location, setLocation] = useState('San Diego, CA');
     const [tempValue, setTempValue] = useState(location);
@@ -21,7 +25,7 @@ export default function Location() {
         setIsEditing(false);
     };
 
-    return <div className="mx-auto">
+    return <div className={className}>
                     {isEditing ? (
                             <input
                                 ref={inputRef}

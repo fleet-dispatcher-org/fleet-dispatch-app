@@ -18,14 +18,11 @@ model Driver {
   in_range                Boolean?          @default(false)
   is_available            Boolean?          @default(true)
   driver_reports_ready    Boolean?          @default(false)
-  has_home_need           Boolean?          @default(false)
+  driver_status           Availability_Status     @default(AVAILABLE)
   assigned_truck_id       String?
   phone_number            String?           @db.VarChar(15)
   emergency_contact       String            @db.VarChar(20)
   emergency_contact_phone String            @db.VarChar(15)
-  hours_driven_today      Int?
-  hours_driven_week       Int?
-  last_rest_period        Int?
   certifications          String[]
   drug_test_current       Boolean?
   employment_status       Employment_Status @default(HIRED)
@@ -34,6 +31,30 @@ model Driver {
   loads                   Load[]
   user                    User              @relation(fields: [id], references: [id], onUpdate: NoAction)
   trucks                  Truck?            @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
+}
+
+model Week {
+  id                      String @id @default(cuid())
+  week_start              DateTime
+  week_end                DateTime
+  day_1_hours             String?
+  day_2_hours             String?
+  day_3_hours             String?
+  day_4_hours             String?
+  day_5_hours             String?
+  day_6_hours             String?
+  day_7_hours             String?
+  day_1_stop              String?
+  day_2_stop              String?
+  day_3_stop              String?
+  day_4_stop              String?
+  day_5_stop              String?
+  day_6_stop              String?
+  day_7_stop              String?
+
+
+  userId                String
+  user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -54,6 +75,7 @@ model Trailer {
   registration_expiry       DateTime? @db.Date
   last_inspection_date      DateTime? @db.Date
   next_inspection_due       DateTime? @db.Date
+  trailer_status            Availability_Status @default(AVAILABLE)
   required_permits          String[]
   assigned_fleet            String? 
   insurance_valid           Boolean?
@@ -112,6 +134,7 @@ model Truck {
   mileage          Int?
   is_active        Boolean?  @default(true)
   current_location String?   @db.VarChar(20)
+  truck_status     Availability_Status @default(AVAILABLE)
   assigned_driver  Boolean?  @default(false)
   driver_id        String?
   assigned_trailer Boolean?  @default(false)
@@ -164,6 +187,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   attached_driver        Driver?
+  weeks          Week[] 
   accounts      Account[]
   sessions      Session[]
   assigned_fleet  String?
@@ -191,6 +215,7 @@ enum Status {
   IN_PROGRESS
   PENDING
   REQUESTED
+  UNASSIGNED
   DELIVERED
 }
 
@@ -200,4 +225,12 @@ enum Employment_Status {
   SUSPENDED_NO_PAY
   TERMINATED
   ON_CONTRACT
+}
+
+enum Availability_Status {
+  AVAILABLE
+  ASSIGNED
+  HAS_EMERGENCY
+  UNAVAILABLE
+  SUGGESTED
 }

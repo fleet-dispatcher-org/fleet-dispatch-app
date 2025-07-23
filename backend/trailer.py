@@ -1,12 +1,32 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
+from pydantic import BaseModel
 import logging
 
 # Get logger
 logger = logging.getLogger('dispatch_logger')
 
 
-class Trailer:
+class Trailer(BaseModel):
+    trailer_id: str
+    attached_truck_id: str
+    location: str
+    is_working_condition: bool
+    has_registration: bool
+    bureaucratically_sound: bool
+    is_currently_working: bool
+    in_range_first_step: bool
+    make: str
+    model: str
+    max_cargo_capacity: float
+    current_cargo_weight: float
+    year: int
+    registration_expiry: Optional[datetime]
+    last_inspection: Optional[datetime]
+    next_inspection_due: Optional[datetime]
+    insurance_carrier: str
+    insurance_valid: bool
+    
     def __init__(self, trailer_id: str, make: str, model: str, year: int):
         """
         Initialize a new Trailer instance.

@@ -6,22 +6,24 @@ import Logo from './Logo';
 import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
 import { tr } from 'react-day-picker/locale';
 import Link from 'next/link';
+import { Load } from "@prisma/client";
 
 
-interface Load {
-    id: string,
-    origin: string,
-    destination: string,
-    weight: number,
-    status: Status,
-    started_at: Timestamp,
-    assigned_driver: string,
-    assigned_trailer: string,
-    assigned_truck: string,
-    percent_complete: number,
-    is_active: boolean,
-    due_date: Timestamp
-}
+// interface Load {
+//     id: string,
+//     origin: string,
+//     destination: string,
+//     due_by: Timestamp,
+//     weight: number,
+//     status: Status,
+//     started_at: Timestamp,
+//     assigned_driver: string,
+//     assigned_trailer: string,
+//     assigned_truck: string,
+//     percent_complete: number,
+//     is_active: boolean,
+//     due_date: Timestamp
+// }
 
 interface User {
   id: string;
@@ -44,6 +46,23 @@ export default function DispatchBoard() {
     useEffect(() => {
         fetchLoads();
     }, []);
+
+    const getUnassignedLoads = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch('/api/dispatcher/loads/unassigned');
+            if (!response.ok) {
+                throw new Error('Failed to fetch unassigned loads');
+            }
+            const data = await response.json();
+            setLoads(data || []);
+            setError(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const fetchLoads = async () => {
         try {
@@ -342,22 +361,23 @@ export default function DispatchBoard() {
                                             className="group"
                                         >
                                             <span className='text-sm font-medium text-gray-300 hover:underline'>
-                                                { driverNames[load.assigned_driver]  ?? "No Driver Assigned"}
+                                                { driverNames[load.assigned_driver || ""]  ?? "No Driver Assigned"}
                                             </span>
                                             </Link>
                                         </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                        { trucks[load.assigned_truck] ?? "No Truck Assigned"}
+                                        { trucks[load.assigned_truck || ""] ?? "No Truck Assigned"}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                        { trailers[load.assigned_trailer] ?? "No Trailer Assigned"}
+                                        { trailers[load.assigned_trailer || ""] ?? "No Trailer Assigned"}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                        { new Date(load.due_date).toLocaleDateString('en-US', {
-                                            year: 'numeric',
-                                            month: 'short',
-                                            day: 'numeric',
-                                        })}
+                                        {(() => {
+                                            if (!load.due_by) return 'No due date';
+                                            const date = new Date(load.due_by);
+                                            if (isNaN(date.getTime())) return 'Invalid date';
+                                            return `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
+                                        })()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <div className="flex items-center space-x-3">

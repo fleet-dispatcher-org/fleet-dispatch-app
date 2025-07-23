@@ -1,12 +1,37 @@
 from datetime import datetime, date
 from typing import Optional, List, Dict, Any
+from pydantic import BaseModel
 import logging
 
 # Get logger
 logger = logging.getLogger('dispatch_logger')
 
 
-class Driver:
+class Driver(BaseModel):
+    id: str
+    first_name: str
+    last_name: str
+    license_number: str
+    license_expiry: Optional[str] = None
+    email: str
+    current_location: str
+    is_available: bool
+    driver_reports_ready: bool
+    assigned_truck_id: str
+    has_personal_needs: bool
+    assigned_truck_id_string: str
+    phone_number: str
+    emergency_contact: str
+    hire_date: Optional[str] = None
+    background_check_valid: bool
+    hours_worked_today: float
+    certifications: List[str]
+    last_rest_period: Optional[str] = None
+    certifications_list_strings: List[str]
+    drug_test_current: bool
+    employment_status: str
+    hire_date_string: Optional[str] = None
+
     def __init__(self, driver_id: str, first_name: str, last_name: str, license_number: str):
         """
         Initialize a new Driver instance.

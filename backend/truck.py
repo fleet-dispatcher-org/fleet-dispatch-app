@@ -1,12 +1,18 @@
 from datetime import datetime, date
 from typing import Optional
+from pydantic import BaseModel
 import logging
 
 # Get logger
 logger = logging.getLogger('dispatch_logger')
 
 
-class Truck:
+class Truck(BaseModel):
+    id: str
+    make: str
+    model: str
+    year: int
+    
     def __init__(self, truck_id: str, make: str, model: str, year: int):
         """
         Initialize a new Truck instance.

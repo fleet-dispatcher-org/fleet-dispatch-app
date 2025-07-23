@@ -2,6 +2,8 @@ import csv
 import os
 from agents import function_tool
 from logger import log_tool_call, log_tool_result, log_error
+import webhook_sender
+from typing import Optional, Dict, Any
 
 orders = []
 CSV_FILE_PATH = "backend/orders.csv"  # Centralized file path
@@ -81,3 +83,11 @@ def delete_order(order_id: str) -> str:
     
     log_tool_result("delete_order", result)
     return result
+@function_tool
+def send_webhook(event: str, data: Dict[str, Any]):
+    return webhook_sender.send_webhook(event, data)
+    
+
+@function_tool
+def query_webhook(data: Dict[str, Any]):
+    return webhook_sender.query_webhook(data)

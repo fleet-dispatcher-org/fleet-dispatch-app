@@ -1,5 +1,5 @@
 from agents import Agent, Runner
-from tools import read_orders_from_csv, delete_order
+from tools import read_orders_from_csv, delete_order, send_webhook, query_webhook
 
 
 summary_agent = Agent(
@@ -12,6 +12,8 @@ summary_agent = Agent(
         "Available tools:\n"
         "- read_orders_from_csv: Use this to load and read order data from the CSV file\n"
         "- delete_order: Use this to delete a specific order by its Order # ID\n\n"
+        "- send_webhook: Use this to send a summary of the orders to a webhook URL\n\n"
+        "- "
         
         "Guidelines:\n"
         "- When users ask about orders, viewing orders, or summaries, use read_orders_from_csv first\n"
@@ -30,7 +32,7 @@ summary_agent = Agent(
         
         "Respond naturally to user requests and choose the appropriate tools to fulfill their needs."
     ),
-    tools=[delete_order, read_orders_from_csv],
+    tools=[delete_order, read_orders_from_csv, send_webhook, query_webhook],
 )
 
 

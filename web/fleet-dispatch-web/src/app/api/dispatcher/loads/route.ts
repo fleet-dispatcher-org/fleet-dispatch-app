@@ -19,6 +19,7 @@ export async function GET() {
                 id: true,
                 origin: true,
                 destination: true,
+                due_by: true, 
                 weight: true,
                 status: true,
                 started_at: true,
