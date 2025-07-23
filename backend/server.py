@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, status, Query, BackgroundTasks
+from fastapi import FastAPI, HTTPException, status, Query, BackgroundTasks, Request
+from fastapi.responses import JSONResponse
 from typing import List, Dict, Any, Optional
 import httpx 
 import hmac
@@ -8,7 +9,6 @@ from pydantic import BaseModel
 import logging
 from datetime import datetime
 import os
-import webhook_sender
 import driver
 import truck
 import trailer
@@ -17,6 +17,7 @@ import load
 # Import storage functions
 import storage
 import uvicorn
+import asyncio
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,34 +28,18 @@ app = FastAPI(
     title="Fleet Dispatch API",
 )
 
-# Webhook sender initialization
-webhook_sender = webhook_sender.WebhookSender(
-    base_url=os.getenv('NEXTJS_BASE_URL') or 'http://localhost:3000/api', 
-    secret_key=os.getenv('WEBHOOK_SECRET_KEY')
-)
-
-async def send_webhook_background(event: str, data: Dict[str, Any]):
-    await webhook_sender.send_webhook(event, data)
-
-# Webhook endpoints
-@app.post("/api/webhooks/check", tags=["Webhooks"])
-async def check_webhook(event: str, data: Dict[str, Any]):
-    await send_webhook_background(event, data)
-    return {"status": "success"}
-
-# This is not going to work the way I think it will. 
-@app.post("/api/webhooks/{load_id}", tags=["Webhooks"])
-async def update_load(load, background_tasks: BackgroundTasks):
-    webhook_data = {
-        "id": load.id,
-        "assigned_driver": load.assigned_driver,
-        "assigned_truck": load.assigned_truck,
-        "assigned_trailer": load.assigned_trailer
-    }
-
-    background_tasks.add_task(send_webhook_background, "load_assigned", webhook_data)
-    return {"status": "success"}
-
+# Webhook endpoint
+@app.post("/api/ai/receive-webhook", tags=["AI"])
+async def receive_webhook(request: Request):
+    """This is the webhook endpoint that will be used to receive webhooks from the Next.js frontend."""
+    try:
+        payload = await request.json()
+        logger.info(f"Webhook received: {payload.get('event', 'unknown')} at {datetime.now().isoformat()}")
+        return {"status": "received", "message": "Communication received successfully"}
+    except Exception as e:
+        logger.error(f"Error processing webhook: {e}")
+        raise HTTPException(status_code=400, detail="Invalid webhook payload")
+    
 # Health check endpoint
 @app.get("/health", tags=["Health"])
 async def health_check():
@@ -299,6 +284,8 @@ async def assign_order_to_driver(order_id: str, driver_id: str):
     return {"message": f"Order {order_id} assigned to driver {driver_id}"}
 
 
+
+
 # Root endpoint
 @app.get("/", tags=["Root"])
 async def root():
@@ -313,8 +300,7 @@ async def root():
 
 
 if __name__ == "__main__":
-    # Get port from environment or use default
-    port = int(os.getenv("PORT", 3000))
+    port = int(os.getenv("PORT", 8000))
     logger.info("API Documentation available at: http://127.0.0.1:8000/docs")
     
     uvicorn.run(

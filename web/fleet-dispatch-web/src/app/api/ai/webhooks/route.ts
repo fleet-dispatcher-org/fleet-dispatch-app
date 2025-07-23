@@ -1,7 +1,11 @@
 import prisma from "@/prisma/prisma";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import Driver from "@prisma/client";
+import { Driver } from "@prisma/client";
+
+// Import webhook sender
+import { WebhookSender } from './webhookSender.js';
+const webhookSender = new WebhookSender();
 
 export async function POST(req: Request, res: Response) {
     // const session = await auth();
@@ -46,6 +50,14 @@ export async function POST(req: Request, res: Response) {
                 console.log(`Unknown event: ${payload.event}`);
                 return new Response('Unknown event type', { status: 400 });
             
+            }
+
+            // Forward webhook to backend This uses the queryWebhook function in the webhookSender.js file.
+            try {
+                const response = await webhookSender.queryWebhook(payload.data);
+                console.log(`Webhook forwarded to backend: ${payload.event}`, response);
+            } catch (error) {
+                console.error(`Failed to forward webhook to backend: ${error}`);
             }
 
             return NextResponse.json({ message: "Success" }, { status: 200 });
