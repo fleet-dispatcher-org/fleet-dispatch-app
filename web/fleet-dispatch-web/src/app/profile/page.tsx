@@ -11,6 +11,7 @@ import MiniTrucksBoard from "../components/MiniTrucksBoard";
 import DriverLoads from "../components/DriverLoadsClient";
 import { User } from "@prisma/client";
 import DriverLoadsWrapper from "../components/DriverLoadsWrapper";
+import { Helmet } from "react-helmet";
 
 
 export default async function Profile() {

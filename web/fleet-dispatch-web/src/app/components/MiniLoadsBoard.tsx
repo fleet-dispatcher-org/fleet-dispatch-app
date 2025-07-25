@@ -97,6 +97,8 @@ export default function MiniLoadsBoard() {
                                     load.status === 'IN_PROGRESS' ? 'bg-blue-800 text-blue-200' :
                                     load.status === 'PENDING' ? 'bg-yellow-800 text-yellow-200' :
                                     load.status === 'TERMINATED' ? 'bg-red-800 text-red-200' :
+                                    load.status === 'SUGGESTED' ? 'bg-purple-800 text-purple-200' :
+                                    load.status === 'REQUESTED' ? 'bg-pink-800 text-pink-200' :
                                     'bg-gray-800 text-gray-200'
                                 }`}>
                                     {load.status}

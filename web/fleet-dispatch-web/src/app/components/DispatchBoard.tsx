@@ -73,9 +73,13 @@ export default function DispatchBoard() {
                 throw new Error('Failed to fetch loads');
             }
 
-            const data = await response.json();
+            const data = await (await response.json()).filter((item: { status: string; })  => 
+                ['PENDING', 'IN_PROGRESS', 'REQUESTED'].includes(item.status)
+            );
             const driverIds = new Set<string>((data || []).map((load: Load) => load.assigned_driver));
             
+            
+
             driverIds.forEach((id: string) => {if(id) {
                 getDriverName(id)
             }});
@@ -390,9 +394,13 @@ export default function DispatchBoard() {
                                                         load.status === 'DELIVERED' ? 'bg-green-800 text-green-200' :
                                                         load.status === 'IN_PROGRESS' ? 'bg-blue-800 text-blue-200' :
                                                         load.status === 'PENDING' ? 'bg-yellow-800 text-yellow-200' :
-                                                        load.status === 'TERMINATED' ? 'bg-red-800 text-red-200' : 'bg-gray-800 text-gray-200'}`}
+                                                        load.status === 'TERMINATED' ? 'bg-red-800 text-red-200' :
+                                                        load.status === 'REQUESTED' ? 'bg-pink-800 text-pink-200' : 
+                                                        'bg-gray-800 text-gray-200'}`}
                                                 >
                                                 <option value="TERMINATED">TERMINATED</option>
+                                                <option value="SUGGESTED">SUGGESTED</option>
+                                                <option value="REQUESTED">REQUESTED</option>
                                                 <option value="IN_PROGRESS">IN PROGRESS</option>
                                                 <option value="PENDING">PENDING</option> 
                                                 <option value="DELIVERED">DELIVERED</option>   

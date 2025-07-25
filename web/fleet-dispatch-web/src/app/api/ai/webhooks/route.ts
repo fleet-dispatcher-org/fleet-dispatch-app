@@ -10,9 +10,9 @@ const webhookSender = new WebhookSender();
 
 export async function POST(req: Request, res: Response) {
     const session = await auth();
-    if (!session) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+    // if (!session) {
+    //     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    // }
 
     try {
         const payload = await req.json();

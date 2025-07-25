@@ -85,10 +85,10 @@ export default function AdminDashboardContent() {
 
             const data = await response.json();
             
-            // Update the local state
+            // Update the local state - change data.user.role to data.role
             setUsers(prevUsers => 
                 prevUsers.map(user => 
-                    user.id === userId ? { ...user, role: data.user.role } : user
+                    user.id === userId ? { ...user, role: data.role } : user
                 )
             );
             
@@ -100,7 +100,6 @@ export default function AdminDashboardContent() {
             setUpdatingUserId(null);
         }
     };
-
     const getRoleBadgeColor = (role: Role): string => {
         switch (role) {
             case 'ADMIN': return 'bg-red-100 text-red-800 border-red-200';
@@ -313,6 +312,13 @@ export default function AdminDashboardContent() {
                         <div className="text-gray-500">No users found</div>
                     </div>
                 )}
+            </div>
+            <div>
+                <Link
+                    href="../profile"
+                    className='text-white hover:text-gray-300 hover:underline hover:cursor-pointer mb-4'>
+                        Back to Profile &rarr; 
+                </Link>
             </div>
 
             {/* Refresh Button */}
