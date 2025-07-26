@@ -1,17 +1,24 @@
-"use client";
-import { useEffect } from "react";
 import DispatchBoard from "../components/DispatchBoard";
 import AIBoard from "../components/AIBoard";
+import UnassignedBoardMini from "../components/UnassignedBoardMini";
+import { Metadata } from 'next'
+import UnassignedDrivers from "../components/UnassignedDrivers";
+
+export const metadata: Metadata = {
+  title: 'Dispatcher Dashboard',
+}
 
 export default function Dispatcher() {
-    useEffect(() => {
-        document.title = "Dispatcher Dashboard";
-    })
     return (
     <main>
     <DispatchBoard />
     <AIBoard
     />
+    <div className="flex flex-row">
+    <UnassignedBoardMini
+    />
+    <UnassignedDrivers/>
+    </div>
     </main>
 );
 }

@@ -106,3 +106,269 @@ INSERT INTO "CustomerRequest" (id, origin, destination, status) VALUES
 ('cm4s4x5y6z7a8b9c0d1e2f3g', 'Sacramento, CA', 'Fresno, CA', 'REQUESTED'),
 ('cm4s5x6y7z8a9b0c1d2e3f4g', 'Birmingham, AL', 'Montgomery, AL', 'PENDING');
 
+-- Insert suggested loads with AI-suggested driver, truck, and trailer assignments
+INSERT INTO "Load" (
+    id, 
+    origin, 
+    destination, 
+    weight, 
+    due_by, 
+    status, 
+    assigned_driver, 
+    assigned_trailer, 
+    assigned_truck, 
+    percent_complete, 
+    is_active
+) VALUES 
+-- Load 1: Chicago to Atlanta
+(
+    'mdf5l5olyyw3i79s18',
+    'Chicago, IL',
+    'Atlanta, GA',
+    25000.50,
+    '2025-07-25 14:00:00',
+    'SUGGESTED',
+    'cm4l6x7y8z9a0b1c2d3e4f5g', -- Sandra Lopez
+    'cm4t1y2z3a4b5c6d7e8f9g0h', -- Great Dane Freedom 2023
+    'cm4n5x6y7z8a9b0c1d2e3f4g', -- Freightliner Columbia 2023
+    0,
+    true
+),
+
+-- Load 2: Los Angeles to Dallas
+(
+    'mdf5klurgpjuwpdheqk',
+    'Los Angeles, CA',
+    'Dallas, TX',
+    32500.75,
+    '2025-07-26 16:30:00',
+    'SUGGESTED',
+    'cm4l5x6y7z8a9b0c1d2e3f4g', -- Thomas Anderson
+    'cm4t3x4y5z6a7b8c9d0e1f2g', -- Wabash National 2023
+    'cm4m7x8y9z0a1b2c3d4e5f6g', -- International LT625 2023
+    0,
+    true
+),
+
+-- Load 3: Miami to New York
+(
+    'mdf5llmbp0n3f8io4i',
+    'Miami, FL',
+    'New York, NY',
+    18750.25,
+    '2025-07-27 10:00:00',
+    'SUGGESTED',
+    'cm4l4x5y6z7a8b9c0d1e2f3g', -- Rachel Green
+    'cm4t7x8y9z0a1b2c3d4e5f6g', -- Utility 3000R 2023
+    'cm4m3x4y5z6a7b8c9d0e1f2g', -- Freightliner Cascadia 2023
+    0,
+    true
+),
+
+-- Load 4: Denver to Seattle
+(
+    'mdf5lvjgoxfm9678hij',
+    'Denver, CO',
+    'Seattle, WA',
+    28900.00,
+    '2025-07-28 12:45:00',
+    'SUGGESTED',
+    'cm4l3x4y5z6a7b8c9d0e1f2g', -- James Miller
+    'cm4t4y5z6a7b8c9d0e1f2g3h', -- Hyundai Steel 2022
+    'cm4n1x2y3z4a5b6c7d8e9f0g', -- Mack Pinnacle 2023
+    0,
+    true
+),
+
+-- Load 5: Phoenix to Houston
+(
+    'mdf5m66pr72gzbqkprq',
+    'Phoenix, AZ',
+    'Houston, TX',
+    22300.80,
+    '2025-07-29 09:15:00',
+    'SUGGESTED',
+    'cm4l2x3y4z5a6b7c8d9e0f1g', -- Nicole Davis
+    'cm4t5x6y7z8a9b0c1d2e3f4g', -- Stoughton Composite 2022
+    'cm4m1x2y3z4a5b6c7d8e9f0g', -- Peterbilt 579 2022
+    0,
+    true
+),
+
+-- Load 6: Boston to Chicago
+(
+    'mdf5mg48ogpg6y72frg',
+    'Boston, MA',
+    'Chicago, IL',
+    31200.45,
+    '2025-07-30 15:20:00',
+    'SUGGESTED',
+    'cm4l1x2y3z4a5b6c7d8e9f0g', -- Kevin Brown
+    'cm4t9x0y1z2a3b4c5d6e7f8g', -- Hyundai Composite 2022
+    'cm4m5x6y7z8a9b0c1d2e3f4g', -- Mack Anthem 2022
+    0,
+    true
+),
+
+-- Load 7: Nashville to Portland
+(
+    'mdf5mwdeva73m8kx5f',
+    'Nashville, TN',
+    'Portland, OR',
+    26800.90,
+    '2025-07-31 11:30:00',
+    'SUGGESTED',
+    'cm4k0x1y2z3a4b5c6d7e8f9g', -- Amanda White
+    'cm4t1x2y3z4a5b6c7d8e9f0g', -- Great Dane Everest 2022
+    'cm4m9x0y1z2a3b4c5d6e7f8g', -- Freightliner Coronado 2022
+    0,
+    true
+),
+
+-- Load 8: Las Vegas to Kansas City
+(
+    'mdf5n66zhrj7eek9vqf',
+    'Las Vegas, NV',
+    'Kansas City, MO',
+    19850.60,
+    '2025-08-01 13:45:00',
+    'SUGGESTED',
+    'cm4k9x0y1z2a3b4c5d6e7f8g', -- Carlos Martinez
+    'cm4t6x7y8z9a0b1c2d3e4f5g', -- Great Dane Champion 2021
+    'cm4n3x4y5z6a7b8c9d0e1f2g', -- International ProStar 2022
+    0,
+    true
+),
+
+-- Load 9: Detroit to Tampa
+(
+    'mdf5nesqydhry0rxle',
+    'Detroit, MI',
+    'Tampa, FL',
+    24700.35,
+    '2025-08-02 08:00:00',
+    'SUGGESTED',
+    'cm4k8x9y0z1a2b3c4d5e6f7g', -- Jennifer Taylor
+    'cm4t3y4z5a6b7c8d9e0f1g2h', -- Wabash Arctic 2021
+    'cm4m2x3y4z5a6b7c8d9e0f1g', -- Kenworth T680 2021
+    0,
+    true
+),
+
+-- Load 10: San Antonio to Minneapolis
+(
+    'mdf5npeg4dfrz4c4lpp',
+    'San Antonio, TX',
+    'Minneapolis, MN',
+    33100.15,
+    '2025-08-03 17:30:00',
+    'SUGGESTED',
+    'cm4k7x8y9z0a1b2c3d4e5f6g', -- Robert Wilson
+    'cm4t2x3y4z5a6b7c8d9e0f1g', -- Utility 4000DX 2021
+    'cm4m6x7y8z9a0b1c2d3e4f5g', -- Peterbilt 389 2021
+    0,
+    true
+),
+
+-- Load 11: Sacramento to Memphis
+(
+    'mdf5ny621j73f7niq0x',
+    'Sacramento, CA',
+    'Memphis, TN',
+    27650.70,
+    '2025-08-04 14:15:00',
+    'SUGGESTED',
+    'cm4k6x7y8z9a0b1c2d3e4f5g', -- Maria Santos
+    'cm4t0x1y2z3a4b5c6d7e8f9g', -- Stoughton Steel 2021
+    'cm4m0x1y2z3a4b5c6d7e8f9g', -- Volvo VNL740 2021
+    0,
+    true
+),
+
+-- Load 12: Salt Lake City to Jacksonville
+(
+    'mdf5o6r335pvdt93nsn',
+    'Salt Lake City, UT',
+    'Jacksonville, FL',
+    29400.50,
+    '2025-08-05 10:45:00',
+    'SUGGESTED',
+    'cm4k5x6y7z8a9b0c1d2e3f4g', -- David Chen
+    'cm4t5y6z7a8b9c0d1e2f3g4h', -- Stoughton Composite 2020
+    'cm4n4x5y6z7a8b9c0d1e2f3g', -- Kenworth T880 2021
+    0,
+    true
+);
+
+-- Optional: Add some loads with different weight categories for variety
+INSERT INTO "Load" (
+    id, 
+    origin, 
+    destination, 
+    weight, 
+    due_by, 
+    status, 
+    assigned_driver, 
+    assigned_trailer, 
+    assigned_truck, 
+    percent_complete, 
+    is_active
+) VALUES 
+-- Load 13: Light load
+(
+    'mdf5oi1lpra6lslenzq',
+    'Reno, NV',
+    'Boise, ID',
+    8500.25,
+    '2025-08-06 16:00:00',
+    'SUGGESTED',
+    'cm4k4x5y6z7a8b9c0d1e2f3g', -- Lisa Rodriguez
+    'cm4t4x5y6z7a8b9c0d1e2f3g', -- Hyundai Translead 2020
+    'cm4n2x3y4z5a6b7c8d9e0f1g', -- Peterbilt 567 2020
+    0,
+    true
+),
+
+-- Load 14: Heavy load
+(
+    'mdf5opz0yqs59x9eosn',
+    'Pittsburgh, PA',
+    'Phoenix, AZ',
+    39750.80,
+    '2025-08-07 12:00:00',
+    'SUGGESTED',
+    'cm4k3x4y5z6a7b8c9d0e1f2g', -- Mike Johnson
+    'cm4t8x9y0z1a2b3c4d5e6f7g', -- Wabash DuraPlate 2020
+    'cm4m4x5y6z7a8b9c0d1e2f3g', -- Volvo VNL860 2020
+    0,
+    true
+),
+
+-- Load 15: Urgent delivery
+(
+    'mdf5p1fbfcf3tjm050c',
+    'Charlotte, NC',
+    'San Diego, CA',
+    21900.45,
+    '2025-07-24 18:00:00', -- Earlier due date for urgency
+    'SUGGESTED',
+    'cm4l6x7y8z9a0b1c2d3e4f5g', -- Sandra Lopez (experienced driver)
+    'cm4t2y3z4a5b6c7d8e9f0g1h', -- Utility 4000D 2020
+    'cm4m8x9y0z1a2b3c4d5e6f7g', -- Kenworth W990 2020
+    0,
+    true
+);
+
+INSERT INTO "Load" (id, origin, destination, weight, due_by, status, started_at, assigned_driver, assigned_trailer, assigned_truck, percent_complete, is_active, assigned_fleet) VALUES
+('cm5a1b2c3d4e5f6g7h8i9j0k', 'Miami, FL', 'Tampa, FL', 18500.75, '2024-07-20 09:00:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5a2b3c4d5e6f7g8h9i0j1k', 'San Diego, CA', 'Sacramento, CA', 32200.50, '2024-07-21 15:30:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5a3b4c5d6e7f8g9h0i1j2k', 'Austin, TX', 'San Antonio, TX', 24750.25, '2024-07-22 12:00:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5a4b5c6d7e8f9g0h1i2j3k', 'Kansas City, MO', 'St. Louis, MO', 28900.80, '2024-07-23 16:45:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5a5b6c7d8e9f0g1h2i3j4k', 'Milwaukee, WI', 'Madison, WI', 19350.60, '2024-07-24 11:15:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5a6b7c8d9e0f1g2h3i4j5k', 'Baltimore, MD', 'Richmond, VA', 26450.90, '2024-07-25 14:20:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5a7b8c9d0e1f2g3h4i5j6k', 'Indianapolis, IN', 'Louisville, KY', 21800.45, '2024-07-26 10:30:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5a8b9c0d1e2f3g4h5i6j7k', 'Albuquerque, NM', 'Tucson, AZ', 33100.70, '2024-07-27 13:45:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5a9b0c1d2e3f4g5h6i7j8k', 'Buffalo, NY', 'Syracuse, NY', 17650.35, '2024-07-28 08:00:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5a0b1c2d3e4f5g6h7i8j9k', 'Raleigh, NC', 'Greensboro, NC', 22900.55, '2024-07-29 17:30:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5b1c2d3e4f5g6h7i8j9k0l', 'Oklahoma City, OK', 'Tulsa, OK', 25300.85, '2024-07-30 12:15:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
+('cm5b2c3d4e5f6g7h8i9j0k1l', 'Salt Lake City, UT', 'Provo, UT', 20100.40, '2024-07-31 15:45:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g');

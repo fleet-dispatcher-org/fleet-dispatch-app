@@ -32,9 +32,6 @@ export async function GET() {
             orderBy: {
             started_at: 'desc'
             },
-            where: {
-                is_active: true
-            }
         });
 
         return NextResponse.json(loads);
