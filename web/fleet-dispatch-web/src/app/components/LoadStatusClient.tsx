@@ -45,13 +45,18 @@ export default function LoadStatusClient({ loadId, initialStatus }: Props) {
                     ${
                         status === 'DELIVERED' ? 'bg-green-800 text-green-200' :
                         status === 'IN_PROGRESS' ? 'bg-blue-800 text-blue-200' :
+                        status === 'SUGGESTED' ? 'bg-purple-800 text-purple-200' :
                         status === 'PENDING' ? 'bg-yellow-800 text-yellow-200' :
-                        status === 'TERMINATED' ? 'bg-red-800 text-red-200' : 'bg-gray-800 text-gray-200'}`}
+                        status === 'UNASSIGNED' ? 'bg-gray-800 text-gray-200' :
+                        status === 'TERMINATED' ? 'bg-red-800 text-red-200' : 
+                        'bg-gray-800 text-gray-200'}`}
                 onChange={(e) => updateLoadStatus(loadId, e.target.value)}>
                     <option value="PENDING" className="bg-white text-black">Pending</option>
                     <option value="IN_PROGRESS" className="bg-white text-black">In Progress</option>
                     <option value="TERMINATED" className="bg-white text-black">Terminated</option>
                     <option value="DELIVERED" className="bg-white text-black">Delivered</option>
+                    <option value="SUGGESTED" className='bg-white text-black'>Suggested</option>
+                    <option value="UNASSIGNED" className='bg-white text-black'>Unassigned</option>
             </select>
         </div>
     </div>

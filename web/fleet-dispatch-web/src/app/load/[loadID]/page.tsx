@@ -9,6 +9,7 @@ import LoadStatusWrapper from "../../components/LoadStatusWrapper";
 import { get } from "http";
 import HalfCircleProgress from "../../components/HalfCircleProgress";
 import Link from "next/link";
+import AcceptDenyLoad from "../../components/AcceptDenyLoad";
 
 interface LoadViewProps {
     params: Promise<{
@@ -328,12 +329,18 @@ export default async function Page({ params }: any) {
                         <LoadStatusWrapper loadId={load.id} />
                     </Suspense>
                 </div>
+                {/* Accept/Deny Load Section */}
+                { load.status === "SUGGESTED" &&
+                    <AcceptDenyLoad loadId={load.id}></AcceptDenyLoad>
+                }
                 <Link 
                     href={`/dispatcher`}
                     className="group"
                 >
                 <p className="text-sm font-medium text-gray-400 hover:text-gray-200 hover:underline transition-colors duration-300" >Back to Loads &rarr;</p>
                 </Link>
+                
+                
             </main>
         </div>
     )

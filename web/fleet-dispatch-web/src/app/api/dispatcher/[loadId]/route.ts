@@ -3,23 +3,26 @@ import { auth } from '@/auth'
 import prisma from '@/prisma/prisma'
 
 interface RouteParams {
-        params: { 
-            loadId: string,
-         };
-    }
+    params: { 
+        loadId: string,
+    };
+}
 
-export async function PATCH(request: NextRequest) {
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+    
     try {
         const session = await auth();
-        if(!session || session.user?.role != "DISPATCHER" ) 
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-        const searchParams = new URL(request.url).searchParams;
+        console.log('Session:', session); // Add this
         
-        // This might not be the best way to ensure this isnt null
-        const loadId = searchParams.get('loadId') as string;
+        if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") {
+            console.log('Unauthorized access attempt'); // Add this
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+        
+        const { loadId } = await params;
+        
         const body = await request.json();
         
-
         const updatedLoad = await prisma.load.update({
             where: { id: loadId },
             data: body,

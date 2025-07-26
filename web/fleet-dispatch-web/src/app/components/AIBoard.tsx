@@ -221,7 +221,6 @@ export default function AIBoard() {
         );
     }
 
-    console.log(suggestedLoads);
     return (
         <div className="max-w-7xl mx-auto p-6 mt-4">
             <div className="bg-gray-900 shadow rounded-lg overflow-hidden">
@@ -259,7 +258,7 @@ export default function AIBoard() {
                                 Due Date
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Actions
+                                View Actions
                             </th>
                         </tr>
                     </thead>
@@ -297,28 +296,12 @@ export default function AIBoard() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex flex-col space-y-2">
-                                        <button
-                                            className="px-3 py-1 text-xs border border-gray-400 rounded-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                                            disabled={updatingLoadId === load.id}
-                                            onClick={() => {
-                                                                if (load.assigned_driver && load.assigned_truck && load.assigned_trailer) {
-                                                                    acceptLoad(load.id, "PENDING", load.assigned_driver, load.assigned_truck, load.assigned_trailer);
-                                                                } else {
-                                                                    // Handle the case where assignments are missing
-                                                                    console.error("Cannot accept load: missing driver, truck, or trailer assignment");
-                                                                    setError("Cannot accept load: missing driver, truck, or trailer assignment");
-                                                                }
-                                                            }}
+                                        <Link 
+                                            href={`/load/${load.id}`}
+                                            className="text-sm font-medium text-gray-300 hover:underline hover:cursor-pointer"
                                         >
-                                            {updatingLoadId === load.id ? 'Processing...' : 'Accept'}
-                                        </button>
-                                        <button
-                                            className="px-3 py-1 text-xs border border-gray-400 rounded-full bg-red-600 hover:bg-red-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                                            disabled={updatingLoadId === load.id}
-                                            onClick={() => rejectLoad(load.id, "SUGGESTED")}
-                                        >
-                                            {updatingLoadId === load.id ? 'Processing...' : 'Deny'}
-                                        </button>
+                                            View
+                                        </Link>
                                     </div>
                                 </td>
                             </tr>

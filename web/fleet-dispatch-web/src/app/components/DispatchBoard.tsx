@@ -106,37 +106,40 @@ export default function DispatchBoard() {
     }
 
     const updateLoad = async (loadId: string, newStatus: string) => {
-        setUpdatingLoadId(loadId);
-        try {
-            const response = await fetch(`/api/dispatcher/loads/${loadId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    status: newStatus
-                })
+    setUpdatingLoadId(loadId);
+    try {
+        const response = await fetch(`/api/dispatcher/${loadId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id: loadId,
+                status: newStatus
             })
-            if (!response.ok) {
-                throw new Error('Failed to update load');
-            }
-            setLoads(prevLoads =>
-                prevLoads.map(load =>
-                    load.id === loadId ? { ...load, status: newStatus as Status } : load
-                )
-            )
-            alert("Load status updated successfully!");
-
-        } catch (err) {
-            console.error('Error updating load:', err);
-            alert('Failed to update load');
-        } finally {
-            if (updatingLoadId === loadId) {
-                setUpdatingLoadId(null);
-            }
+        })
+        
+        if (!response.ok) {
+            // Get the actual error message from the API
+            const errorData = await response.json();
+            console.error('API Error:', errorData);
+            throw new Error(`HTTP ${response.status}: ${errorData.message || 'Failed to update load'}`);
         }
+        
+        setLoads(prevLoads =>
+            prevLoads.map(load =>
+                load.id === loadId ? { ...load, status: newStatus as Status } : load
+            )
+        )
+        alert("Load status updated successfully!");
+
+    } catch (err) {
+        console.error('Error updating load:', err);
+        alert(`Failed to update load: ${err}`); // Show the actual error
+    } finally {
         setUpdatingLoadId(null);
     }
+}
 
     const getDriverName = async (driverId: string) => {
         try {
@@ -399,8 +402,8 @@ export default function DispatchBoard() {
                                                         'bg-gray-800 text-gray-200'}`}
                                                 >
                                                 <option value="TERMINATED">TERMINATED</option>
-                                                <option value="SUGGESTED">SUGGESTED</option>
-                                                <option value="REQUESTED">REQUESTED</option>
+                                                <option value="SUGGESTED" hidden={true}>SUGGESTED</option>
+                                                <option value="REQUESTED" hidden={true}>REQUESTED</option>
                                                 <option value="IN_PROGRESS">IN PROGRESS</option>
                                                 <option value="PENDING">PENDING</option> 
                                                 <option value="DELIVERED">DELIVERED</option>   
