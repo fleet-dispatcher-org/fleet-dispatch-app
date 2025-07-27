@@ -2,92 +2,105 @@ import csv
 import os
 from agents import function_tool
 from logger import log_tool_call, log_tool_result, log_error
-import webhook_sender
 from typing import Optional, Dict, Any
+import math
+from datetime import datetime, timedelta
+import pandas as pd
 
-orders = []
-CSV_FILE_PATH = "backend/orders.csv"  # Centralized file path
 
-def save_orders_to_csv(file_path: str = CSV_FILE_PATH):
-    """Save the current orders list to CSV file."""
-    global orders
-    try:
-        if not orders:
-            log_tool_result("save_orders_to_csv", "No orders to save")
-            return
-            
-        # Get the fieldnames from the first order
-        fieldnames = list(orders[0].keys()) if orders else []
-        
-        with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(orders)
-            
-        log_tool_result("save_orders_to_csv", f"Saved {len(orders)} orders to {file_path}")
-        
-    except Exception as e:
-        log_error(e, "save_orders_to_csv")
-        raise
 
-# Read CSV and parse orders
-@function_tool
-def read_orders_from_csv(file_path: str = CSV_FILE_PATH):
-    """Reads orders from a CSV file and stores them in the global orders list."""
-    global orders
-    log_tool_call("read_orders_from_csv", {"file_path": file_path})
-    
-    orders = []  # Reset orders to avoid duplicates
+@function_tool  
+def hrs_min_sec(hour_of_day: float) -> str:
+    """Convert decimal hour to HH:MM:SS format."""
+    log_tool_call("hrs_min_sec", {"hour_of_day": hour_of_day})
     
     try:
-        with open(file_path, newline='', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                orders.append(row)
-        
-        result = f"Successfully loaded {len(orders)} orders from {file_path}"
-        log_tool_result("read_orders_from_csv", result)
-        return orders
-        
-    except FileNotFoundError:
-        error_msg = f"Error: Could not find orders file at {file_path}"
-        log_tool_result("read_orders_from_csv", error_msg)
-        return error_msg
+        if 0 <= hour_of_day <= 24:
+            hours = math.floor(hour_of_day)
+            minutes = math.floor((hour_of_day % 1) * 60)
+            result = f"{hours:02d}:{minutes:02d}:00"
+            log_tool_result("hrs_min_sec", result)
+            return result
+        else:
+            result = "Invalid Hour: Input # between 0 and 24"
+            log_tool_result("hrs_min_sec", result)
+            return result
     except Exception as e:
-        error_msg = f"Error reading orders: {str(e)}"
-        log_error(e, "read_orders_from_csv")
+        error_msg = f"Error converting hour format: {str(e)}"
+        log_error(e, "hrs_min_sec")
         return error_msg
 
 @function_tool
-def delete_order(order_id: str) -> str:
-    """Deletes an order by its number order from both memory and the CSV file."""
-    global orders
-    log_tool_call("delete_order", {"order_id": order_id})
+def trip_schedule(start_time: float, distance: float, ave_speed: float) -> Dict[str, Any]:
+    """Calculate trip schedule with DOT compliance breaks for a given distance and speed."""
+    log_tool_call("trip_schedule", {
+        "start_time": start_time, 
+        "distance": distance, 
+        "ave_speed": ave_speed
+    })
     
-    # If orders list is empty, try to load from CSV first
-    if not orders:
-        read_orders_from_csv()
-    
-    initial_len = len(orders)
-    orders = [order for order in orders if order.get("Order #") != order_id]
-    
-    if len(orders) < initial_len:
-        # Save the updated orders back to CSV file
-        try:
-            save_orders_to_csv()
-            result = f"Order {order_id} deleted successfully and saved to file."
-        except Exception as e:
-            result = f"Order {order_id} deleted from memory but failed to save to file: {str(e)}"
-    else:
-        result = f"Order {order_id} not found."
-    
-    log_tool_result("delete_order", result)
-    return result
-@function_tool
-def send_webhook(event: str, data: Dict[str, Any]):
-    return webhook_sender.send_webhook(event, data)
-    
+    try:
+        total_road_hours = distance / ave_speed
 
-@function_tool
-def query_webhook(data: Dict[str, Any]):
-    return webhook_sender.query_webhook(data)
+        # Calculate the total number of full-day drive sections:
+        total_full_drive_legs = math.floor(total_road_hours / 11)
+        # Calculate the total number of drive legs including the last leg < 11 hrs
+        total_drive_legs = math.ceil(total_road_hours / 11)
+        # Calculate the number of hours required on the last day's leg
+        last_work_day_hours = (total_road_hours % 11) * (total_road_hours != 11) + 11 * (total_road_hours == 11)
+
+        # Set graph parameters
+        start_times = [(start_time + 21.5 * i) % 24 for i in range(total_drive_legs)]
+        n = len(start_times)
+
+        # Create a list of datetimes for the schedule
+        start_datetime = datetime.now().replace(
+            hour=int(start_time), 
+            minute=int((start_time % 1) * 60), 
+            second=0, 
+            microsecond=0
+        )
+        datetimes = [start_datetime + timedelta(hours=21.5 * i) for i in range(n)]
+
+        # Create lists of datetime stamps for each event
+        start_times_dt = [datetimes[i] for i in range(n)]
+        half_hour_break_times_dt = [datetimes[i] + timedelta(hours=3) for i in range(n)]
+        ten_hour_break_times_dt = [datetimes[i] + timedelta(hours=11.5) if i < n-1 else None for i in range(n)]
+        
+        # Adjust the last half_hour_break_time for the last work day
+        half_hour_break_times_dt[-1] = datetimes[-1] + timedelta(hours=last_work_day_hours)
+        ten_hour_break_times_dt[-1] = None
+
+        schedule_data = {
+            "datetimes": [dt.strftime("%Y-%m-%d %H:%M:%S") for dt in datetimes],
+            "start_times": [dt.strftime("%Y-%m-%d %H:%M:%S") for dt in start_times_dt],
+            "half_hour_break_times": [dt.strftime("%Y-%m-%d %H:%M:%S") for dt in half_hour_break_times_dt],
+            "ten_hour_break_times": [dt.strftime("%Y-%m-%d %H:%M:%S") if dt is not None else None for dt in ten_hour_break_times_dt],
+            "last_work_day_hours": last_work_day_hours,
+            "total_road_hours": total_road_hours,
+            "total_full_drive_legs": total_full_drive_legs,
+            "total_drive_legs": total_drive_legs
+        }
+        
+        # Create a trip table with just the first start time and the final end time
+        trip_summary = {
+            "start_time": datetimes[0].strftime("%Y-%m-%d %H:%M:%S"),
+            "end_time": (datetimes[-1] + timedelta(hours=last_work_day_hours)).strftime("%Y-%m-%d %H:%M:%S"),
+            "total_hours": total_road_hours,
+            "total_days": total_drive_legs
+        }
+        
+        result = {
+            "schedule": schedule_data,
+            "trip_summary": trip_summary
+        }
+        
+        log_tool_result("trip_schedule", f"Generated schedule for {distance} mile trip at {ave_speed} mph")
+        return result
+        
+    except Exception as e:
+        error_msg = f"Error calculating trip schedule: {str(e)}"
+        log_error(e, "trip_schedule")
+        return {"error": error_msg}
+
+
