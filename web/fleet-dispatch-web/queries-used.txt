@@ -1,5 +1,5 @@
 -- ========================================
--- COMPLETE LOGISTICS DATABASE DUMMY DATA
+-- CORRECTED LOGISTICS DATABASE DUMMY DATA
 -- ========================================
 
 -- Insert Fleet first (required for Users, Drivers, Trucks, etc.)
@@ -26,7 +26,7 @@ INSERT INTO "User" (id, name, email, role, "createdAt", "updatedAt", assigned_fl
 ('cm4l6x7y8z9a0b1c2d3e4f5g', 'Sandra Lopez', 'sandra.l@logistics.com', 'DRIVER', '2024-04-05 08:30:00', '2024-04-05 08:30:00', 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 ('cm4l7x8y9z0a1b2c3d4e5f6g', 'Daniel Thompson', 'daniel.t@logistics.com', 'DRIVER', '2024-04-10 09:30:00', '2024-04-10 09:30:00', 'cm4f1x2y3z4a5b6c7d8e9f0g');
 
--- Insert Trucks (all columns populated) - Updated with fleet assignment
+-- Insert Trucks (corrected column names and removed non-existent fields)
 INSERT INTO "Truck" (id, license_plate, make, model, year, capacity_tons, mileage, is_active, current_location, assigned_driver, driver_id, assigned_trailer, trailer_id, created_at, assigned_fleet_id) VALUES
 ('cm4m1x2y3z4a5b6c7d8e9f0g', 'TRK001CA', 'Peterbilt', '579', 2022, 40.00, 125000, true, 'Los Angeles, CA', true, 'cm4k3x4y5z6a7b8c9d0e1f2g', true, 'cm4t1x2y3z4a5b6c7d8e9f0g', '2024-01-10 08:00:00', 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 ('cm4m2x3y4z5a6b7c8d9e0f1g', 'TRK002TX', 'Kenworth', 'T680', 2021, 42.50, 178000, true, 'Houston, TX', true, 'cm4k4x5y6z7a8b9c0d1e2f3g', true, 'cm4t2x3y4z5a6b7c8d9e0f1g', '2024-01-12 09:00:00', 'cm4f1x2y3z4a5b6c7d8e9f0g'),
@@ -62,26 +62,25 @@ INSERT INTO "Trailer" (id, assigned_truck_id, current_location, has_registration
 ('cm4t4y5z6a7b8c9d0e1f2g3h', 'cm4n2x3y4z5a6b7c8d9e0f1g', 'Louisville, KY', true, true, true, true, 'Hyundai', 'Steel', 2022, 80200.00, 29450.85, 'TRL014KY', '2025-08-31', '2024-03-18', '2025-03-18', '{}', 'cm4f1x2y3z4a5b6c7d8e9f0g', true),
 ('cm4t5y6z7a8b9c0d1e2f3g4h', 'cm4n4x5y6z7a8b9c0d1e2f3g', 'Birmingham, AL', true, true, false, false, 'Stoughton', 'Composite', 2020, 78800.00, 16890.45, 'TRL015AL', '2025-07-15', '2024-02-22', '2025-02-22', '{"OVERSIZE"}', 'cm4f1x2y3z4a5b6c7d8e9f0g', true);
 
--- Insert Drivers (all columns populated) - Updated with correct User IDs
-INSERT INTO "Driver" (id, first_name, last_name, license_number, license_expiration, license_class, current_location, in_range, is_available, driver_reports_ready, has_home_need, assigned_truck_id, phone_number, emergency_contact, emergency_contact_phone, hours_driven_today, hours_driven_week, last_rest_period, certifications, drug_test_current, employment_status, hire_date) VALUES
-('cm4k3x4y5z6a7b8c9d0e1f2g', 'Mike', 'Johnson', 'CDL123456789', '2026-08-15', 'A', 'Los Angeles, CA', true, false, true, false, 'cm4m1x2y3z4a5b6c7d8e9f0g', '555-0101', 'Sarah Johnson', '555-0102', 8, 45, 10, '{"HAZMAT", "PASSENGER"}', true, 'HIRED', '2022-03-15'),
-('cm4k4x5y6z7a8b9c0d1e2f3g', 'Lisa', 'Rodriguez', 'CDL987654321', '2025-12-20', 'A', 'Houston, TX', true, false, true, false, 'cm4m2x3y4z5a6b7c8d9e0f1g', '555-0201', 'Carlos Rodriguez', '555-0202', 6, 38, 8, '{"HAZMAT", "SCHOOL_BUS"}', true, 'HIRED', '2021-07-22'),
-('cm4k5x6y7z8a9b0c1d2e3f4g', 'David', 'Chen', 'CDL456789123', '2026-03-10', 'A', 'Miami, FL', false, true, false, true, 'cm4m3x4y5z6a7b8c9d0e1f2g', '555-0301', 'Linda Chen', '555-0302', 0, 0, 34, '{"HAZMAT"}', true, 'HIRED', '2023-01-08'),
-('cm4k6x7y8z9a0b1c2d3e4f5g', 'Maria', 'Santos', 'CDL789123456', '2025-09-25', 'A', 'New York, NY', false, true, false, false, 'cm4m4x5y6z7a8b9c0d1e2f3g', '555-0401', 'Juan Santos', '555-0402', 0, 0, 12, '{"PASSENGER"}', true, 'HIRED', '2022-11-30'),
-('cm4k7x8y9z0a1b2c3d4e5f6g', 'Robert', 'Wilson', 'CDL321654987', '2026-01-18', 'A', 'Chicago, IL', true, false, true, false, 'cm4m5x6y7z8a9b0c1d2e3f4g', '555-0501', 'Mary Wilson', '555-0502', 9, 52, 11, '{"HAZMAT", "DOUBLE_TRIPLE"}', true, 'HIRED', '2020-05-12'),
-('cm4k8x9y0z1a2b3c4d5e6f7g', 'Jennifer', 'Taylor', 'CDL654987321', '2025-11-08', 'A', 'Seattle, WA', true, false, true, true, 'cm4m6x7y8z9a0b1c2d3e4f5g', '555-0601', 'Tom Taylor', '555-0602', 7, 41, 9, '{"SCHOOL_BUS"}', true, 'HIRED', '2021-09-18'),
--- First, complete the incomplete Carlos Martinez record from the original data
-('cm4k9x0y1z2a3b4c5d6e7f8g', 'Carlos', 'Martinez', 'CDL147258369', '2026-06-12', 'A', 'Denver, CO', false, true, false, false, 'cm4m7x8y9z0a1b2c3d4e5f6g', '555-0701', 'Rosa Martinez', '555-0702', 0, 0, 18, '{"HAZMAT", "PASSENGER"}', true, 'HIRED', '2022-08-14'),
-
+-- Insert Drivers (removing non-existent columns and adding proper relationship)
+INSERT INTO "Driver" (id, first_name, last_name, license_number, license_expiration, license_class, current_location, in_range, is_available, driver_reports_ready, assigned_truck_id, phone_number, emergency_contact, emergency_contact_phone, certifications, drug_test_current, employment_status, hire_date) VALUES
+('cm4k3x4y5z6a7b8c9d0e1f2g', 'Mike', 'Johnson', 'CDL123456789', '2026-08-15', 'A', 'Los Angeles, CA', true, false, true, 'cm4m1x2y3z4a5b6c7d8e9f0g', '555-0101', 'Sarah Johnson', '555-0102', '{"HAZMAT", "PASSENGER"}', true, 'HIRED', '2022-03-15'),
+('cm4k4x5y6z7a8b9c0d1e2f3g', 'Lisa', 'Rodriguez', 'CDL987654321', '2025-12-20', 'A', 'Houston, TX', true, false, true, 'cm4m2x3y4z5a6b7c8d9e0f1g', '555-0201', 'Carlos Rodriguez', '555-0202', '{"HAZMAT", "SCHOOL_BUS"}', true, 'HIRED', '2021-07-22'),
+('cm4k5x6y7z8a9b0c1d2e3f4g', 'David', 'Chen', 'CDL456789123', '2026-03-10', 'A', 'Miami, FL', false, true, false, 'cm4m3x4y5z6a7b8c9d0e1f2g', '555-0301', 'Linda Chen', '555-0302', '{"HAZMAT"}', true, 'HIRED', '2023-01-08'),
+('cm4k6x7y8z9a0b1c2d3e4f5g', 'Maria', 'Santos', 'CDL789123456', '2025-09-25', 'A', 'New York, NY', false, true, false, 'cm4m4x5y6z7a8b9c0d1e2f3g', '555-0401', 'Juan Santos', '555-0402', '{"PASSENGER"}', true, 'HIRED', '2022-11-30'),
+('cm4k7x8y9z0a1b2c3d4e5f6g', 'Robert', 'Wilson', 'CDL321654987', '2026-01-18', 'A', 'Chicago, IL', true, false, true, 'cm4m5x6y7z8a9b0c1d2e3f4g', '555-0501', 'Mary Wilson', '555-0502', '{"HAZMAT", "DOUBLE_TRIPLE"}', true, 'HIRED', '2020-05-12'),
+('cm4k8x9y0z1a2b3c4d5e6f7g', 'Jennifer', 'Taylor', 'CDL654987321', '2025-11-08', 'A', 'Seattle, WA', true, false, true, 'cm4m6x7y8z9a0b1c2d3e4f5g', '555-0601', 'Tom Taylor', '555-0602', '{"SCHOOL_BUS"}', true, 'HIRED', '2021-09-18'),
+('cm4k9x0y1z2a3b4c5d6e7f8g', 'Carlos', 'Martinez', 'CDL147258369', '2026-06-12', 'A', 'Denver, CO', false, true, false, 'cm4m7x8y9z0a1b2c3d4e5f6g', '555-0701', 'Rosa Martinez', '555-0702', '{"HAZMAT", "PASSENGER"}', true, 'HIRED', '2022-08-14');
 -- Continue with remaining Driver inserts
-('cm4k0x1y2z3a4b5c6d7e8f9g', 'Amanda', 'White', 'CDL258369147', '2025-10-30', 'A', 'Phoenix, AZ', true, false, true, false, 'cm4m8x9y0z1a2b3c4d5e6f7g', '555-0801', 'Steve White', '555-0802', 5, 35, 14, '{"DOUBLE_TRIPLE"}', true, 'HIRED', '2021-12-03'),
-('cm4l1x2y3z4a5b6c7d8e9f0g', 'Kevin', 'Brown', 'CDL369147258', '2026-04-22', 'A', 'Atlanta, GA', true, false, true, true, 'cm4m9x0y1z2a3b4c5d6e7f8g', '555-0901', 'Lisa Brown', '555-0902', 8, 48, 10, '{"HAZMAT", "SCHOOL_BUS"}', true, 'HIRED', '2020-10-15'),
-('cm4l2x3y4z5a6b7c8d9e0f1g', 'Nicole', 'Davis', 'CDL741852963', '2025-07-17', 'A', 'Portland, OR', true, false, true, false, 'cm4m0x1y2z3a4b5c6d7e8f9g', '555-1001', 'Mark Davis', '555-1002', 6, 42, 12, '{"PASSENGER"}', true, 'HIRED', '2023-02-28'),
-('cm4l3x4y5z6a7b8c9d0e1f2g', 'James', 'Miller', 'CDL852963741', '2026-02-14', 'A', 'Las Vegas, NV', true, false, true, false, 'cm4n1x2y3z4a5b6c7d8e9f0g', '555-1101', 'Patricia Miller', '555-1102', 7, 44, 11, '{"HAZMAT", "DOUBLE_TRIPLE"}', true, 'HIRED', '2021-06-20'),
-('cm4l4x5y6z7a8b9c0d1e2f3g', 'Rachel', 'Green', 'CDL963741852', '2025-12-05', 'A', 'Boston, MA', false, true, false, true, 'cm4n2x3y4z5a6b7c8d9e0f1g', '555-1201', 'David Green', '555-1202', 0, 0, 22, '{"SCHOOL_BUS"}', true, 'HIRED', '2022-04-10'),
-('cm4l5x6y7z8a9b0c1d2e3f4g', 'Thomas', 'Anderson', 'CDL159753486', '2026-08-28', 'A', 'Columbus, OH', true, false, true, false, 'cm4n3x4y5z6a7b8c9d0e1f2g', '555-1301', 'Neo Anderson', '555-1302', 9, 53, 9, '{"HAZMAT", "PASSENGER"}', true, 'HIRED', '2020-01-25'),
-('cm4l6x7y8z9a0b1c2d3e4f5g', 'Sandra', 'Lopez', 'CDL753486159', '2025-09-11', 'A', 'Nashville, TN', false, true, false, false, 'cm4n4x5y6z7a8b9c0d1e2f3g', '555-1401', 'Miguel Lopez', '555-1402', 0, 0, 16, '{"DOUBLE_TRIPLE"}', true, 'HIRED', '2023-05-18'),
-('cm4l7x8y9z0a1b2c3d4e5f6g', 'Daniel', 'Thompson', 'CDL486159753', '2026-01-03', 'A', 'Charlotte, NC', true, false, true, true, 'cm4n5x6y7z8a9b0c1d2e3f4g', '555-1501', 'Sarah Thompson', '555-1502', 4, 28, 20, '{"HAZMAT", "SCHOOL_BUS"}', true, 'HIRED', '2021-11-08');
+-- Continue with remaining Driver inserts (corrected format to match first document)
+('cm4k0x1y2z3a4b5c6d7e8f9g', 'Amanda', 'White', 'CDL258369147', '2025-10-30', 'A', 'Phoenix, AZ', true, false, true, 'cm4m8x9y0z1a2b3c4d5e6f7g', '555-0801', 'Steve White', '555-0802', '{"DOUBLE_TRIPLE"}', true, 'HIRED', '2021-12-03'),
+('cm4l1x2y3z4a5b6c7d8e9f0g', 'Kevin', 'Brown', 'CDL369147258', '2026-04-22', 'A', 'Atlanta, GA', true, false, true, 'cm4m9x0y1z2a3b4c5d6e7f8g', '555-0901', 'Lisa Brown', '555-0902', '{"HAZMAT", "SCHOOL_BUS"}', true, 'HIRED', '2020-10-15'),
+('cm4l2x3y4z5a6b7c8d9e0f1g', 'Nicole', 'Davis', 'CDL741852963', '2025-07-17', 'A', 'Portland, OR', true, false, true, 'cm4m0x1y2z3a4b5c6d7e8f9g', '555-1001', 'Mark Davis', '555-1002', '{"PASSENGER"}', true, 'HIRED', '2023-02-28'),
+('cm4l3x4y5z6a7b8c9d0e1f2g', 'James', 'Miller', 'CDL852963741', '2026-02-14', 'A', 'Las Vegas, NV', true, false, true, 'cm4n1x2y3z4a5b6c7d8e9f0g', '555-1101', 'Patricia Miller', '555-1102', '{"HAZMAT", "DOUBLE_TRIPLE"}', true, 'HIRED', '2021-06-20'),
+('cm4l4x5y6z7a8b9c0d1e2f3g', 'Rachel', 'Green', 'CDL963741852', '2025-12-05', 'A', 'Boston, MA', false, true, false, 'cm4n2x3y4z5a6b7c8d9e0f1g', '555-1201', 'David Green', '555-1202', '{"SCHOOL_BUS"}', true, 'HIRED', '2022-04-10'),
+('cm4l5x6y7z8a9b0c1d2e3f4g', 'Thomas', 'Anderson', 'CDL159753486', '2026-08-28', 'A', 'Columbus, OH', true, false, true, 'cm4n3x4y5z6a7b8c9d0e1f2g', '555-1301', 'Neo Anderson', '555-1302', '{"HAZMAT", "PASSENGER"}', true, 'HIRED', '2020-01-25'),
+('cm4l6x7y8z9a0b1c2d3e4f5g', 'Sandra', 'Lopez', 'CDL753486159', '2025-09-11', 'A', 'Nashville, TN', false, true, false, 'cm4n4x5y6z7a8b9c0d1e2f3g', '555-1401', 'Miguel Lopez', '555-1402', '{"DOUBLE_TRIPLE"}', true, 'HIRED', '2023-05-18'),
+('cm4l7x8y9z0a1b2c3d4e5f6g', 'Daniel', 'Thompson', 'CDL486159753', '2026-01-03', 'A', 'Charlotte, NC', true, false, true, 'cm4n5x6y7z8a9b0c1d2e3f4g', '555-1501', 'Sarah Thompson', '555-1502', '{"HAZMAT", "SCHOOL_BUS"}', true, 'HIRED', '2021-11-08');
 
 -- Insert Load data to connect trucks, drivers, and trailers
 INSERT INTO "Load" (id, origin, destination, weight, due_by, status, started_at, assigned_driver, assigned_trailer, assigned_truck, percent_complete, is_active, assigned_fleet) VALUES
@@ -118,247 +117,55 @@ INSERT INTO "Load" (
     assigned_trailer, 
     assigned_truck, 
     percent_complete, 
-    is_active
+    is_active,
+    assigned_fleet
 ) VALUES 
 -- Load 1: Chicago to Atlanta
-(
-    'mdf5l5olyyw3i79s18',
-    'Chicago, IL',
-    'Atlanta, GA',
-    25000.50,
-    '2025-07-25 14:00:00',
-    'SUGGESTED',
-    'cm4l6x7y8z9a0b1c2d3e4f5g', -- Sandra Lopez
-    'cm4t1y2z3a4b5c6d7e8f9g0h', -- Great Dane Freedom 2023
-    'cm4n5x6y7z8a9b0c1d2e3f4g', -- Freightliner Columbia 2023
-    0,
-    true
-),
+('mdf5l5olyyw3i79s18', 'Chicago, IL', 'Atlanta, GA', 25000.50, '2025-07-25 14:00:00', 'SUGGESTED', 'cm4l6x7y8z9a0b1c2d3e4f5g', 'cm4t1y2z3a4b5c6d7e8f9g0h', 'cm4n5x6y7z8a9b0c1d2e3f4g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 2: Los Angeles to Dallas
-(
-    'mdf5klurgpjuwpdheqk',
-    'Los Angeles, CA',
-    'Dallas, TX',
-    32500.75,
-    '2025-07-26 16:30:00',
-    'SUGGESTED',
-    'cm4l5x6y7z8a9b0c1d2e3f4g', -- Thomas Anderson
-    'cm4t3x4y5z6a7b8c9d0e1f2g', -- Wabash National 2023
-    'cm4m7x8y9z0a1b2c3d4e5f6g', -- International LT625 2023
-    0,
-    true
-),
+('mdf5klurgpjuwpdheqk', 'Los Angeles, CA', 'Dallas, TX', 32500.75, '2025-07-26 16:30:00', 'SUGGESTED', 'cm4l5x6y7z8a9b0c1d2e3f4g', 'cm4t3x4y5z6a7b8c9d0e1f2g', 'cm4m7x8y9z0a1b2c3d4e5f6g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 3: Miami to New York
-(
-    'mdf5llmbp0n3f8io4i',
-    'Miami, FL',
-    'New York, NY',
-    18750.25,
-    '2025-07-27 10:00:00',
-    'SUGGESTED',
-    'cm4l4x5y6z7a8b9c0d1e2f3g', -- Rachel Green
-    'cm4t7x8y9z0a1b2c3d4e5f6g', -- Utility 3000R 2023
-    'cm4m3x4y5z6a7b8c9d0e1f2g', -- Freightliner Cascadia 2023
-    0,
-    true
-),
+('mdf5llmbp0n3f8io4i', 'Miami, FL', 'New York, NY', 18750.25, '2025-07-27 10:00:00', 'SUGGESTED', 'cm4l4x5y6z7a8b9c0d1e2f3g', 'cm4t7x8y9z0a1b2c3d4e5f6g', 'cm4m3x4y5z6a7b8c9d0e1f2g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 4: Denver to Seattle
-(
-    'mdf5lvjgoxfm9678hij',
-    'Denver, CO',
-    'Seattle, WA',
-    28900.00,
-    '2025-07-28 12:45:00',
-    'SUGGESTED',
-    'cm4l3x4y5z6a7b8c9d0e1f2g', -- James Miller
-    'cm4t4y5z6a7b8c9d0e1f2g3h', -- Hyundai Steel 2022
-    'cm4n1x2y3z4a5b6c7d8e9f0g', -- Mack Pinnacle 2023
-    0,
-    true
-),
+('mdf5lvjgoxfm9678hij', 'Denver, CO', 'Seattle, WA', 28900.00, '2025-07-28 12:45:00', 'SUGGESTED', 'cm4l3x4y5z6a7b8c9d0e1f2g', 'cm4t4y5z6a7b8c9d0e1f2g3h', 'cm4n1x2y3z4a5b6c7d8e9f0g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 5: Phoenix to Houston
-(
-    'mdf5m66pr72gzbqkprq',
-    'Phoenix, AZ',
-    'Houston, TX',
-    22300.80,
-    '2025-07-29 09:15:00',
-    'SUGGESTED',
-    'cm4l2x3y4z5a6b7c8d9e0f1g', -- Nicole Davis
-    'cm4t5x6y7z8a9b0c1d2e3f4g', -- Stoughton Composite 2022
-    'cm4m1x2y3z4a5b6c7d8e9f0g', -- Peterbilt 579 2022
-    0,
-    true
-),
+('mdf5m66pr72gzbqkprq', 'Phoenix, AZ', 'Houston, TX', 22300.80, '2025-07-29 09:15:00', 'SUGGESTED', 'cm4l2x3y4z5a6b7c8d9e0f1g', 'cm4t5x6y7z8a9b0c1d2e3f4g', 'cm4m1x2y3z4a5b6c7d8e9f0g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 6: Boston to Chicago
-(
-    'mdf5mg48ogpg6y72frg',
-    'Boston, MA',
-    'Chicago, IL',
-    31200.45,
-    '2025-07-30 15:20:00',
-    'SUGGESTED',
-    'cm4l1x2y3z4a5b6c7d8e9f0g', -- Kevin Brown
-    'cm4t9x0y1z2a3b4c5d6e7f8g', -- Hyundai Composite 2022
-    'cm4m5x6y7z8a9b0c1d2e3f4g', -- Mack Anthem 2022
-    0,
-    true
-),
+('mdf5mg48ogpg6y72frg', 'Boston, MA', 'Chicago, IL', 31200.45, '2025-07-30 15:20:00', 'SUGGESTED', 'cm4l1x2y3z4a5b6c7d8e9f0g', 'cm4t9x0y1z2a3b4c5d6e7f8g', 'cm4m5x6y7z8a9b0c1d2e3f4g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 7: Nashville to Portland
-(
-    'mdf5mwdeva73m8kx5f',
-    'Nashville, TN',
-    'Portland, OR',
-    26800.90,
-    '2025-07-31 11:30:00',
-    'SUGGESTED',
-    'cm4k0x1y2z3a4b5c6d7e8f9g', -- Amanda White
-    'cm4t1x2y3z4a5b6c7d8e9f0g', -- Great Dane Everest 2022
-    'cm4m9x0y1z2a3b4c5d6e7f8g', -- Freightliner Coronado 2022
-    0,
-    true
-),
+('mdf5mwdeva73m8kx5f', 'Nashville, TN', 'Portland, OR', 26800.90, '2025-07-31 11:30:00', 'SUGGESTED', 'cm4k0x1y2z3a4b5c6d7e8f9g', 'cm4t1x2y3z4a5b6c7d8e9f0g', 'cm4m9x0y1z2a3b4c5d6e7f8g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 8: Las Vegas to Kansas City
-(
-    'mdf5n66zhrj7eek9vqf',
-    'Las Vegas, NV',
-    'Kansas City, MO',
-    19850.60,
-    '2025-08-01 13:45:00',
-    'SUGGESTED',
-    'cm4k9x0y1z2a3b4c5d6e7f8g', -- Carlos Martinez
-    'cm4t6x7y8z9a0b1c2d3e4f5g', -- Great Dane Champion 2021
-    'cm4n3x4y5z6a7b8c9d0e1f2g', -- International ProStar 2022
-    0,
-    true
-),
+('mdf5n66zhrj7eek9vqf', 'Las Vegas, NV', 'Kansas City, MO', 19850.60, '2025-08-01 13:45:00', 'SUGGESTED', 'cm4k9x0y1z2a3b4c5d6e7f8g', 'cm4t6x7y8z9a0b1c2d3e4f5g', 'cm4n3x4y5z6a7b8c9d0e1f2g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 9: Detroit to Tampa
-(
-    'mdf5nesqydhry0rxle',
-    'Detroit, MI',
-    'Tampa, FL',
-    24700.35,
-    '2025-08-02 08:00:00',
-    'SUGGESTED',
-    'cm4k8x9y0z1a2b3c4d5e6f7g', -- Jennifer Taylor
-    'cm4t3y4z5a6b7c8d9e0f1g2h', -- Wabash Arctic 2021
-    'cm4m2x3y4z5a6b7c8d9e0f1g', -- Kenworth T680 2021
-    0,
-    true
-),
+('mdf5nesqydhry0rxle', 'Detroit, MI', 'Tampa, FL', 24700.35, '2025-08-02 08:00:00', 'SUGGESTED', 'cm4k8x9y0z1a2b3c4d5e6f7g', 'cm4t3y4z5a6b7c8d9e0f1g2h', 'cm4m2x3y4z5a6b7c8d9e0f1g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 10: San Antonio to Minneapolis
-(
-    'mdf5npeg4dfrz4c4lpp',
-    'San Antonio, TX',
-    'Minneapolis, MN',
-    33100.15,
-    '2025-08-03 17:30:00',
-    'SUGGESTED',
-    'cm4k7x8y9z0a1b2c3d4e5f6g', -- Robert Wilson
-    'cm4t2x3y4z5a6b7c8d9e0f1g', -- Utility 4000DX 2021
-    'cm4m6x7y8z9a0b1c2d3e4f5g', -- Peterbilt 389 2021
-    0,
-    true
-),
+('mdf5npeg4dfrz4c4lpp', 'San Antonio, TX', 'Minneapolis, MN', 33100.15, '2025-08-03 17:30:00', 'SUGGESTED', 'cm4k7x8y9z0a1b2c3d4e5f6g', 'cm4t2x3y4z5a6b7c8d9e0f1g', 'cm4m6x7y8z9a0b1c2d3e4f5g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 11: Sacramento to Memphis
-(
-    'mdf5ny621j73f7niq0x',
-    'Sacramento, CA',
-    'Memphis, TN',
-    27650.70,
-    '2025-08-04 14:15:00',
-    'SUGGESTED',
-    'cm4k6x7y8z9a0b1c2d3e4f5g', -- Maria Santos
-    'cm4t0x1y2z3a4b5c6d7e8f9g', -- Stoughton Steel 2021
-    'cm4m0x1y2z3a4b5c6d7e8f9g', -- Volvo VNL740 2021
-    0,
-    true
-),
+('mdf5ny621j73f7niq0x', 'Sacramento, CA', 'Memphis, TN', 27650.70, '2025-08-04 14:15:00', 'SUGGESTED', 'cm4k6x7y8z9a0b1c2d3e4f5g', 'cm4t0x1y2z3a4b5c6d7e8f9g', 'cm4m0x1y2z3a4b5c6d7e8f9g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 12: Salt Lake City to Jacksonville
-(
-    'mdf5o6r335pvdt93nsn',
-    'Salt Lake City, UT',
-    'Jacksonville, FL',
-    29400.50,
-    '2025-08-05 10:45:00',
-    'SUGGESTED',
-    'cm4k5x6y7z8a9b0c1d2e3f4g', -- David Chen
-    'cm4t5y6z7a8b9c0d1e2f3g4h', -- Stoughton Composite 2020
-    'cm4n4x5y6z7a8b9c0d1e2f3g', -- Kenworth T880 2021
-    0,
-    true
-);
+('mdf5o6r335pvdt93nsn', 'Salt Lake City, UT', 'Jacksonville, FL', 29400.50, '2025-08-05 10:45:00', 'SUGGESTED', 'cm4k5x6y7z8a9b0c1d2e3f4g', 'cm4t5y6z7a8b9c0d1e2f3g4h', 'cm4n4x5y6z7a8b9c0d1e2f3g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
--- Optional: Add some loads with different weight categories for variety
-INSERT INTO "Load" (
-    id, 
-    origin, 
-    destination, 
-    weight, 
-    due_by, 
-    status, 
-    assigned_driver, 
-    assigned_trailer, 
-    assigned_truck, 
-    percent_complete, 
-    is_active
-) VALUES 
 -- Load 13: Light load
-(
-    'mdf5oi1lpra6lslenzq',
-    'Reno, NV',
-    'Boise, ID',
-    8500.25,
-    '2025-08-06 16:00:00',
-    'SUGGESTED',
-    'cm4k4x5y6z7a8b9c0d1e2f3g', -- Lisa Rodriguez
-    'cm4t4x5y6z7a8b9c0d1e2f3g', -- Hyundai Translead 2020
-    'cm4n2x3y4z5a6b7c8d9e0f1g', -- Peterbilt 567 2020
-    0,
-    true
-),
+('mdf5oi1lpra6lslenzq', 'Reno, NV', 'Boise, ID', 8500.25, '2025-08-06 16:00:00', 'SUGGESTED', 'cm4k4x5y6z7a8b9c0d1e2f3g', 'cm4t4x5y6z7a8b9c0d1e2f3g', 'cm4n2x3y4z5a6b7c8d9e0f1g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 14: Heavy load
-(
-    'mdf5opz0yqs59x9eosn',
-    'Pittsburgh, PA',
-    'Phoenix, AZ',
-    39750.80,
-    '2025-08-07 12:00:00',
-    'SUGGESTED',
-    'cm4k3x4y5z6a7b8c9d0e1f2g', -- Mike Johnson
-    'cm4t8x9y0z1a2b3c4d5e6f7g', -- Wabash DuraPlate 2020
-    'cm4m4x5y6z7a8b9c0d1e2f3g', -- Volvo VNL860 2020
-    0,
-    true
-),
+('mdf5opz0yqs59x9eosn', 'Pittsburgh, PA', 'Phoenix, AZ', 39750.80, '2025-08-07 12:00:00', 'SUGGESTED', 'cm4k3x4y5z6a7b8c9d0e1f2g', 'cm4t8x9y0z1a2b3c4d5e6f7g', 'cm4m4x5y6z7a8b9c0d1e2f3g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 
 -- Load 15: Urgent delivery
-(
-    'mdf5p1fbfcf3tjm050c',
-    'Charlotte, NC',
-    'San Diego, CA',
-    21900.45,
-    '2025-07-24 18:00:00', -- Earlier due date for urgency
-    'SUGGESTED',
-    'cm4l6x7y8z9a0b1c2d3e4f5g', -- Sandra Lopez (experienced driver)
-    'cm4t2y3z4a5b6c7d8e9f0g1h', -- Utility 4000D 2020
-    'cm4m8x9y0z1a2b3c4d5e6f7g', -- Kenworth W990 2020
-    0,
-    true
-);
+('mdf5p1fbfcf3tjm050c', 'Charlotte, NC', 'San Diego, CA', 21900.45, '2025-07-24 18:00:00', 'SUGGESTED', 'cm4l6x7y8z9a0b1c2d3e4f5g', 'cm4t2y3z4a5b6c7d8e9f0g1h', 'cm4m8x9y0z1a2b3c4d5e6f7g', 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g');
 
+-- Insert unassigned loads
 INSERT INTO "Load" (id, origin, destination, weight, due_by, status, started_at, assigned_driver, assigned_trailer, assigned_truck, percent_complete, is_active, assigned_fleet) VALUES
 ('cm5a1b2c3d4e5f6g7h8i9j0k', 'Miami, FL', 'Tampa, FL', 18500.75, '2024-07-20 09:00:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
 ('cm5a2b3c4d5e6f7g8h9i0j1k', 'San Diego, CA', 'Sacramento, CA', 32200.50, '2024-07-21 15:30:00', 'UNASSIGNED', NULL, NULL, NULL, NULL, 0, true, 'cm4f1x2y3z4a5b6c7d8e9f0g'),
