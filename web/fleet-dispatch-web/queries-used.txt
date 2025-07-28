@@ -71,7 +71,6 @@ INSERT INTO "Driver" (id, first_name, last_name, license_number, license_expirat
 ('cm4k7x8y9z0a1b2c3d4e5f6g', 'Robert', 'Wilson', 'CDL321654987', '2026-01-18', 'A', 'Chicago, IL', true, false, true, 'cm4m5x6y7z8a9b0c1d2e3f4g', '555-0501', 'Mary Wilson', '555-0502', '{"HAZMAT", "DOUBLE_TRIPLE"}', true, 'HIRED', '2020-05-12'),
 ('cm4k8x9y0z1a2b3c4d5e6f7g', 'Jennifer', 'Taylor', 'CDL654987321', '2025-11-08', 'A', 'Seattle, WA', true, false, true, 'cm4m6x7y8z9a0b1c2d3e4f5g', '555-0601', 'Tom Taylor', '555-0602', '{"SCHOOL_BUS"}', true, 'HIRED', '2021-09-18'),
 ('cm4k9x0y1z2a3b4c5d6e7f8g', 'Carlos', 'Martinez', 'CDL147258369', '2026-06-12', 'A', 'Denver, CO', false, true, false, 'cm4m7x8y9z0a1b2c3d4e5f6g', '555-0701', 'Rosa Martinez', '555-0702', '{"HAZMAT", "PASSENGER"}', true, 'HIRED', '2022-08-14');
--- Continue with remaining Driver inserts
 -- Continue with remaining Driver inserts (corrected format to match first document)
 ('cm4k0x1y2z3a4b5c6d7e8f9g', 'Amanda', 'White', 'CDL258369147', '2025-10-30', 'A', 'Phoenix, AZ', true, false, true, 'cm4m8x9y0z1a2b3c4d5e6f7g', '555-0801', 'Steve White', '555-0802', '{"DOUBLE_TRIPLE"}', true, 'HIRED', '2021-12-03'),
 ('cm4l1x2y3z4a5b6c7d8e9f0g', 'Kevin', 'Brown', 'CDL369147258', '2026-04-22', 'A', 'Atlanta, GA', true, false, true, 'cm4m9x0y1z2a3b4c5d6e7f8g', '555-0901', 'Lisa Brown', '555-0902', '{"HAZMAT", "SCHOOL_BUS"}', true, 'HIRED', '2020-10-15'),
