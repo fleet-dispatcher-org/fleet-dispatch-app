@@ -10,6 +10,7 @@ import { get } from "http";
 import HalfCircleProgress from "../../components/HalfCircleProgress";
 import Link from "next/link";
 import AcceptDenyLoad from "../../components/AcceptDenyLoad";
+import { button } from "@material-tailwind/react";
 
 interface LoadViewProps {
     params: Promise<{
@@ -23,6 +24,17 @@ export default async function Page({ params }: any) {
     if (session?.user === null) return <div>Error signing in. Please try again. </div>;
 
     else if (session?.user === undefined) return <div>Loading...</div>;
+
+    async function assignDriver(loadId: string, driverId: string) {
+        try {
+            await prisma.load.update({
+                where: { id: loadId },
+                data: { assigned_driver: driverId },
+            });
+        } catch (error) {
+            console.error('Error assigning driver to load:', error);
+        }
+    }
 
     async function getLoad(loadId: string) {
         try {
@@ -206,9 +218,7 @@ export default async function Page({ params }: any) {
                             href={`/admin/users/${load.assigned_driver}`}
                             className="group"
                         >
-                        <p className="text-xl font-bold text-gray-400 hover:underline">
-                            {assignedDriver ? `${assignedDriver.first_name} ${assignedDriver.last_name}` : "Not Assigned"}
-                        </p>
+                        
                         </Link>
                     </div>
 

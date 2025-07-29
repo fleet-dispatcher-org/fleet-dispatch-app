@@ -12,7 +12,11 @@ import DriverLoads from "../components/DriverLoadsClient";
 import { User } from "@prisma/client";
 import DriverLoadsWrapper from "../components/DriverLoadsWrapper";
 import { Helmet } from "react-helmet";
+import { Metadata } from "next";
 
+export const metadata: Metadata = {
+    title: 'Profile',
+}
 
 export default async function Profile() {
     const session = await auth();
@@ -77,7 +81,7 @@ export default async function Profile() {
                             <h3 className="text-lg font-semibold text-gray-400 mb-4">Profile Information</h3>
                             <UserProfileCard />
                         </div>
-                        <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6 flex flex-row gap-10 ">
+                        <div className="bg-gray-900 rounded-lg items-center justify-center shadow-sm border border-gray-700 p-6 flex flex-row gap-10 ">
                             <div className="items-center justify-center">
                                 <h3 className="text-center text-lg font-semibold text-gray-400 mb-4 justify-center">Home Base</h3>
                                 <Location className="text-center"/>
