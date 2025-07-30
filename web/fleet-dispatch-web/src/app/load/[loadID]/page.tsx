@@ -11,6 +11,7 @@ import HalfCircleProgress from "../../components/HalfCircleProgress";
 import Link from "next/link";
 import AcceptDenyLoad from "../../components/AcceptDenyLoad";
 import { button } from "@material-tailwind/react";
+import AssignDriverWrapper from "../../components/AssignDriverWrapper";
 
 interface LoadViewProps {
     params: Promise<{
@@ -214,12 +215,7 @@ export default async function Page({ params }: any) {
                             </div>
                             <h3 className="text-lg font-semibold text-gray-400">Driver</h3>
                         </div>
-                            <Link 
-                            href={`/admin/users/${load.assigned_driver}`}
-                            className="group"
-                        >
-                        
-                        </Link>
+                            <AssignDriverWrapper loadId={load.id} assignedDriver={assignedDriver} />
                     </div>
 
                     {/* Truck Card */}

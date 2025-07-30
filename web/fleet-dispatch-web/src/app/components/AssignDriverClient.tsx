@@ -1,20 +1,22 @@
 "use client";
 import { Driver } from "@prisma/client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface AssignDriverClientProps {
-    driverId: string;
     loadId: string;
 }
 
-export default function AssignDriverClient({ driverId, loadId }: AssignDriverClientProps) {
-    const [assignedDriver, setAssignedDriver] = useState(driverId);
-    const [unassignedDrivers, setUnassignedDrivers] = useState<string[]>([]);
+export default function AssignDriverClient({  loadId }: AssignDriverClientProps) {
+    const [unassignedDrivers, setUnassignedDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
-    const handleAssignDriver = async () => {
+
+    useEffect(() => {
+        fetchUnassignedDrivers();
+    }, []);
+    const handleAssignDriver = async (assignedDriver: string) => {
         try {
             const response = await fetch(`/api/dispatcher/${loadId}/${assignedDriver}`, {
                 method: "PATCH",
@@ -68,19 +70,24 @@ export default function AssignDriverClient({ driverId, loadId }: AssignDriverCli
                 setLoading(false);
             }
         };
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
+
     return (
         <div>
             <select
-                value={assignedDriver}
-                onChange={(e) => setAssignedDriver(e.target.value)}
+                value="Unassigned Drivers"
+                onChange={(e) => handleAssignDriver(e.target.value)}
+                className="block w-full overflow-y-scroll rounded-md border-gray-300 text-gray-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             >
-                {unassignedDrivers.map((driverId) => (
-                    <option key={driverId} value={driverId}>
-                        {driverId}
+                <option value="No Driver">-- No Driver Selected --</option>
+                {unassignedDrivers.map((driver) => (
+                    <option key={driver.id} value={driver.first_name || "Unnamed"}>
+                        {`${driver.first_name || "Unnamed"} ${driver.last_name || ""}` || "Unnamed"}
                     </option>
                 ))}
             </select>
-            <button onClick={handleAssignDriver}>Assign Driver</button>
         </div>
     );
 }
