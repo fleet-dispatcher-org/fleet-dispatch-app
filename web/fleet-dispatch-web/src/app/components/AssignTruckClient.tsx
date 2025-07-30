@@ -83,7 +83,7 @@ export default function AssignTruckClient({loadId}: {loadId: string}) {
             <select
                 value="Unassigned Drivers"
                 onChange={(e) => handleAssignTruck(e.target.value)}
-                className="block w-full overflow-y-scroll rounded-md border-gray-300 text-gray-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                className="block w-full overflow-y-scroll rounded-md border-gray-300 text-gray-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm hover:underline"
             >
                 <option value="No Truck">-- No Truck Selected --</option>
                 {unassignedTrucks.map((truck) => (
