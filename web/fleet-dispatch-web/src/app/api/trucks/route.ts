@@ -9,12 +9,6 @@ export async function GET() {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const trucks = await prisma.truck.findMany({ 
-            select: {
-                id: true,
-                make: true,
-                model: true,
-                year: true
-            },
             orderBy: {
                 year: 'desc'
             }

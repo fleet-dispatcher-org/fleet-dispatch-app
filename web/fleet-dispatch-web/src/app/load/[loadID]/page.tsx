@@ -12,6 +12,7 @@ import Link from "next/link";
 import AcceptDenyLoad from "../../components/AcceptDenyLoad";
 import { button } from "@material-tailwind/react";
 import AssignDriverWrapper from "../../components/AssignDriverWrapper";
+import AssignTruckWrapper from "../../components/AssignTruckWrapper";
 
 interface LoadViewProps {
     params: Promise<{
@@ -228,9 +229,7 @@ export default async function Page({ params }: any) {
                             </div>
                             <h3 className="text-lg font-semibold text-gray-400">Truck</h3>
                         </div>
-                        <p className="text-xl font-bold text-gray-400">
-                            {assigned_truck?.license_plate || "Not Assigned"}
-                        </p>
+                        <AssignTruckWrapper loadId={load.id} assignedTruck={assigned_truck}></AssignTruckWrapper>
                     </div>
 
                     {/* Trailer Card */}
