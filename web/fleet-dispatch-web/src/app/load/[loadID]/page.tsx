@@ -13,6 +13,7 @@ import AcceptDenyLoad from "../../components/AcceptDenyLoad";
 import { button } from "@material-tailwind/react";
 import AssignDriverWrapper from "../../components/AssignDriverWrapper";
 import AssignTruckWrapper from "../../components/AssignTruckWrapper";
+import AssignTrailerWrapper from "../../components/AssignTrailerWrapper";
 
 interface LoadViewProps {
     params: Promise<{
@@ -242,9 +243,7 @@ export default async function Page({ params }: any) {
                             </div>
                             <h3 className="text-lg font-semibold text-gray-400">Trailer</h3>
                         </div>
-                        <p className="text-xl font-bold text-gray-400">
-                            {assigned_trailer ? `${assigned_trailer.make}, ${assigned_trailer.model}` : "Not Assigned"}
-                        </p>
+                        <AssignTrailerWrapper loadId={load.id} assignedTrailer={assigned_trailer}></AssignTrailerWrapper>
                     </div>
                 </div>
 

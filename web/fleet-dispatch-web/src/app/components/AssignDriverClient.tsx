@@ -18,7 +18,7 @@ export default function AssignDriverClient({  loadId }: AssignDriverClientProps)
     }, []);
     const handleAssignDriver = async (assignedDriver: string) => {
         try {
-            const response = await fetch(`/api/dispatcher/${loadId}/${assignedDriver}`, {
+            const response = await fetch(`/api/dispatcher/${loadId}/driver/${assignedDriver}`, {
                 method: "PATCH",
             });
             if (!response.ok) {

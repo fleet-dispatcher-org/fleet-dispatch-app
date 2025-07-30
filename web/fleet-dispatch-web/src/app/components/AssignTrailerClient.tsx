@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function AssignTrailerClient({ loadId }: { loadId: string }) {
-    const [trailer, setTrailer] = useState<Trailer | null>(null);
+    const [trailers, setTrailers] = useState<Trailer[] | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
@@ -41,7 +41,7 @@ export default function AssignTrailerClient({ loadId }: { loadId: string }) {
             }
 
             const availableTrailers = trailersArray.filter((trailer: Trailer) => trailer.trailer_status === "AVAILABLE");
-            setTrailer(availableTrailers[0]);
+            setTrailers(availableTrailers);
             setLoading(false);
             setError(null);
         } catch (err) {
@@ -49,4 +49,39 @@ export default function AssignTrailerClient({ loadId }: { loadId: string }) {
             setLoading(false);
         }
     }
+
+    async function handleAssignTrailer(trailerId: string) {
+        try {
+            const response = await fetch(`/api/dispatcher/${loadId}/trailer/${trailerId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ trailerId: trailerId }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+            router.refresh();
+        } catch (err) {
+            console.error("Error assigning trailer to load:", err);
+        }
+    }
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
+
+    return (
+        <div>
+            <select value="Unassigned Trailers"
+                onChange={(e) => handleAssignTrailer(e.target.value)}>
+                    <option value="No Trailer">-- No Trailer Assigned --</option>
+                    {trailers?.map((trailer) => (
+                        <option value={trailer.id} key={trailer.id}>{`${trailer.make} ${trailer.model} ${trailer.year} ${trailer.license_plate}`}</option>
+                    ))}
+                </select>
+        </div>
+    );
 }
