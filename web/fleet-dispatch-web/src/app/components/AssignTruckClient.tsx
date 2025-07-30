@@ -3,8 +3,9 @@
 import { Truck } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-export default function AssignTruckClient({loadId}: {loadId: string}) {
+export default function AssignTruckClient({loadId, assignedTruck}: {loadId: string, assignedTruck: Truck | null | undefined}) {
     const [unassignedTrucks, setUnassignedTrucks] = useState<Truck[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -70,12 +71,58 @@ export default function AssignTruckClient({loadId}: {loadId: string}) {
         }
     }
 
+    async function handleDeleteTruck(truckId: string) {
+        try {
+            const [truckResponse, loadResponse] = await Promise.all([
+                fetch(`/api/truck/${truckId}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ truck_status: "AVAILABLE" }),
+                }),
+                fetch(`/api/dispatcher/${loadId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ assigned_truck: null }),
+                })
+            ])
+
+            if (!truckResponse.ok) {
+                throw new Error("Failed to update truck availability");
+            }
+            if (!loadResponse.ok) {
+                throw new Error("Failed to remove truck from load");
+            }
+            router.refresh();
+        } catch (err) {
+            console.error("Error deleting truck:", err);
+        }
+    }
+
     if(loading) {
         return <div>Loading...</div>;
     }
 
     if (error) {
         return <div>Error: {error}</div>;
+    }
+
+        if (assignedTruck) {
+        return (
+            <div className="group flex flex-row">
+                <Link
+                    href={`/admin/trucks/${assignedTruck.id}`}
+                    className="group"
+                >
+                    <span>{assignedTruck.make} {assignedTruck.model} ({assignedTruck.year})</span>
+                </Link>
+                <button 
+                className="ml-auto text-gray-400 hover:text-gray-500" onClick={() => handleDeleteTruck(assignedTruck.id)}>x</button>
+            </div>
+        );
     }
 
 

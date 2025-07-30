@@ -17,6 +17,7 @@
     "@auth0/nextjs-auth0": "^4.6.1",
     "@material-tailwind/react": "^2.1.10",
     "@mui/x-date-pickers": "^8.5.0",
+    "@openai/agents": "^0.0.14",
     "@prisma/client": "^6.10.1",
     "bcrypt": "^6.0.0",
     "cuid": "^3.0.0",
@@ -26,7 +27,8 @@
     "react": "^19.0.0",
     "react-day-picker": "^9.7.0",
     "react-dom": "^19.0.0",
-    "react-helmet": "^6.1.0"
+    "react-helmet": "^6.1.0",
+    "zod": "<=3.25.67"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

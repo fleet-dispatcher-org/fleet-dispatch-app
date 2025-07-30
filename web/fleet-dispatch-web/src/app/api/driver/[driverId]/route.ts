@@ -9,7 +9,7 @@ interface RouteParams {
     driverId: string
 }
 
-export async function PATCH(request: NextRequest, params: RouteParams) {
+export async function PATCH(request: NextRequest, { params } : RouteParams) {
     try {
         const session = await auth();
 

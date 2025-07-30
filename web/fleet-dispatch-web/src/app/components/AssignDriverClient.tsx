@@ -37,35 +37,37 @@ export default function AssignDriverClient({  loadId, assignedDriver }: AssignDr
     };
 
     const handleDeleteDriver = async (assignedDriver: string) => {
-        try {
-            const response = await fetch(`/api/driver/${assignedDriver}`, {
+    try {
+        const [driverResponse, loadResponse] = await Promise.all([
+            fetch(`/api/driver/${assignedDriver}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ Availability_Status: "AVAILABLE" }),
-            });
-            if (!response.ok) {
-                throw new Error("Failed to delete driver from load");
-            }
-            router.refresh();
-        } catch (error) {
-            console.error("Error deleting driver from load:", error);
+                body: JSON.stringify({ driver_status: "AVAILABLE" }),
+            }),
+            fetch(`/api/dispatcher/${loadId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ assigned_driver: null }),
+            })
+        ]);
+
+        if (!driverResponse.ok) {
+            throw new Error("Failed to update driver availability");
         }
         
-        try {
-            const response = await fetch(`/api/dispatcher/${loadId}/driver/${assignedDriver}`, {
-                method: "DELETE",
-            });
-            if (!response.ok) {
-                throw new Error("Failed to delete driver from load");
-            }
-            router.refresh();
-        } catch (error) {
-            console.error("Error deleting driver from load:", error);
+        if (!loadResponse.ok) {
+            throw new Error("Failed to remove driver from load");
         }
-    };
 
+        router.refresh();
+    } catch (error) {
+        console.error("Error deleting driver from load:", error);
+    }
+};
     const fetchUnassignedDrivers = async () => {
             try {
                 setLoading(true);
@@ -121,7 +123,7 @@ export default function AssignDriverClient({  loadId, assignedDriver }: AssignDr
                     <span>{`${assignedDriver.first_name} ${assignedDriver.last_name}`}</span>
                 </Link>
                 <button 
-                className="ml-auto text-red-600 hover:text-red-800" onClick={() => handleDeleteDriver(assignedDriver.id)}>X</button>
+                className="ml-auto text-gray-400 hover:text-gray-500 hover:cursor-pointer" onClick={() => handleDeleteDriver(assignedDriver.id)}>x</button>
             </div>
         );
     }
