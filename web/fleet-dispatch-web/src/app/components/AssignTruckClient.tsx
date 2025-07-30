@@ -52,11 +52,12 @@ export default function AssignTruckClient({loadId}: {loadId: string}) {
 
     async function handleAssignTruck(truckId: string) {
         try {
-            const response = await fetch(`/api/dispatcher/${loadId}/${truckId}`, {
+            const response = await fetch(`/api/dispatcher/${loadId}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },
+                body: JSON.stringify({ assigned_truck: truckId }),
             });
 
             if (!response.ok) {
@@ -87,7 +88,7 @@ export default function AssignTruckClient({loadId}: {loadId: string}) {
             >
                 <option value="No Truck">-- No Truck Selected --</option>
                 {unassignedTrucks.map((truck) => (
-                    <option key={truck.id} value={truck.license_plate || "Unlicensed"}>
+                    <option key={truck.id} value={truck.id || "Unlicensed"}>
                         {`${truck.make || "Unnamed"}, ${truck.model || ""} ${truck.year || ""} ${truck.license_plate || ""}` || "Unnamed"}
                     </option>
                 ))}

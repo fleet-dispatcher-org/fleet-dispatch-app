@@ -36,3 +36,64 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
         }   
 }
+
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
+    try {
+        const session = await auth();
+        console.log("Session:", session?.user?.role || "User not logged in");
+        // This one is going to be pretty much open to anyone. It's still a private route but any role can use it. 
+        // This may be a problem in the future.
+        // The idea is that both dispatchers and admins can use it.
+        if(session?.user?.role != "ADMIN" && session?.user?.role != "DISPATCHER") {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const { userId } = await params;
+        await prisma.user.delete({ where: { id: userId } });
+        return NextResponse.json({ message: "User deleted successfully" }, { status: 200 });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
+    }
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+    try {
+        const session = await auth();
+        console.log("Session:", session?.user?.role || "User not logged in");
+        // This one is going to be pretty much open to anyone. It's still a private route but any role can use it. 
+        // This may be a problem in the future.
+        // The idea is that both dispatchers and admins can use it.
+        if(session?.user?.role != "ADMIN" && session?.user?.role != "DISPATCHER") {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const body = await request.json();
+        const { userId } = await params;
+        const updatedUser = await prisma.user.update({ where: { id: userId }, data: body });
+        return NextResponse.json(updatedUser);
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
+    }
+}
+
+export async function POST(request: NextRequest, { params }: RouteParams) {
+    try {
+        const session = await auth();
+        console.log("Session:", session?.user?.role || "User not logged in");
+        // This one is going to be pretty much open to anyone. It's still a private route but any role can use it. 
+        // This may be a problem in the future.
+        // The idea is that both dispatchers and admins can use it.
+        if(session?.user?.role != "ADMIN" && session?.user?.role != "DISPATCHER") {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const body = await request.json();
+        const user = await prisma.user.create({ data: body });
+        return NextResponse.json(user);
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
+    }
+}

@@ -52,12 +52,12 @@ export default function AssignTrailerClient({ loadId }: { loadId: string }) {
 
     async function handleAssignTrailer(trailerId: string) {
         try {
-            const response = await fetch(`/api/dispatcher/${loadId}/trailer/${trailerId}`, {
+            const response = await fetch(`/api/dispatcher/${loadId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ trailerId: trailerId }),
+                body: JSON.stringify({ assigned_trailer: trailerId }),
             });
 
             if (!response.ok) {

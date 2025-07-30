@@ -1,13 +1,15 @@
 "use client";
-import { Driver } from "@prisma/client";
+import { Availability_Status, Driver } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface AssignDriverClientProps {
     loadId: string;
+    assignedDriver: Driver | null | undefined;
 }
 
-export default function AssignDriverClient({  loadId }: AssignDriverClientProps) {
+export default function AssignDriverClient({  loadId, assignedDriver }: AssignDriverClientProps) {
     const [unassignedDrivers, setUnassignedDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -18,8 +20,12 @@ export default function AssignDriverClient({  loadId }: AssignDriverClientProps)
     }, []);
     const handleAssignDriver = async (assignedDriver: string) => {
         try {
-            const response = await fetch(`/api/dispatcher/${loadId}/driver/${assignedDriver}`, {
+            const response = await fetch(`/api/dispatcher/${loadId}`, {
                 method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ assigned_driver: assignedDriver }),
             });
             if (!response.ok) {
                 throw new Error("Failed to assign driver to load");
@@ -27,6 +33,36 @@ export default function AssignDriverClient({  loadId }: AssignDriverClientProps)
             router.refresh();
         } catch (error) {
             console.error("Error assigning driver to load:", error);
+        }
+    };
+
+    const handleDeleteDriver = async (assignedDriver: string) => {
+        try {
+            const response = await fetch(`/api/driver/${assignedDriver}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ Availability_Status: "AVAILABLE" }),
+            });
+            if (!response.ok) {
+                throw new Error("Failed to delete driver from load");
+            }
+            router.refresh();
+        } catch (error) {
+            console.error("Error deleting driver from load:", error);
+        }
+        
+        try {
+            const response = await fetch(`/api/dispatcher/${loadId}/driver/${assignedDriver}`, {
+                method: "DELETE",
+            });
+            if (!response.ok) {
+                throw new Error("Failed to delete driver from load");
+            }
+            router.refresh();
+        } catch (error) {
+            console.error("Error deleting driver from load:", error);
         }
     };
 
@@ -74,6 +110,23 @@ export default function AssignDriverClient({  loadId }: AssignDriverClientProps)
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
+    if (assignedDriver) {
+            if (assignedDriver) {
+        return (
+            <div className="group flex flex-row">
+                <Link 
+                href={`/admin/users/${assignedDriver.id}`}
+                className="group"
+                >
+                    <span>{`${assignedDriver.first_name} ${assignedDriver.last_name}`}</span>
+                </Link>
+                <button 
+                className="ml-auto text-red-600 hover:text-red-800" onClick={() => handleDeleteDriver(assignedDriver.id)}>X</button>
+            </div>
+        );
+    }
+    }
+
     return (
         <div>
             <select
@@ -83,7 +136,7 @@ export default function AssignDriverClient({  loadId }: AssignDriverClientProps)
             >
                 <option value="No Driver">-- No Driver Selected --</option>
                 {unassignedDrivers.map((driver) => (
-                    <option key={driver.id} value={driver.first_name || "Unnamed"}>
+                    <option key={driver.id} value={driver.id || "Unnamed"}>
                         {`${driver.first_name || "Unnamed"} ${driver.last_name || ""}` || "Unnamed"}
                     </option>
                 ))}
