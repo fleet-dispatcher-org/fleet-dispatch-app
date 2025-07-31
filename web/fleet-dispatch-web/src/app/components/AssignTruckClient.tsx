@@ -4,8 +4,26 @@ import { Truck } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { tr } from "react-day-picker/locale";
 
-export default function AssignTruckClient({loadId, assignedTruck}: {loadId: string, assignedTruck: Truck | null | undefined}) {
+interface AssignTruckClientProps {
+    loadId: string;
+    assignedTruck: {
+        id: string;
+        license_plate: string;
+        make: string;
+        model: string;
+        year: number | null;
+        capacity_tons: number | null; // Changed to number
+        mileage: number | null;
+        is_active: boolean | null;
+        current_location: string | null;
+        // ... add all other fields, converting Decimal types to number
+    } | null;
+}
+
+
+export default function AssignTruckClient({loadId, assignedTruck}: AssignTruckClientProps) {
     const [unassignedTrucks, setUnassignedTrucks] = useState<Truck[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -41,7 +59,13 @@ export default function AssignTruckClient({loadId, assignedTruck}: {loadId: stri
                 throw new Error("Invalid response format: expected array or object with trucks property");
             }
 
-            const availableTrucks = trucksArray.filter((truck: Truck) => truck.truck_status === "AVAILABLE");
+            let availableTrucks = trucksArray.filter((truck: Truck) => truck.truck_status === "AVAILABLE");
+            availableTrucks = availableTrucks.forEach((truck: { capacity_tons: any; }) => {
+                truck = {
+                    ...truck, 
+                    capacity_tons: Number(truck.capacity_tons),
+                }
+            });
             setUnassignedTrucks(availableTrucks);
             setLoading(false);
             setError(null);

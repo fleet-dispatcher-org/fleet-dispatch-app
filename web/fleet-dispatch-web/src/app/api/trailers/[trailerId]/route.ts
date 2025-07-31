@@ -2,6 +2,12 @@ import { NextResponse, NextRequest } from "next/server";
 import { auth } from "@/auth";
 import prisma from "@/prisma/prisma";
 
+interface RouteParams {
+    params: {
+        trailerId: string;
+    };
+}
+
 export async function GET(request: NextRequest) {
     const session = await auth();
 
@@ -40,5 +46,20 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error('API Error:', error);
         return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
+    }
+}
+
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+    try {
+        const session = await auth();
+        const { trailerId } = await params;
+        await prisma.trailer.update({
+            where: { id: trailerId },
+            data: await request.json(),
+        });
+        return NextResponse.json({ message: "Trailer updated successfully" }, { status: 200 });
+    } catch (error) {
+        console.error('Error updating trailer:', error);
+        return NextResponse.json({ message: "Error updating trailer" }, { status: 500 });
     }
 }

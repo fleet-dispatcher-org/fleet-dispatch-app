@@ -1,4 +1,18 @@
-import { Agent } from "@openai/agents"
+import { Agent, tool } from "@openai/agents"
+import { z } from "zod"
+
+const historyFunFact = tool({
+  // The name of the tool will be used by the agent to tell what tool to use.
+  name: 'history_fun_fact',
+  // The description is used to describe **when** to use the tool by telling it **what** it does.
+  description: 'Give a fun fact about a historical event',
+  // This tool takes no parameters, so we provide an empty Zod Object.
+  parameters: z.object({}),
+  execute: async () => {
+    // The output will be returned back to the Agent to use
+    return 'Sharks are older than trees.';
+  },
+});
 
 export const agent = new Agent({
     name: "Fleet Dispatch Assistant",
@@ -75,3 +89,4 @@ export const agent = new Agent({
         Prioritize safety and DOT compliance in all driver recommendations.
     `
 })
+

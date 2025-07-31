@@ -3,8 +3,31 @@
 import { Trailer } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-export default function AssignTrailerClient({ loadId }: { loadId: string }) {
+type SerializedTrailer = {
+    id: string;
+    assigned_truck_id: string | null;
+    current_location: string | null;
+    has_registration: boolean | null;
+    make: string | null;
+    model: string | null;
+    year: number | null;
+    bureaucratically_sound: boolean | null;
+    correct_equipment_working: boolean | null;
+    max_cargo_capacity: number | null; // Changed from Decimal to number
+    current_cargo_weight: number | null; // Changed from Decimal to number
+    insurance_valid: boolean | null;
+    // Add any other fields from your trailer model here
+    // Convert any other Decimal fields to number | null
+} | null;
+
+interface AssignTrailerClientProps {
+    loadId: string;
+    assignedTrailer: SerializedTrailer | null;
+}
+
+export default function AssignTrailerClient({ loadId, assignedTrailer }: AssignTrailerClientProps) {
     const [trailers, setTrailers] = useState<Trailer[] | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -53,7 +76,7 @@ export default function AssignTrailerClient({ loadId }: { loadId: string }) {
     async function handleAssignTrailer(trailerId: string) {
         try {
             const response = await fetch(`/api/dispatcher/${loadId}`, {
-                method: "POST",
+                method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -70,8 +93,54 @@ export default function AssignTrailerClient({ loadId }: { loadId: string }) {
         }
     }
 
+    async function handleDeleteTrailer(trailerId: string) {
+        try {
+            const [trailerResponse, loadResponse] = await Promise.all([
+                fetch(`/api/trailers/${trailerId}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ trailer_status: "AVAILABLE" }),
+                }),
+                fetch(`/api/dispatcher/${loadId}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ assigned_trailer: null }),
+                }),
+            ]);
+
+            if (!trailerResponse.ok) {
+                throw new Error("Failed to update trailer availability");
+            }
+            if (!loadResponse.ok) {
+                throw new Error("Failed to remove trailer from load");
+            }
+            router.refresh();
+        } catch (err) {
+            console.error("Error deleting trailer:", err);
+        }
+    }
+
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
+
+        if (assignedTrailer) {
+        return (
+            <div className="group flex flex-row">
+                <Link
+                    href={`/admin/trailers/${assignedTrailer.id}`}
+                    className="group"
+                >
+                    <span>{assignedTrailer.make} {assignedTrailer.model} ({assignedTrailer.year})</span>
+                </Link>
+                <button 
+                className="ml-auto text-gray-400 hover:text-gray-500" onClick={() => handleDeleteTrailer(assignedTrailer.id)}>x</button>
+            </div>
+        );
+    }
 
     return (
         <div>
