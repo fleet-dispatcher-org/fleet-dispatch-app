@@ -1,20 +1,183 @@
-import { Agent, tool } from "@openai/agents"
-import { z } from "zod"
+import { Agent, tool, setDefaultOpenAIKey, RunContext } from "@openai/agents"
+import { AuthenticatedRequest } from "@/types/api";
+import { boolean, z } from "zod"
+import { Availability_Status } from "@prisma/client";
+import { run } from "node:test";
 
-const historyFunFact = tool({
-  // The name of the tool will be used by the agent to tell what tool to use.
-  name: 'history_fun_fact',
-  // The description is used to describe **when** to use the tool by telling it **what** it does.
-  description: 'Give a fun fact about a historical event',
-  // This tool takes no parameters, so we provide an empty Zod Object.
-  parameters: z.object({}),
-  execute: async () => {
-    // The output will be returned back to the Agent to use
-    return 'Sharks are older than trees.';
-  },
+// Set your OpenAI API key
+setDefaultOpenAIKey(process.env.OPENAI_API_KEY!);
+
+ interface Truck {
+        id: string, 
+        license_plate:   string,
+        make:            string,
+        model:            string,    
+        year:             number,
+        capacity_tons:    number,
+        mileage:          number,
+        is_active:        boolean,
+        current_location: string | undefined,
+        truck_status:     Availability_Status, 
+        assigned_driver:  boolean,
+        driver_id:        string,
+        assigned_trailer: boolean,
+        trailer_id:       string | undefined,
+        created_at:       Date,
+        driver:           Driver[]
+        trailer:          Trailer[]
+        load:             Load[]
+        assigned_fleet_id: string | undefined,
+        fleet:   Fleet | null
+    }
+
+interface Driver {
+    id: string,
+    first_name: string,
+    last_name: string,
+    email: string,
+    phone_number: string,
+    license_number: string,
+    available: boolean,
+    created_at: Date,
+    updated_at: Date,
+    driver_status: Availability_Status,
+    assigned_fleet_id: string | undefined,
+    fleet: Fleet | null
+}
+
+interface Trailer {
+    id: string,
+    assigned_truck_id: string | null,
+    current_location: string | null,
+    has_registration: boolean | null,
+    make: string | null,
+    model: string | null,
+    year: number | null,
+    bureaucratically_sound: boolean | null,
+    correct_equipment_working: boolean | null,
+    max_cargo_capacity: number | null,
+    current_cargo_weight: number | null,
+    insurance_valid: boolean | null,
+    trailer_status: Availability_Status,
+    assigned_fleet_id: string | undefined,
+    fleet: Fleet | null
+}
+
+interface Fleet {
+    id: string,
+    name: string,
+    drivers: Driver[],
+    trucks: Truck[],
+    trailers: Trailer[],
+    created_at: Date,
+    updated_at: Date
+}
+
+interface Load {
+    id: string,
+    load_type: string,
+    weight: number,
+    description: string,
+    assigned_truck_id: string | null,
+    assigned_driver_id: string | null,
+    assigned_trailer_id: string | null,
+    created_at: Date,
+    updated_at: Date
+}
+
+interface AssignmentContext {
+    unassignedDrivers: Driver[],
+    unassignedTrucks: Truck[],
+    unassignedTrailers: Trailer[],
+    unassignedLoads: Load[]
+}
+
+// Assignment result interface
+interface Assignment {
+    load_id: string,
+    driver_id: string,
+    truck_id: string,
+    trailer_id: string,
+    rationale: string,
+    estimated_distance?: number,
+    estimated_duration?: number
+}
+
+interface AssignmentResults {
+    assignments: Assignment[],
+    unassignedLoads: Load[],
+    summary: string
+}
+
+
+const getUnassignedLoads = tool({
+    name: "get_unassigned_loads",
+    description: `Assign Unassigned Drivers, Trucks, and Trailers to Loads. 
+    Do so in a fashion that makes certain that the Drivers, 
+    Trucks and Trailers are close in location to where the Load originates`,
+    parameters: z.object({}),
+    execute: async (_args, runContext?: RunContext<AssignmentContext>): Promise<Load[] | undefined> => {
+        return runContext?.context?.unassignedLoads || [];
+    }
+})
+
+// Tool to get available trucks for assignment
+const getAvailableTrucks = tool({
+    name: "get_available_trucks",
+    description: "Get all available trucks from the context that can be assigned to loads",
+    parameters: z.object({}),
+    execute: async (_args, runContext?: RunContext<AssignmentContext>): Promise<Truck[]> => {
+        return runContext?.context?.unassignedTrucks || [];
+    }
 });
 
-export const agent = new Agent({
+const getAvailableDrivers = tool({
+    name: "get_available_drivers",
+    description: "Get all available drivers from the context that can be assigned to loads",
+    parameters: z.object({}),
+    execute: async (_args, runContext?: RunContext<AssignmentContext>): Promise<Driver[]> => {
+        return runContext?.context?.unassignedDrivers || [];
+    }
+})
+
+const getAvailableTrailers = tool({
+    name: "get_available_trailers",
+    description: "Get all available trailers from the context that can be assigned to loads",
+    parameters: z.object({}),
+    execute: async (_args, runContext?: RunContext<AssignmentContext>): Promise<Trailer[]> => {
+        return runContext?.context?.unassignedTrailers || [];
+    }
+}) 
+
+
+const makeOptimalAssignments = tool({
+    name: "make_optimal_assignments",
+    description: "Get all available trailers from the context that can be assigned to loads",
+    parameters: z.object({
+        assignments: z.array(z.object({
+            load_id: z.string(),
+            driver_id: z.string(),  
+            truck_id: z.string(),
+            trailer_id: z.string(),
+            rationale: z.string(),
+        })),
+    }),
+    execute: async (_args, runContext?: RunContext<AssignmentContext>): Promise<AssignmentResults> => {
+        const context = runContext?.context;
+        if(!context) return { assignments: [], unassignedLoads: [], summary: "No assignments needed." };
+        
+        const assignedLoadIds = new Set(_args.assignments.map(assignment => assignment.load_id));
+        const unassignedLoads = context.unassignedLoads.filter(load => !assignedLoadIds.has(load.id));
+
+        return {
+            assignments: _args.assignments,
+            unassignedLoads,
+            summary: "Optimal assignments made."
+        }
+    }
+})
+
+export const dispatch_agent = new Agent({
     name: "Fleet Dispatch Assistant",
     model: "gpt-4o",
     instructions: `You are a professional fleet dispatch assistant specializing in optimal driver selection and route planning. 
@@ -87,6 +250,13 @@ export const agent = new Agent({
         
         Always begin your analysis immediately using the provided context data.
         Prioritize safety and DOT compliance in all driver recommendations.
-    `
+    `,
+    tools: [
+        getAvailableDrivers,
+        getAvailableTrucks, 
+        getAvailableTrailers,
+        getUnassignedLoads,
+        makeOptimalAssignments,
+    ],
 })
 

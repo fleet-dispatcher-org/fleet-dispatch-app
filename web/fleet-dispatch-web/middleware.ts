@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "./auth";
 import { match } from "assert";
+import { getToken } from "next-auth/jwt";
 
 const protectedRoutes = ["/driver", "/truck", "/dispatcher"];
+
 
 export default async function middleware(request: NextRequest) {
         const session = await auth();

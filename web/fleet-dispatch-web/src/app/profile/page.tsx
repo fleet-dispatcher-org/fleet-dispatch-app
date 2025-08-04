@@ -13,6 +13,8 @@ import { User } from "@prisma/client";
 import DriverLoadsWrapper from "../components/DriverLoadsWrapper";
 import { Helmet } from "react-helmet";
 import { Metadata } from "next";
+import { dispatch_agent } from "../agent/agent";
+import { run } from "@openai/agents";
 
 export const metadata: Metadata = {
     title: 'Profile',
@@ -36,8 +38,6 @@ export default async function Profile() {
             </div>
         );
     }
-
-    
    
 
     const ProfileLayout = ({ children, role }: { children: React.ReactNode; role: string }) => (

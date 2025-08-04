@@ -6,6 +6,7 @@ import Logo from './Logo';
 import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
 import { Load } from '@prisma/client';
 import Link from 'next/link';
+import { dispatch_agent } from '../agent/agent';
 
 
 export default function AIBoard() {
