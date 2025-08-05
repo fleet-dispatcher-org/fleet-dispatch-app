@@ -1,28 +1,232 @@
 'use client'
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { Role, Status } from "@prisma/client";
+import { Role, Status, Trailer, Load, Driver, Truck } from "@prisma/client";
 import Logo from './Logo';
 import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
-import { Load } from '@prisma/client';
 import Link from 'next/link';
-import { dispatch_agent } from '../agent/agent';
+import { assignLoadsToResources, Assignment, AssignmentContext } from '../agent/agent';
+import { setDefaultOpenAIKey } from '@openai/agents'
 
 
 export default function AIBoard() {
     const { data: session } = useSession();
     const [suggestedLoads, setSuggestedLoads] = useState<Load[]>([]);
     const [trucks, setTrucks] = useState<Record<string, string>>({});
+    const [unassignedTrucks, setUnassignedTrucks] = useState<Truck[]>([]);
+    const [unassignedTrailers, setUnassignedTrailers] = useState<Trailer[]>([]);
+    const [unassignedDrivers, setUnassignedDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [updatingLoadId, setUpdatingLoadId] = useState<string | null>(null);
     const [trailers, setTrailers] = useState<Record<string, string>>({});
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
+    const [unassignedLoads, setUnassignedLoads] = useState<Load[]>([]);
 
     useEffect(() => {
-        getSuggestions();
+        try {
+            makeSuggestions();
+        } catch (error) {
+            console.error('Error making suggestions:', error);
+        } finally {
+            getSuggestions();   
+        }
     }, []);
-    
+    const fetchUnassignedDrivers = async (): Promise<Driver[]> => {
+    try {
+        setLoading(true);
+        
+        const response = await fetch('/api/dispatcher/drivers', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            cache: 'no-store'
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Handle both array and object responses
+        let driversArray;
+        if (Array.isArray(data)) {
+            driversArray = data;
+        } else if (data && Array.isArray(data.drivers)) {
+            driversArray = data.drivers;
+        } else {
+            throw new Error('Invalid response format: expected array or object with drivers property');
+        }
+        
+        const availableDrivers = driversArray.filter((driver: Driver) => driver.is_available);
+        setUnassignedDrivers(availableDrivers);
+        setError(null);
+        return availableDrivers; // Return the data
+    } catch (error) {
+        console.error('Error fetching unassigned drivers:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error occurred');
+        setUnassignedDrivers([]);
+        return []; // Return empty array on error
+    } finally {
+        setLoading(false);
+    }
+};
+
+const fetchUnassignedTrucks = async (): Promise<Truck[]> => {
+    try {
+        setLoading(true);
+        
+        const response = await fetch('/api/trucks', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        setUnassignedTrucks(data);
+        setError(null);
+        return data; // Return the data
+    } catch (error) {
+        console.error('Error fetching unassigned trucks:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error occurred');
+        setUnassignedTrucks([]);
+        return []; // Return empty array on error
+    } finally {
+        setLoading(false);
+    }
+};
+
+const fetchUnassignedTrailers = async (): Promise<Trailer[]> => {
+    try {
+        setLoading(true);
+        
+        const response = await fetch('/api/trailers', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        setUnassignedTrailers(data);
+        setError(null);
+        return data; // Return the data
+    } catch (error) {
+        console.error('Error fetching unassigned trailers:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error occurred');
+        setUnassignedTrailers([]);
+        return []; // Return empty array on error
+    } finally {
+        setLoading(false);
+    }
+};
+
+const fetchUnassignedLoads = async (): Promise<Load[]> => {
+    try {
+        setLoading(true);
+        
+        const response = await fetch('/api/dispatcher/loads', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        let unassignedLoads = data.filter((load: Load) => !load.assigned_driver || !load.assigned_truck || !load.assigned_trailer);
+        setUnassignedLoads(unassignedLoads);
+        setError(null);
+        return data; // Return the data
+    } catch (error) {
+        console.error('Error fetching unassigned loads:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error occurred');
+        setUnassignedLoads([]);
+        return []; // Return empty array on error
+    } finally {
+        setLoading(false);
+    }
+    }
+
+const makeSuggestions = async () => {
+    // Get the actual data from the fetch functions
+    const [drivers, trucks, trailers, loads] = await Promise.all([
+        fetchUnassignedDrivers(), 
+        fetchUnassignedTrucks(), 
+        fetchUnassignedTrailers(),
+        fetchUnassignedLoads()
+    ]);
+
+    const assignmentData: AssignmentContext = {
+        unassignedDrivers: drivers,     // Use returned data
+        unassignedTrucks: trucks,       // Use returned data
+        unassignedTrailers: trailers,   // Use returned data
+        unassignedLoads: loads
+    }
+
+    console.log(assignmentData);
+
+    const response_ai = await fetch('/api/agent/assign-loads', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(assignmentData)
+    });
+
+    if (!response_ai.ok) {
+        const errorData = await response_ai.json();
+        throw new Error(errorData.message || `HTTP ${response_ai.status}: ${response_ai.statusText}`);
+    }
+
+    const results = await response_ai.json();
+
+    // Process assignments
+    results.assignments.forEach(async (assignment: Assignment) => {
+        try {
+            const response = await fetch(`/api/dispatcher/${assignment.load_id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    assigned_driver: assignment.driver_id,
+                    assigned_truck: assignment.truck_id,
+                    assigned_trailer: assignment.trailer_id,
+                    status: 'SUGGESTED'  
+                })
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            console.log('Successfully updated load:', assignment.load_id);
+            
+        } catch (error) {
+            console.error('Error updating load:', error);
+        }
+    })
+}
     const getSuggestions = async () => {
         try {
             setLoading(true);
@@ -147,69 +351,7 @@ export default function AIBoard() {
             }))
         }
     }
-
-    const acceptLoad = async (loadId: string, newStatus: string, newDriverId: string, newTruckId: string, newTrailerId: string) => {
-        try {
-            setUpdatingLoadId(loadId);
-            
-            const response = await fetch(`/api/dispatcher/${loadId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    status: newStatus,
-                    assigned_driver: newDriverId,
-                    assigned_truck: newTruckId,
-                    assigned_trailer: newTrailerId
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to accept load: ${response.status}`);
-            }
-
-            // Refresh the data after successful update
-            await getSuggestions();
-        } catch (err) {
-            console.error('Error accepting load:', err);
-            setError(err instanceof Error ? err.message : 'Failed to accept load');
-        } finally {
-            setUpdatingLoadId(null);
-        }
-    };
-
-    const rejectLoad = async (loadId: string, newStatus: string) => {
-        try {
-            setUpdatingLoadId(loadId);
-            
-            const response = await fetch(`/api/dispatcher/${loadId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    status: newStatus,
-                    assigned_driver: null,
-                    assigned_truck: null,
-                    assigned_trailer: null
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to reject load: ${response.status}`);
-            }
-
-            // Refresh the data after successful update
-            await getSuggestions();
-        } catch (err) {
-            console.error('Error rejecting load:', err);
-            setError(err instanceof Error ? err.message : 'Failed to reject load');
-        } finally {
-            setUpdatingLoadId(null);
-        }
-    };
-
+    
     if (loading && suggestedLoads.length === 0) {
         return (
             <div className="max-w-7xl mx-auto p-6 mt-4">

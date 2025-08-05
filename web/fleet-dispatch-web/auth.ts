@@ -96,12 +96,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             select: { role: true }
           });
           token.role = dbUser?.role || 'USER';
-          token.id = user.id;
+          if (user.id) {
+            token.id = user.id;
+          }
           console.log("JWT token role set to:", token.role); // Add this log
         } catch (error) {
           console.error("Error in JWT callback:", error);
           token.role = 'USER';
+          if (user.id) {
           token.id = user.id;
+          }
         }
       }
       return token;

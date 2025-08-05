@@ -39,7 +39,10 @@ export default function AcceptDenyButtons({ loadId }: AcceptDenyButtonsProps) {
                 },
                 body: JSON.stringify({
                     id: loadId,
-                    status: "UNASSIGNED"
+                    status: "UNASSIGNED",
+                    assigned_driver: null,
+                    assigned_truck: null,
+                    assigned_trailer: null
                 })
             })
             if (!response.ok) {
