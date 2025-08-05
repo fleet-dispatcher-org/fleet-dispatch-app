@@ -49,6 +49,7 @@ export default function AssignTruckClient({loadId, assignedTruck}: AssignTruckCl
 
             const data = await response.json();
 
+
             // Handle both array and object responses
             let trucksArray;
             if (Array.isArray(data)) {
@@ -60,8 +61,8 @@ export default function AssignTruckClient({loadId, assignedTruck}: AssignTruckCl
             }
 
             let availableTrucks = trucksArray.filter((truck: Truck) => truck.truck_status === "AVAILABLE");
-            availableTrucks = availableTrucks.forEach((truck: { capacity_tons: any; }) => {
-                truck = {
+            availableTrucks = availableTrucks.map((truck: { capacity_tons: any; }) => {
+                return {
                     ...truck, 
                     capacity_tons: Number(truck.capacity_tons),
                 }
@@ -96,36 +97,54 @@ export default function AssignTruckClient({loadId, assignedTruck}: AssignTruckCl
     }
 
     async function handleDeleteTruck(truckId: string) {
-        try {
-            const [truckResponse, loadResponse] = await Promise.all([
-                fetch(`/api/truck/${truckId}`, {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ truck_status: "AVAILABLE" }),
-                }),
-                fetch(`/api/dispatcher/${loadId}`, {
+    try {
+        const [truckResponse, loadResponse] = await Promise.all([
+            fetch(`/api/trucks/${truckId}`, { // Fixed: trucks instead of truck
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ truck_status: "AVAILABLE" }),
+            }),
+            fetch(`/api/dispatcher/${loadId}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({ assigned_truck: null }),
-                })
-            ])
+            })
+        ]);
 
-            if (!truckResponse.ok) {
-                throw new Error("Failed to update truck availability");
-            }
-            if (!loadResponse.ok) {
-                throw new Error("Failed to remove truck from load");
-            }
-            router.refresh();
-        } catch (err) {
-            console.error("Error deleting truck:", err);
+        if (!truckResponse.ok) {
+            throw new Error(`Failed to update truck availability: ${truckResponse.status} ${truckResponse.statusText}`);
         }
-    }
 
+        if (!loadResponse.ok) {
+            throw new Error(`Failed to remove truck from load: ${loadResponse.status} ${loadResponse.statusText}`);
+        }
+
+        // Check if responses have content before parsing JSON
+        const truckText = await truckResponse.text();
+        const loadText = await loadResponse.text();
+
+        // Only parse as JSON if there's content
+        if (truckText) {
+            const truckData = JSON.parse(truckText);
+            console.log("Truck update response:", truckData);
+        }
+
+        if (loadText) {
+            const loadData = JSON.parse(loadText);
+            console.log("Load update response:", loadData);
+        }
+
+        // Only refresh if both operations succeeded
+        router.refresh();
+        
+    } catch (err) {
+        console.error("Error deleting truck:", err);
+    }
+}
     if(loading) {
         return <div>Loading...</div>;
     }

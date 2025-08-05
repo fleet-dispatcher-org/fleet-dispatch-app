@@ -21,7 +21,6 @@ export interface Assignment {
 
 export interface AssignmentResults {
     assignments: Assignment[],
-    unassignedLoads: Load[],
     summary: string
 }
 
@@ -43,18 +42,14 @@ const createAssignments = tool({
         const context = runContext?.context;
         if (!context) {
             return { 
-                assignments: [], 
-                unassignedLoads: [], 
+                assignments: [],  
                 summary: "No context available" 
             };
         }
-        
-        const assignedLoadIds = new Set(args.assignments.map(a => a.load_id));
-        const unassignedLoads = context.unassignedLoads.filter(load => !assignedLoadIds.has(load.id));
+    
 
         return {
             assignments: args.assignments,
-            unassignedLoads,
             summary: args.summary
         };
     }
@@ -106,20 +101,10 @@ export async function assignLoadsToResources(assignmentData: AssignmentContext):
             loads: assignmentData.unassignedLoads.length
         });
 
-        // Filter to only truly unassigned loads
-        const trulyUnassignedLoads = assignmentData.unassignedLoads.filter(load => 
-            load.status === 'UNASSIGNED' && 
-            !load.assigned_driver && 
-            !load.assigned_truck && 
-            !load.assigned_trailer
-        );
+        // We're already filtering the data. So there's a bit of an expectation of Filtered loads being provided.
 
-        console.log('Truly unassigned loads:', trulyUnassignedLoads.length);
+        console.log('Truly unassigned loads:', assignmentData.unassignedLoads.length);
 
-        const contextWithFilteredLoads = {
-            ...assignmentData,
-            unassignedLoads: trulyUnassignedLoads
-        };
 
         const result = await run(
             dispatch_agent,
@@ -129,11 +114,12 @@ export async function assignLoadsToResources(assignmentData: AssignmentContext):
             - Drivers: ${assignmentData.unassignedDrivers.length}
             - Trucks: ${assignmentData.unassignedTrucks.length}  
             - Trailers: ${assignmentData.unassignedTrailers.length}
-            - Truly unassigned loads: ${trulyUnassignedLoads.length}
+            - Truly unassigned loads: ${assignmentData.unassignedLoads.length}
             
-            Use the exact IDs from the data and call create_assignments with your results.`,
+            Use the exact IDs from the data and call create_assignments with your results.
+            `,
             {
-                context: contextWithFilteredLoads
+                context: assignmentData
             }
         );
 
@@ -145,18 +131,17 @@ export async function assignLoadsToResources(assignmentData: AssignmentContext):
             return result.finalOutput as AssignmentResults;
         }
 
+
         // Fallback
         return {
             assignments: [],
-            unassignedLoads: assignmentData.unassignedLoads,
-            summary: 'Agent did not call create_assignments tool properly'
+            summary: result.finalOutput as string
         };
 
     } catch (error) {
         console.error('Assignment failed:', error);
         return {
             assignments: [],
-            unassignedLoads: assignmentData.unassignedLoads,
             summary: `Assignment failed: ${error instanceof Error ? error.message : 'Unknown error'}`
         };
     }
