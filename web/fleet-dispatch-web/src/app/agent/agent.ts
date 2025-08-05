@@ -1,7 +1,6 @@
 import { Agent, tool, setDefaultOpenAIKey, RunContext, run } from "@openai/agents"
-import { AuthenticatedRequest } from "@/types/api";
-import { boolean, z } from "zod"
-import { Availability_Status, Driver, Fleet, Load, Trailer, Truck } from "@prisma/client";
+import { z } from "zod"
+import { Driver, Load, Trailer, Truck } from "@prisma/client";
 
 setDefaultOpenAIKey(process.env.OPENAI_API_KEY!);
 
@@ -12,15 +11,12 @@ export interface AssignmentContext {
     unassignedLoads: Load[]
 }
 
-// Assignment result interface
 export interface Assignment {
     load_id: string,
     driver_id: string,
     truck_id: string,
     trailer_id: string,
     rationale: string,
-    estimated_distance?: number,
-    estimated_duration?: number
 }
 
 export interface AssignmentResults {
@@ -29,54 +25,19 @@ export interface AssignmentResults {
     summary: string
 }
 
-const getUnassignedLoads = tool({
-    name: "get_unassigned_loads",
-    description: "Get all unassigned loads that need driver, truck, and trailer assignments",
-    parameters: z.object({}),
-    execute: async (_args, runContext?: RunContext<AssignmentContext>): Promise<Load[] | undefined> => {
-        return runContext?.context?.unassignedLoads || [];
-    }
-})
-
-const getAvailableTrucks = tool({
-    name: "get_available_trucks",
-    description: "Get all available trucks that can be assigned to loads",
-    parameters: z.object({}),
-    execute: async (_args, runContext?: RunContext<AssignmentContext>): Promise<Truck[]> => {
-        return runContext?.context?.unassignedTrucks || [];
-    }
-});
-
-const getAvailableDrivers = tool({
-    name: "get_available_drivers",
-    description: "Get all available drivers that can be assigned to loads",
-    parameters: z.object({}),
-    execute: async (_args, runContext?: RunContext<AssignmentContext>): Promise<Driver[]> => {
-        return runContext?.context?.unassignedDrivers || [];
-    }
-})
-
-const getAvailableTrailers = tool({
-    name: "get_available_trailers",
-    description: "Get all available trailers that can be assigned to loads",
-    parameters: z.object({}),
-    execute: async (_args, runContext?: RunContext<AssignmentContext>): Promise<Trailer[]> => {
-        return runContext?.context?.unassignedTrailers || [];
-    }
-}) 
-
-const makeOptimalAssignments = tool({
-    name: "make_optimal_assignments",
-    description: "Create optimal assignments of drivers, trucks, and trailers to loads. This tool must be called to complete the assignment process.",
+// This is the ONLY tool that should return the final result
+const createAssignments = tool({
+    name: "create_assignments",
+    description: "REQUIRED: Create and return the final assignment results. This tool MUST be called to complete the assignment process.",
     parameters: z.object({
         assignments: z.array(z.object({
-            load_id: z.string().describe("The ID of the load being assigned"),
-            driver_id: z.string().describe("The ID of the driver being assigned"),
-            truck_id: z.string().describe("The ID of the truck being assigned"),
-            trailer_id: z.string().describe("The ID of the trailer being assigned"),
-            rationale: z.string().describe("Explanation for why this assignment is optimal"),
-        })).describe("Array of load assignments"),
-        summary: z.string().describe("Overall summary of the assignment process and results")
+            load_id: z.string().describe("Exact load ID from the unassigned loads"),
+            driver_id: z.string().describe("Exact driver ID from available drivers"),
+            truck_id: z.string().describe("Exact truck ID from available trucks"),
+            trailer_id: z.string().describe("Exact trailer ID from available trailers"),
+            rationale: z.string().describe("Brief explanation for this assignment choice")
+        })).describe("Array of load assignments with exact IDs"),
+        summary: z.string().describe("Summary of assignment process and results")
     }),
     execute: async (args, runContext?: RunContext<AssignmentContext>): Promise<AssignmentResults> => {
         const context = runContext?.context;
@@ -84,11 +45,11 @@ const makeOptimalAssignments = tool({
             return { 
                 assignments: [], 
                 unassignedLoads: [], 
-                summary: "No context available for assignments." 
+                summary: "No context available" 
             };
         }
         
-        const assignedLoadIds = new Set(args.assignments.map(assignment => assignment.load_id));
+        const assignedLoadIds = new Set(args.assignments.map(a => a.load_id));
         const unassignedLoads = context.unassignedLoads.filter(load => !assignedLoadIds.has(load.id));
 
         return {
@@ -97,82 +58,102 @@ const makeOptimalAssignments = tool({
             summary: args.summary
         };
     }
-})
+});
 
 export const dispatch_agent = new Agent({
-    name: "Fleet Dispatch Assignment Agent",
+    name: "Assignment Agent",
     model: "gpt-4o",
-    instructions: `You are a fleet dispatch assignment agent responsible for creating optimal assignments of drivers, trucks, and trailers to loads.
+    instructions: `You are an assignment agent that creates optimal driver-truck-trailer-load assignments.
 
-## Your Task:
-1. Analyze available drivers, trucks, trailers, and unassigned loads
-2. Create optimal assignments that match resources to loads efficiently
-3. ALWAYS call the make_optimal_assignments tool with your assignments
-4. Provide rationale for each assignment decision
-
-## Assignment Criteria (in priority order):
-1. **Resource Availability**: Only assign available drivers, trucks, and trailers
-2. **Location Efficiency**: Minimize travel distance from resource location to load origin
-3. **Load Requirements**: Match trailer type and capacity to load specifications
-4. **Delivery Deadlines**: Prioritize loads with earlier due dates
-5. **Driver Qualifications**: Match driver certifications to load requirements (HAZMAT, etc.)
-6. **Equipment Compatibility**: Ensure truck and trailer are compatible
+## CRITICAL REQUIREMENTS:
+1. You MUST call the create_assignments tool with your results
+2. Use EXACT IDs from the context data - do not make up IDs
+3. Only assign loads with status "UNASSIGNED" 
+4. Do not assign loads that already have assigned_driver, assigned_truck, or assigned_trailer
 
 ## Process:
-1. First, use the get_* tools to retrieve available resources and loads
-2. Analyze the data to identify optimal matches
-3. Create assignments based on the criteria above
-4. MUST call make_optimal_assignments with your results - this is required to complete the task
-5. Include detailed rationale for each assignment
+1. Analyze the context data provided
+2. Find truly unassigned loads (status = "UNASSIGNED" AND all assigned fields are null)
+3. Match available drivers, trucks, and trailers to these loads
+4. Call create_assignments with exact IDs and rationale
+5. Do NOT provide a text summary - only call the tool
 
-## Assignment Strategy:
-- Start with the most constrained loads (earliest due dates, special requirements)
-- Assign the closest available resources to minimize empty miles
-- Consider load weight and trailer capacity
-- Ensure driver certifications match load requirements
-- Factor in delivery time constraints
+## Assignment Logic:
+- Prioritize loads by due date (earliest first)
+- Match closest available resources to minimize travel
+- Ensure load weight is within truck/trailer capacity
+- Match any special requirements (HAZMAT, etc.)
 
-## Response Format:
-You must always end by calling the make_optimal_assignments tool with:
-- An array of assignments (load_id, driver_id, truck_id, trailer_id, rationale)
-- A summary of the assignment process and any unassigned loads
+## Data Access:
+The context contains:
+- unassignedDrivers: array of available drivers
+- unassignedTrucks: array of available trucks  
+- unassignedTrailers: array of available trailers
+- unassignedLoads: array of loads needing assignment
 
-Remember: Your job is to make actual assignments, not just provide recommendations. Always call the make_optimal_assignments tool to complete the process.`,
-    tools: [
-        getAvailableDrivers,
-        getAvailableTrucks, 
-        getAvailableTrailers,
-        getUnassignedLoads,
-        makeOptimalAssignments,
-    ],
-})
+You have access to all this data directly through the context parameter.
+
+REMEMBER: You must end by calling create_assignments with the exact IDs from the data.`,
+    tools: [createAssignments],
+});
 
 export async function assignLoadsToResources(assignmentData: AssignmentContext): Promise<AssignmentResults> {
     try {
+        console.log('Starting assignment with:', {
+            drivers: assignmentData.unassignedDrivers.length,
+            trucks: assignmentData.unassignedTrucks.length,
+            trailers: assignmentData.unassignedTrailers.length,
+            loads: assignmentData.unassignedLoads.length
+        });
+
+        // Filter to only truly unassigned loads
+        const trulyUnassignedLoads = assignmentData.unassignedLoads.filter(load => 
+            load.status === 'UNASSIGNED' && 
+            !load.assigned_driver && 
+            !load.assigned_truck && 
+            !load.assigned_trailer
+        );
+
+        console.log('Truly unassigned loads:', trulyUnassignedLoads.length);
+
+        const contextWithFilteredLoads = {
+            ...assignmentData,
+            unassignedLoads: trulyUnassignedLoads
+        };
+
         const result = await run(
             dispatch_agent,
-            `Create optimal assignments for the available resources and loads. 
-            Analyze the data and make assignments that minimize travel time and ensure all requirements are met.
-            You must call the make_optimal_assignments tool with your results.`,
+            `Create assignments for the unassigned loads using available drivers, trucks, and trailers. 
+            
+            Available resources:
+            - Drivers: ${assignmentData.unassignedDrivers.length}
+            - Trucks: ${assignmentData.unassignedTrucks.length}  
+            - Trailers: ${assignmentData.unassignedTrailers.length}
+            - Truly unassigned loads: ${trulyUnassignedLoads.length}
+            
+            Use the exact IDs from the data and call create_assignments with your results.`,
             {
-                context: assignmentData
+                context: contextWithFilteredLoads
             }
         );
 
-        // Check if the agent used the tool and returned structured data
+        console.log('Agent result type:', typeof result.finalOutput);
+        console.log('Agent result:', result.finalOutput);
+
+        // The tool should return AssignmentResults directly
         if (result.finalOutput && typeof result.finalOutput === 'object' && 'assignments' in result.finalOutput) {
             return result.finalOutput as AssignmentResults;
         }
-        
-        // Fallback if the agent didn't use the tool properly
-        console.warn('Agent did not return structured assignment data');
+
+        // Fallback
         return {
             assignments: [],
             unassignedLoads: assignmentData.unassignedLoads,
-            summary: typeof result.finalOutput === 'string' ? result.finalOutput : 'Assignment process completed but no structured data returned'
+            summary: 'Agent did not call create_assignments tool properly'
         };
+
     } catch (error) {
-        console.error('Assignment process failed:', error);
+        console.error('Assignment failed:', error);
         return {
             assignments: [],
             unassignedLoads: assignmentData.unassignedLoads,
