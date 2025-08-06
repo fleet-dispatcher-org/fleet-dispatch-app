@@ -86,7 +86,7 @@ export default function UnassignedDrivers() {
     }
 
     return (
-        <div className="w-1/2 mx-0 p-6">
+        <div className="w-1/4 mx-0 p-6">
             {/* Drivers Table */}
             <div className="bg-gray-900 shadow rounded-lg overflow-hidden">
                 {/* Table Header */}

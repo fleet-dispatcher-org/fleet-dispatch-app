@@ -96,6 +96,9 @@ export default function UnassignedBoardMini() {
                     <thead className="bg-gray-800">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ID
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Origin
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -110,44 +113,50 @@ export default function UnassignedBoardMini() {
                         </tr>
                     </thead>
 
-                    <tbody className="bg-gray-800 divide-y divide-gray-200">
-                        {loads.map((load) => (
-                            <tr key={load.id} className="hover:bg-gray-700">
-                                <td className='px-6 py-4 whitespace-nowrap'>
-                                    <div className='flex items-center'>
-                                        <div className='flex-shrink-0 h-10 w-10'>
-                                            <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer'>
-                                                <span className="text-sm font-medium text-gray-300">
-                                                    {load.origin}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                    {load.destination}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {(() => {
-                                        if (!load.due_by) return 'No due date';
-                                        const date = new Date(load.due_by);
-                                        if (isNaN(date.getTime())) return 'Invalid date';
-                                        return `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
-                                    })()}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <Link 
-                                        href={`/load/${load.id}`}
-                                        className="group"
-                                    >
-                                        <span className='text-sm font-medium text-gray-300 hover:underline mx-auto'>
-                                            View
-                                        </span>
-                                    </Link>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
+<tbody className="bg-gray-800 divide-y divide-gray-200">
+    {loads.map((load) => {
+        // Add this console log to debug what's in your load object
+        console.log('Load object:', load);
+                
+                return (
+                    <tr key={load.id} className="hover:bg-gray-700">
+                        {/* Simplified ID cell */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            ID: {load.id} {/* Added "ID: " prefix to make it obvious */}
+                        </td>
+                        
+                        {/* Simplified Origin cell */}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {load.origin}
+                        </td>
+                        
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {load.destination}
+                        </td>
+                        
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {(() => {
+                                if (!load.due_by) return 'No due date';
+                                const date = new Date(load.due_by);
+                                if (isNaN(date.getTime())) return 'Invalid date';
+                                return `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
+                            })()}
+                        </td>
+                        
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <Link 
+                                href={`/load/${load.id}`}
+                                className="group"
+                            >
+                                <span className='text-sm font-medium text-gray-300 hover:underline'>
+                                    View
+                                </span>
+                            </Link>
+                        </td>
+                    </tr>
+                );
+            })}
+        </tbody>
                 </table> 
             </div>   
 

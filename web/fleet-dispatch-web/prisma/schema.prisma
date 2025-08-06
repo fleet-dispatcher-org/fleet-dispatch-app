@@ -28,6 +28,7 @@ model Driver {
   employment_status       Employment_Status @default(HIRED)
   hire_date               DateTime?         @db.Date
   // Remove user_id field since id now serves this purpose
+  attributes              Json?
   loads                   Load[]
   user                    User              @relation(fields: [id], references: [id], onUpdate: NoAction)
   trucks                  Truck?            @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
@@ -79,6 +80,7 @@ model Trailer {
   required_permits          String[]
   assigned_fleet            String? 
   insurance_valid           Boolean?
+  attributes                Json? 
   load                      Load[]
   truck_id                  Truck?    @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   fleet                     Fleet?      @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction) 
@@ -98,6 +100,7 @@ model Load {
   percent_complete Int       @default(0)
   is_active        Boolean   @default(true)
   assigned_fleet   String?
+  attributes       Json? 
   truck            Truck?    @relation(fields: [assigned_truck], references: [id], onDelete: NoAction, onUpdate: NoAction)
   driver           Driver?   @relation(fields: [assigned_driver], references: [id], onDelete: NoAction, onUpdate: NoAction)
   trailer          Trailer?  @relation(fields: [assigned_trailer], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -143,6 +146,7 @@ model Truck {
   driver           Driver[]
   trailer          Trailer[]
   load             Load[]
+  attributes       Json?
   assigned_fleet_id String?
   fleet   Fleet? @relation(fields: [assigned_fleet_id], references: [id], onDelete: NoAction)
 }
@@ -191,6 +195,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   assigned_fleet  String?
+  attributes      Json? 
   fleet      Fleet? @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction)
 }
 
