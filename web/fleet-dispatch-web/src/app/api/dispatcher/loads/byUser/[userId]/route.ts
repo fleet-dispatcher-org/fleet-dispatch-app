@@ -48,3 +48,16 @@ export async function GET({ params }: RouteParams) {
         return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
     }
 }
+
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+    try {
+        const session = await auth();
+        const { userId } = await params;
+        const body = await request.json();
+        const updatedDriver = await prisma.driver.update({ where: { id: userId }, data: body });
+        return NextResponse.json(updatedDriver, { status: 200 });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
+    }
+}
