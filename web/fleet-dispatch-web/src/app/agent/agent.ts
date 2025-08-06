@@ -24,122 +24,157 @@ export interface AssignmentResults {
     summary: string
 }
 
-// This is the ONLY tool that should return the final result
-const createAssignments = tool({
-    name: "create_assignments",
-    description: "REQUIRED: Create and return the final assignment results. This tool MUST be called to complete the assignment process.",
-    parameters: z.object({
-        assignments: z.array(z.object({
-            load_id: z.string().describe("Exact load ID from the unassigned loads"),
-            driver_id: z.string().describe("Exact driver ID from available drivers"),
-            truck_id: z.string().describe("Exact truck ID from available trucks"),
-            trailer_id: z.string().describe("Exact trailer ID from available trailers"),
-            rationale: z.string().describe("Brief explanation for this assignment choice")
-        })).describe("Array of load assignments with exact IDs"),
-        summary: z.string().describe("Summary of assignment process and results")
-    }),
-    execute: async (args, runContext?: RunContext<AssignmentContext>): Promise<AssignmentResults> => {
-        const context = runContext?.context;
-        if (!context) {
-            return { 
-                assignments: [],  
-                summary: "No context available" 
-            };
-        }
-    
+// Agent instructions as a constant for reuse
+const AGENT_INSTRUCTIONS = `You are a logistics assignment agent that creates optimal driver-truck-trailer-load assignments.
 
-        return {
-            assignments: args.assignments,
-            summary: args.summary
-        };
-    }
-});
+## WORKFLOW:
+1. Analyze the provided context data
+2. Create optimized assignments based on logistics best practices
+3. Call create_assignments tool with your final results
 
-export const dispatch_agent = new Agent({
-    name: "Assignment Agent",
-    model: "gpt-4o",
-    instructions: `You are an assignment agent that creates optimal driver-truck-trailer-load assignments.
+## ASSIGNMENT CRITERIA:
+1. **Urgency Priority**: Assign loads with earliest due_by dates first
+2. **Proximity Matching**: Match drivers/equipment closest to load origin
+3. **Capacity Validation**: Ensure truck+trailer capacity >= load weight
+4. **Efficiency**: Minimize total travel distance
 
-## CRITICAL REQUIREMENTS:
-1. You MUST call the create_assignments tool with your results
-2. Use EXACT IDs from the context data - do not make up IDs
-3. Only assign loads with status "UNASSIGNED" 
-4. Do not assign loads that already have assigned_driver, assigned_truck, or assigned_trailer
+## ASSIGNMENT PROCESS:
+1. Sort unassigned loads by due_by date (earliest first)
+2. For each load, find the best combination of available resources
+3. Validate weight capacity: load.weight <= min(truck.capacity, trailer.capacity)
+4. Create assignment with rationale explaining the choice
 
-## Process:
-1. Analyze the context data provided
-2. Find truly unassigned loads (status = "UNASSIGNED" AND all assigned fields are null)
-3. Match available drivers, trucks, and trailers to these loads
-4. Call create_assignments with exact IDs and rationale
-5. Do NOT provide a text summary - only call the tool
-
-## Assignment Logic:
-- Prioritize loads by due date (earliest first)
-- Match closest available resources to minimize travel
-- Ensure load weight is within truck/trailer capacity
-- Match any special requirements (HAZMAT, etc.)
-
-## Data Access:
-The context contains:
-- unassignedDrivers: array of available drivers
-- unassignedTrucks: array of available trucks  
-- unassignedTrailers: array of available trailers
-- unassignedLoads: array of loads needing assignment
-
-You have access to all this data directly through the context parameter.
-
-REMEMBER: You must end by calling create_assignments with the exact IDs from the data.`,
-    tools: [createAssignments],
-});
+## RULES:
+- Only use exact IDs from the context data
+- Each resource can only be assigned once
+- Load weight must not exceed both truck AND trailer capacity
+- Call create_assignments tool with ALL assignments at once`;
 
 export async function assignLoadsToResources(assignmentData: AssignmentContext): Promise<AssignmentResults> {
     try {
-        console.log('Starting assignment with:', {
-            drivers: assignmentData.unassignedDrivers.length,
-            trucks: assignmentData.unassignedTrucks.length,
-            trailers: assignmentData.unassignedTrailers.length,
-            loads: assignmentData.unassignedLoads.length
+        // Closure variable to capture tool results
+        let capturedResult: AssignmentResults | null = null;
+
+        // Transform data for AI processing
+        const loadsData = assignmentData.unassignedLoads.map(load => ({
+            id: load.id,
+            origin: load.origin,
+            destination: load.destination,
+            due_by: load.due_by,
+            weight: load.weight,
+            status: load.status
+        }));
+
+        const driversData = assignmentData.unassignedDrivers.map(driver => ({
+            id: driver.id,
+            name: `${driver.first_name || ''} ${driver.last_name || ''}`.trim() || 'Unknown',
+            location: driver.current_location,
+            status: driver.employment_status
+        }));
+
+        const trucksData = assignmentData.unassignedTrucks.map(truck => ({
+            id: truck.id,
+            model: truck.model || 'Unknown',
+            location: truck.current_location,
+            status: truck.truck_status,
+            capacity: truck.capacity_tons
+        }));
+
+        const trailersData = assignmentData.unassignedTrailers.map(trailer => ({
+            id: trailer.id,
+            type: trailer.model || 'Standard',
+            location: trailer.current_location,
+            status: trailer.trailer_status,
+            capacity: trailer.max_cargo_capacity
+        }));
+
+        // Create agent with closure-capturing tool
+        const assignmentAgent = new Agent({
+            name: "Load Assignment Optimizer",
+            model: "gpt-4o",
+            instructions: AGENT_INSTRUCTIONS,
+            tools: [tool({
+                name: "create_assignments",
+                description: "Create and return the final assignment results.",
+                parameters: z.object({
+                    assignments: z.array(z.object({
+                        load_id: z.string(),
+                        driver_id: z.string(),
+                        truck_id: z.string(),
+                        trailer_id: z.string(),
+                        rationale: z.string()
+                    })),
+                    summary: z.string()
+                }),
+                strict: true,
+                execute: async (args, runContext?: RunContext<AssignmentContext>): Promise<AssignmentResults> => {
+                    const context = runContext?.context;
+                    if (!context) {
+                        const result = { assignments: [], summary: "Error: No context available" };
+                        capturedResult = result;
+                        return result;
+                    }
+
+                    const validatedAssignments: Assignment[] = [];
+                    const errors: string[] = [];
+
+                    for (const assignment of args.assignments) {
+                        const load = context.unassignedLoads.find(l => l.id === assignment.load_id);
+                        const driver = context.unassignedDrivers.find(d => d.id === assignment.driver_id);
+                        const truck = context.unassignedTrucks.find(t => t.id === assignment.truck_id);
+                        const trailer = context.unassignedTrailers.find(t => t.id === assignment.trailer_id);
+
+                        if (!load) errors.push(`Load ${assignment.load_id} not found`);
+                        if (!driver) errors.push(`Driver ${assignment.driver_id} not found`);
+                        if (!truck) errors.push(`Truck ${assignment.truck_id} not found`);
+                        if (!trailer) errors.push(`Trailer ${assignment.trailer_id} not found`);
+
+                        if (load && driver && truck && trailer) {
+                            validatedAssignments.push(assignment);
+                        }
+                    }
+
+                    const result = {
+                        assignments: validatedAssignments,
+                        summary: errors.length > 0 ? `${args.summary} | Issues: ${errors.join('; ')}` : args.summary
+                    };
+                    
+                    capturedResult = result; // Capture the result
+                    return result;
+                }
+            })]
         });
 
-        // We're already filtering the data. So there's a bit of an expectation of Filtered loads being provided.
-
-        console.log('Truly unassigned loads:', assignmentData.unassignedLoads.length);
-
-
+        // Execute the agent
         const result = await run(
-            dispatch_agent,
-            `Create assignments for the unassigned loads using available drivers, trucks, and trailers. 
-            
-            Available resources:
-            - Drivers: ${assignmentData.unassignedDrivers.length}
-            - Trucks: ${assignmentData.unassignedTrucks.length}  
-            - Trailers: ${assignmentData.unassignedTrailers.length}
-            - Truly unassigned loads: ${assignmentData.unassignedLoads.length}
-            
-            Use the exact IDs from the data and call create_assignments with your results.
-            `,
-            {
-                context: assignmentData
-            }
+            assignmentAgent,
+            `Create optimal load assignments using the data below.
+
+AVAILABLE LOADS: ${JSON.stringify(loadsData, null, 2)}
+AVAILABLE DRIVERS: ${JSON.stringify(driversData, null, 2)}
+AVAILABLE TRUCKS: ${JSON.stringify(trucksData, null, 2)}
+AVAILABLE TRAILERS: ${JSON.stringify(trailersData, null, 2)}
+
+Use ONLY the IDs shown above. Match loads by urgency, consider proximity, and ensure capacity constraints are met.`,
+            { context: assignmentData }
         );
 
-        console.log('Agent result type:', typeof result.finalOutput);
-        console.log('Agent result:', result.finalOutput);
+        // Return results with same priority logic
+        if (capturedResult) {
+            return capturedResult;
+        }
 
-        // The tool should return AssignmentResults directly
-        if (result.finalOutput && typeof result.finalOutput === 'object' && 'assignments' in result.finalOutput) {
+        if (result.finalOutput && typeof result.finalOutput === 'object' && 
+            'assignments' in result.finalOutput && 'summary' in result.finalOutput) {
             return result.finalOutput as AssignmentResults;
         }
 
-
-        // Fallback
         return {
             assignments: [],
-            summary: result.finalOutput as string
+            summary: "Assignment failed: Agent did not use assignment tool properly"
         };
 
     } catch (error) {
-        console.error('Assignment failed:', error);
         return {
             assignments: [],
             summary: `Assignment failed: ${error instanceof Error ? error.message : 'Unknown error'}`
