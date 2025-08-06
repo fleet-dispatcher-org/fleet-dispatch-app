@@ -6,6 +6,7 @@ import AdminUserProfileCard from "@/src/app/components/AdminUserProfileCard";
 import AdminUserLoads from "@/src/app/components/AdminUserLoads";
 import AdminFleetUsers from "@/src/app/components/AdminFleetUsers";
 import prisma  from "@/prisma/prisma";
+import UpdateDriverEmploymentClient from "@/src/app/components/UpdateDriverEmploymentClient";
 
 interface User {
     id: string;
@@ -49,6 +50,19 @@ export default async function UserView({ params }: UserViewProps) {
             
         } catch (error) {
             console.error('Error fetching user:', error);
+            return null;
+        }
+    }
+
+    async function getDriver(userId: string) {
+        try {
+            const driver = await prisma.driver.findUnique({ where: { id: userId } });
+            if (!driver) {
+                throw new Error('Driver not found');
+            }
+            return driver;
+        } catch (error) {
+            console.error('Error fetching driver:', error);
             return null;
         }
     }
@@ -102,23 +116,60 @@ export default async function UserView({ params }: UserViewProps) {
     }
 
     if (user.role === "DRIVER") {
+        const driver = await getDriver(userId);
         return (
-        <div>
-            <div className="flex flex-row space-x-0">
-                <Logo
-                    path="/fleet-dispatch-logo-no-background.png"
-                    alt="Inverted Logo"
-                    width={38}
-                    height={38}
-                    reroute="/"
-                />
-                <h4 className="text-3xl mt-0.5 ml-1 font-bold">Fleet Dispatch</h4>
-            </div>
-            <header className="flex flex-col mx-auto mt-15 justify-center space-x-0">
+        <div className="min-h-screen bg-black">
+            <header className="bg-gray-900 shadow-sm border-b border-gray-400 px-6 py-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                    <Logo
+                                        path="/fleet-dispatch-logo-no-background.png"
+                                        alt="Inverted Logo"
+                                        width={38}
+                                        height={38}
+                                        reroute="/"
+                                    />
+                                    <h1 className="text-2xl font-bold text-white">Fleet Dispatch</h1>
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                    User ID: {user.id}
+                                </div>
+                            </div>
+                        </header>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                </div>
+            <main className="max-w-7xl mx-auto px-6 py-8 bg-gray-900 border border-gray-700 mt-4 rounded-lg">
                 <AdminUserProfileCard id={user.id} name={user.name || ''} image={user.image || ''} email={user.email || ''} role={user.role || ''} />
-            </header>
-            <main>
                 <AdminUserLoads loads={loads || []}/>
+                
+                {/* Employment Status */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6 flex flex-col">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg> 
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-400">Employment Status</h3>
+                        </div>
+                        <UpdateDriverEmploymentClient driver={driver!}></UpdateDriverEmploymentClient>
+                    </div>
+                    {/*  Current Location */}
+                    <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg className="w-5 h-5 text-green-600" fill="currentColor" stroke="none" viewBox="0 0 24 24">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-400">Current Location</h3>
+                        </div>
+                        <p className="text-gray-400">{driver?.current_location}</p>
+                    </div>
+                </div>
+                
+                
             </main>
             
         </div>

@@ -24,7 +24,7 @@ export default function MiniLoadsBoard({ loads }: MiniLoadsBoardProps) {
     return (
         <div className='overflow-x-auto'>
             <a href="/dispatcher" className='text-white hover:underline mb-2'>See All Loads &rarr;</a>
-            <table className="table-auto w-full border-collapse">
+            <table className="table-auto w-full border-collapse border border-gray-600">
                 <thead className="bg-gray-800">
                     <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">

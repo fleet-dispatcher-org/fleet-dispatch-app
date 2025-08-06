@@ -32,7 +32,7 @@ export default function AdminUserProfileCard(User: User) {
   }
 
   return (
-    <div className=" rounded-lg shadow-md p-6 mx-auto max-w-sm">
+    <div className=" rounded-lg shadow-md p-6 mx-auto max-w-sm border border-gray-600">
       {user?.image ? (
           <Image 
             src={user.image} 

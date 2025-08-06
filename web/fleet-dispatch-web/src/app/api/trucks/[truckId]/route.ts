@@ -31,3 +31,45 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
     }
 }
+
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
+    try {
+        const session = await auth();
+        const { truckId } = await params;
+        await prisma.truck.update({
+            where: { id: truckId },
+            data: await request.json(),
+        });
+        return NextResponse.json({ message: "Truck updated successfully" }, { status: 200 });
+    } catch (error) {
+        console.error('Error updating truck:', error);
+        return NextResponse.json({ message: "Error updating truck" }, { status: 500 });
+    }
+}
+
+export async function POST(request: NextRequest, { params }: RouteParams) {
+    try {
+        const session = await auth();
+        const { truckId } = await params;
+        await prisma.truck.update({
+            where: { id: truckId },
+            data: await request.json(),
+        });
+        return NextResponse.json({ message: "Truck updated successfully" }, { status: 200 });
+    } catch (error) {
+        console.error('Error updating truck:', error);
+        return NextResponse.json({ message: "Error updating truck" }, { status: 500 });
+    }
+}
+
+export async function DELETE({params}: RouteParams) {
+    try {
+        const session = await auth();
+        const { truckId } = await params;
+        await prisma.truck.delete({ where: { id: truckId } });
+        return NextResponse.json({ message: "Truck deleted successfully" }, { status: 200 });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
+    }
+}
