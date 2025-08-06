@@ -20,20 +20,63 @@ export default function AssignDriverClient({  loadId, assignedDriver }: AssignDr
     }, []);
     const handleAssignDriver = async (assignedDriver: string) => {
         try {
-            const response = await fetch(`/api/dispatcher/${loadId}`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ assigned_driver: assignedDriver }),
-            });
-            if (!response.ok) {
+            const [userLoadsResponse, loadResponse] = await Promise.all([
+                fetch(`/api/dispatcher/loads/byUser/${assignedDriver}`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    }
+                }),
+                fetch(`/api/dispatcher/${loadId}` , {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ assigned_driver: assignedDriver }),
+                 })
+            ]);
+
+            if (!userLoadsResponse.ok) {
+                throw new Error("Failed to fetch all loads");
+            }
+            if (!loadResponse.ok) {
                 throw new Error("Failed to assign driver to load");
             }
+            const allLoads = await userLoadsResponse.json();
+            const filteredLoads = allLoads.filter((load: any) => load.assigned_driver == assignedDriver && load.status == "SUGGESTED");
+            filteredLoads.forEach((load: any) => {
+                fetch(`/api/dispatcher/${load.id}` , {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ 
+                        status: "UNASSIGNED",
+                        assigned_driver: null,
+                        
+                     }),
+                 })
+            })
             router.refresh();
         } catch (error) {
             console.error("Error assigning driver to load:", error);
         }
+        
+        // try {
+        //     const response = await fetch(`/api/dispatcher/${loadId}`, {
+        //         method: "PATCH",
+        //         headers: {
+        //             "Content-Type": "application/json",
+        //         },
+        //         body: JSON.stringify({ assigned_driver: assignedDriver }),
+        //     });
+        //     if (!response.ok) {
+        //         throw new Error("Failed to assign driver to load");
+        //     }
+        //     router.refresh();
+        // } catch (error) {
+        //     console.error("Error assigning driver to load:", error);
+        // }
     };
 
     const handleDeleteDriver = async (assignedDriver: string) => {
