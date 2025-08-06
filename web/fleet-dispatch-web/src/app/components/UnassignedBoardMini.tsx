@@ -119,7 +119,7 @@ export default function UnassignedBoardMini() {
                                 <td>
                                     <div className='flex items-center'>
                                         <div className='flex-shrink-0 h-10 w-10'>
-                                            <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer'>
+                                            <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer px-2'>
                                                 <span className="text-sm font-medium text-gray-300">
                                                     {load.id}
                                                 </span>
@@ -130,7 +130,7 @@ export default function UnassignedBoardMini() {
                                 <td className='px-6 py-4 whitespace-nowrap'>
                                     <div className='flex items-center'>
                                         <div className='flex-shrink-0 h-10 w-10'>
-                                            <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer'>
+                                            <div className='h-10 w-10 rounded-full flex items-center justify-start hover:cursor-pointer'>
                                                 <span className="text-sm font-medium text-gray-300">
                                                     {load.origin}
                                                 </span>

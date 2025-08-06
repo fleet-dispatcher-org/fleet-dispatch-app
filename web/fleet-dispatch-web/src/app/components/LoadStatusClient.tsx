@@ -14,7 +14,7 @@ export default function LoadStatusClient({ loadId, initialStatus }: Props) {
     async function updateLoadStatus(loadId: string, newStatus: string) {
         try {
             const response = await fetch(`/api/dispatcher/${loadId}`, {
-                method: 'PUT',
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
                 },

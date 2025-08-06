@@ -335,7 +335,7 @@ export default async function Page({ params }: any) {
                 </div>
                 {/* Accept/Deny Load Section */}
                 { load.status === "SUGGESTED" &&
-                    <AcceptDenyLoad loadId={load.id}></AcceptDenyLoad>
+                    <AcceptDenyLoad loadId={load.id} driverId={load.assigned_driver!} trailerId={load.assigned_trailer!} truckId={load.assigned_truck!}></AcceptDenyLoad>
                 }
                 <Link 
                     href={`/dispatcher`}

@@ -20,17 +20,6 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         const { loadId } = await params;
         const body = await request.json();
         
-        // Validate driver exists if assigning one
-        if (body.assigned_driver) {
-            const driverExists = await prisma.driver.findUnique({
-                where: { id: body.assigned_driver }
-            });
-            
-            if (!driverExists) {
-                return NextResponse.json({ message: "Driver not found" }, { status: 400 });
-            }
-        }
-        
         const updatedLoad = await prisma.load.update({
             where: { id: loadId },
             data: body,
