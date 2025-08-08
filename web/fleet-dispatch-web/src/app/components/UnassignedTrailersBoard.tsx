@@ -1,19 +1,19 @@
 "use client";
 
-import { Driver, Load } from "@prisma/client";
+import { Driver, Load, Trailer } from "@prisma/client";
 import { useEffect, useState } from "react";
 import Link from 'next/link';
 
-export default function UnassignedDrivers() {
-    const [drivers, setDrivers] = useState<Driver[]>([]);
+export default function UnassignedTrailersBoard() {
+    const [trailers, setTrailers] = useState<Trailer[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchUnassignedDrivers = async () => {
+    const fetchUnassignedTrailers = async () => {
         try {
             setLoading(true);
             
-            const response = await fetch('/api/dispatcher/drivers', {
+            const response = await fetch('/api/trailers', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -29,29 +29,29 @@ export default function UnassignedDrivers() {
             const data = await response.json();
             
             // Handle both array and object responses
-            let driversArray;
+            let trailersArray;
             if (Array.isArray(data)) {
-                driversArray = data;
-            } else if (data && Array.isArray(data.drivers)) {
-                driversArray = data.drivers;
+                trailersArray = data;
+            } else if (data && Array.isArray(data.trailers)) {
+                trailersArray = data.trailers;
             } else {
-                throw new Error('Invalid response format: expected array or object with drivers property');
+                throw new Error('Invalid response format: expected array or object with trailers property');
             }
             
-            const availableDrivers = driversArray.filter((driver: Driver) => driver.is_available);
-            setDrivers(availableDrivers);
+            const availableTrailers = trailersArray.filter((trailer: Trailer) => trailer.trailer_status === "AVAILABLE");
+            setTrailers(availableTrailers);
             setError(null);
         } catch (error) {
-            console.error('Error fetching unassigned drivers:', error);
+            console.error('Error fetching unassigned trailers:', error);
             setError(error instanceof Error ? error.message : 'Unknown error occurred');
-            setDrivers([]);
+            setTrailers([]);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchUnassignedDrivers();
+        fetchUnassignedTrailers();
     }, []);
 
     if (loading) {
@@ -59,7 +59,7 @@ export default function UnassignedDrivers() {
             <div className="w-1/2 mx-0 p-6">
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    <span className="ml-3 text-lg">Loading available drivers...</span>
+                    <span className="ml-3 text-lg">Loading available trailers...</span>
                 </div>
             </div>
         );
@@ -71,11 +71,11 @@ export default function UnassignedDrivers() {
                 <div className="flex items-center justify-center min-h-screen">
                     <div className="bg-red-50 border border-red-200 rounded-md p-4">
                         <div className="text-red-800">
-                            <strong>Error loading available drivers: {error}</strong>
+                            <strong>Error loading available trailers: {error}</strong>
                         </div>
                         <button 
                             className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700" 
-                            onClick={fetchUnassignedDrivers}
+                            onClick={fetchUnassignedTrailers}
                         >
                             Retry
                         </button>
@@ -87,13 +87,13 @@ export default function UnassignedDrivers() {
 
     return (
         <div className="w-full mx-0 p-6">
-            {/* Drivers Table */}
+            {/* Trailers Table */}
             <div className="bg-gray-900 shadow rounded-lg overflow-hidden">
                 {/* Table Header */}
                 <div className="px-6 py-4 border-b border-gray-900">
-                    <h2 className="text-xl font-semibold text-gray-400">Available Drivers ({drivers.length})</h2>
+                    <h2 className="text-xl font-semibold text-gray-400">Available Trailers ({trailers.length})</h2>
                     <p className="text-sm text-gray-600 mt-1">
-                        Drivers ready for assignment
+                        Trailers ready for assignment
                     </p>
                 </div>
             </div>
@@ -104,13 +104,13 @@ export default function UnassignedDrivers() {
                     <thead className="bg-gray-800">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Name
+                                License Plate
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Phone
+                                Make, Model, Year
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
+                                Capacity
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Info
@@ -119,34 +119,20 @@ export default function UnassignedDrivers() {
                     </thead>
 
                     <tbody className="bg-gray-800 divide-y divide-gray-200">
-                        {drivers.map((driver) => (
-                            <tr key={driver.id} className="hover:bg-gray-700">
-                                <td className='px-6 py-4 whitespace-nowrap'>
-                                    <div className='flex items-center'>
-                                        <div className='flex-shrink-0 h-10 w-10'>
-                                            <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer hover:underline'>
-                                                <span className="text-sm font-medium text-gray-300">
-                                                    {`${driver.first_name} ${driver.last_name}`}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
+                        {trailers.map((trailer) => (
+                            <tr key={trailer.id} className="hover:bg-gray-700">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    {trailer.license_plate}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                                    {driver.phone_number}
+                                    {`${trailer.make}, ${trailer.model}, ${trailer.year}`}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                        driver.is_available 
-                                            ? 'bg-green-100 text-green-800' 
-                                            : 'bg-red-100 text-red-800'
-                                    }`}>
-                                        {driver.is_available ? 'Available' : 'Not Available'}
-                                    </span>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                    {`${trailer.max_cargo_capacity} lbs`}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <Link 
-                                        href={`/dispatcher/drivers/${driver.id}`}
+                                        href={`/trailer/${trailer.id}`}
                                         className="group"
                                     >
                                         <span className='text-sm font-medium text-gray-300 hover:underline mx-auto'>
@@ -160,16 +146,16 @@ export default function UnassignedDrivers() {
                 </table> 
             </div>   
 
-            {drivers.length === 0 && (
+            {trailers.length === 0 && (
                 <div className='text-center py-8'>
-                    <p className="text-gray-500 mt-2">No available drivers found.</p>
+                    <p className="text-gray-500 mt-2">No available trailers found.</p>
                 </div>
             )}
             
             {/* Refresh Button */}
             <div className="mt-6 flex justify-end">
                 <button
-                    onClick={fetchUnassignedDrivers}
+                    onClick={fetchUnassignedTrailers}
                     disabled={loading}
                     className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
                 >

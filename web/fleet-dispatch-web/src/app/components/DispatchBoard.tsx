@@ -349,26 +349,18 @@ export default function DispatchBoard() {
                         <tbody className="bg-gray-800 divide-y divide-gray-200">
                             {loads.map((load) => (
                                 <tr key={load.id} className="hover:bg-gray-700">
-                                    <td className='px-6 py-4 whitespace-nowrap'>
-                                        <div className='flex items-center'>
-                                            <div className='flex-shrink-0 h-10 w-10'>
-                                                <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer'>
-                                                    <span>
-                                                        {load.origin}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                        {load.origin}
                                     </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                            <Link 
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <Link 
                                             href={`/admin/users/${load.assigned_driver}`}
                                             className="group">
-                                                <span className='text-sm font-medium text-gray-300 hover:underline'>
-                                                    { driverNames[load.assigned_driver || ""]  ?? "No Driver Assigned"}
-                                                </span>
-                                            </Link>
-                                        </td>
+                                            <span className='text-sm font-medium text-gray-300 hover:underline'>
+                                                {driverNames[load.assigned_driver || ""] ?? "No Driver Assigned"}
+                                            </span>
+                                        </Link>
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         <Link 
                                             href={`/trucks/${load.assigned_truck}`}
