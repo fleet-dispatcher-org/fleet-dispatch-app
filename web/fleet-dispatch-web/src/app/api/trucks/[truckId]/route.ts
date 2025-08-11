@@ -10,10 +10,10 @@ interface RouteParams {
 // Everything is going to be a route of some sorts so just follow the file paths. 
 export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
-        const session = await auth();
-        // Handle authentication on the server side
-        if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
-            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        // const session = await auth();
+        // // Handle authentication on the server side
+        // if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
+        //     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const { truckId } = await params;
 
