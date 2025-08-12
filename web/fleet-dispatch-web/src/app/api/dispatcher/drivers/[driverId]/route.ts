@@ -11,10 +11,14 @@ interface RouteParams {
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
     try {
-        // const session = await auth();
-        // if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") {
-        //     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-        // }
+        const session = await auth();
+        
+        if (!session) {
+            return NextResponse.json({ message: "Session not found" }, { status: 401 });
+        }
+        if(session?.user?.role !== "DISPATCHER" && session?.user?.role !== "ADMIN") {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
         const { driverId } = await params;
         const driver = await prisma.driver.findUnique({ where: { id: driverId } });
         return NextResponse.json(driver, { status: 200 });

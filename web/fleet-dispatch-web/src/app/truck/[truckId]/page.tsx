@@ -1,4 +1,3 @@
-"use server";
 
 import { Truck } from "@prisma/client";
 import Link from "next/link";
@@ -18,11 +17,17 @@ export default async function TruckPage({ params }: { params: { truckId: string 
     async function fetchTruck(truckId: string): Promise<Truck | undefined> {
         try {
             const baseURL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+            // Get cookies from the current request context
+            const { cookies } = await import('next/headers');
+            const cookieStore = await cookies();
+            const cookieHeader = cookieStore.toString();
             const response = await fetch(`${baseURL}/api/trucks/${truckId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
+                    "Cookie": cookieHeader
                 },
+                cache: 'no-store',
             });
 
             if (!response.ok) {
@@ -40,11 +45,18 @@ export default async function TruckPage({ params }: { params: { truckId: string 
     async function getAssignedDriver(driverId: string) {
         try {
             const baseURL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+            
+            // Get cookies from the current request context
+            const { cookies } = await import('next/headers');
+            const cookieStore = await cookies();
+            const cookieHeader = cookieStore.toString();
             const response = await fetch(`${baseURL}/api/dispatcher/drivers/${driverId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
+                    "Cookie": cookieHeader
                 },
+                cache: 'no-store',
             });
 
             if (!response.ok) {
@@ -65,7 +77,9 @@ export default async function TruckPage({ params }: { params: { truckId: string 
         fetchTruck(truckProps.truckId),
     ]);
 
-    const assignedDriver = await Promise.all([
+    
+
+    const [assignedDriver] = await Promise.all([
         getAssignedDriver(truck?.driver_id as string),
     ])
 
@@ -98,11 +112,6 @@ export default async function TruckPage({ params }: { params: { truckId: string 
                                         <h2 className="text-lg font-semibold opacity-90">Current Location</h2>
                                         <p className="text-2xl font-bold">{truck?.current_location}</p>
                                     </div>
-                                <div className="text-4xl opacity-75">→</div>
-                                    <div className="text-center">
-                                        <h2 className="text-lg font-semibold opacity-90">Make, Model, Year</h2>
-                                        <p className="text-2xl font-bold">{`${truck?.make}, ${truck?.model}, ${truck?.year}`}</p>
-                                    </div>
                                 </div>
                                 <div className="mt-4 text-center">
                                     <p className="text-sm opacity-90">
@@ -110,6 +119,36 @@ export default async function TruckPage({ params }: { params: { truckId: string 
                                     </p>
                                 </div>
                             </div>
+                         </div>
+
+                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"> 
+                                <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
+                                    <div className="flex items-center space-x-3 mb-4">
+                                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-lg font-semibold text-gray-400">Driver</h3>
+                                    </div>
+                                        {assignedDriver ? (
+                                            <div className="flex items-center space-x-3">
+                                                <div className="text-gray-400">
+                                                    <p className="text-sm">{assignedDriver.first_name} {assignedDriver.last_name}</p>
+                                                    <p className="text-sm">{assignedDriver.email}</p>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                    </svg>
+                                                </div>
+                                                <p className="text-gray-400">No Driver Assigned</p>
+                                            </div>
+                                        )}
+                                </div>
                          </div>
                     </main>
         </div>

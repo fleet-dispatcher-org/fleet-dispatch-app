@@ -10,15 +10,15 @@ interface RouteParams {
 // Everything is going to be a route of some sorts so just follow the file paths. 
 export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
-        // const session = await auth();
-        // // Handle authentication on the server side
-        // if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
-        //     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        const session = await auth();
+        // Handle authentication on the server side
+        if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const { truckId } = await params;
 
         // This is essentially the SQL query here. 
-        const truck = await prisma.truck.findUnique({ where: { id: truckId }, select: { id: true, make: true, model: true, year: true, license_plate: true, capacity_tons: true} });
+        const truck = await prisma.truck.findUnique({ where: { id: truckId } });
 
         // This is what packs it up into JSON. There's no external [data] or anything like that. 
         // In the response just use the variable data. 

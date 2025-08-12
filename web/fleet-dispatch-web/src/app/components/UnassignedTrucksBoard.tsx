@@ -17,7 +17,13 @@ export default function UnassignedTrucksBoard() {
 
     async function fetchTrucks() {
         try {
-            const response = await fetch('/api/trucks');
+            const response = await fetch('/api/trucks', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                cache: 'no-store',
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch trucks');
             }
