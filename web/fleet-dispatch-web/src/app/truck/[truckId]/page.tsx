@@ -149,6 +149,21 @@ export default async function TruckPage({ params }: { params: { truckId: string 
                                             </div>
                                         )}
                                 </div>
+                                <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
+                                    <div className="flex items-center space-x-3 mb-4">
+                                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-lg font-semibold text-gray-400">Capacity Tons</h3>
+                                    </div>
+                                    <div className="flex items-center space-x-3">
+                                        <div className="text-gray-400">
+                                            <p className="text-sm">{truck?.capacity_tons as unknown as number} tons</p>
+                                        </div>
+                                    </div>
+                                </div>
                          </div>
                     </main>
         </div>
