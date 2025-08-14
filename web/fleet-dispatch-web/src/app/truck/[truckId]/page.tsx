@@ -3,6 +3,8 @@ import { Truck } from "@prisma/client";
 import Link from "next/link";
 import { auth } from "@/auth";
 import Logo from "../../components/Logo";
+import { DayPicker, DateRange } from 'react-day-picker';
+import MaintenanceCalendar from "../../components/MaintenanceCalendar";
 
 export default async function TruckPage({ params }: { params: { truckId: string } }) {
 
@@ -120,9 +122,10 @@ export default async function TruckPage({ params }: { params: { truckId: string 
                                 </div>
                             </div>
                          </div>
-
+                        {/* Top Row */}
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"> 
                                 <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
+                                    {/* Driver */}
                                     <div className="flex items-center space-x-3 mb-4">
                                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                                             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,6 +152,7 @@ export default async function TruckPage({ params }: { params: { truckId: string 
                                             </div>
                                         )}
                                 </div>
+                                {/* Capacity */}
                                 <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
                                     <div className="flex items-center space-x-3 mb-4">
                                         <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -164,6 +168,7 @@ export default async function TruckPage({ params }: { params: { truckId: string 
                                         </div>
                                     </div>
                                 </div>
+                                {/* Status */}
                                 <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
                                     <div className="flex items-center space-x-3 mb-4">
                                         {truck?.truck_status === "AVAILABLE" ? (
@@ -195,6 +200,27 @@ export default async function TruckPage({ params }: { params: { truckId: string 
                                         )}
                             </div>
                          </div>
+                         <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
+                            <div className="flex items-center space-x-3 mb-4">
+                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-400">Scheduled Maintenance</h3>
+                            </div>
+                                <div className="flex flex-col items-center w-1/2 mb-8">
+                            {
+                                !truck?.next_maintenance_date ? (
+                                    <p className="text-gray-400">No maintenance scheduled</p>
+                                ) : (
+                                    <p className="text-gray-400">Next maintenance: {truck?.next_maintenance_date as unknown as string}</p>
+                                )
+                            }
+                            <MaintenanceCalendar maintenance_date={truck?.next_maintenance_date as unknown as Date || new Date()} />
+                            </div>
+                        </div>
+                         
                     </main>
         </div>
     )

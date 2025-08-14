@@ -142,7 +142,9 @@ model Truck {
   driver_id        String?
   assigned_trailer Boolean?  @default(false)
   trailer_id       String?
-  required_certs   String[]
+  truck_number     String? 
+  // This would be "permit": Expiration Time. 
+  required_certs   Json? 
   created_at       DateTime? @default(now()) @db.Timestamp(6)
   next_maintenance_date DateTime?
   driver           Driver[]
