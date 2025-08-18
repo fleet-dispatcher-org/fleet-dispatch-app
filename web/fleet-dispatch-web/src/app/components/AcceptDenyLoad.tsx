@@ -25,7 +25,7 @@ export default function AcceptDenyButtons({ loadId, driverId, trailerId, truckId
                     status: "PENDING"
                 })
             }),
-            fetch(`/api/driver/${driverId}`, {
+            fetch(`/api/dispatcher/drivers/${driverId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
