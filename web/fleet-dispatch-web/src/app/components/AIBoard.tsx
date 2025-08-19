@@ -92,9 +92,13 @@ const fetchUnassignedTrucks = async (): Promise<Truck[]> => {
         }
         
         const data = await response.json();
-        setUnassignedTrucks(data);
+        // Filter for truly unassigned trucks - available status and no assigned driver
+        const availableTrucks = data.filter((truck: Truck) => 
+            truck.truck_status === 'AVAILABLE' // && !truck.assigned_driver
+        );
+        setUnassignedTrucks(availableTrucks);
         setError(null);
-        return data; // Return the data
+        return availableTrucks; // Return the filtered available trucks
     } catch (error) {
         console.error('Error fetching unassigned trucks:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
@@ -122,9 +126,13 @@ const fetchUnassignedTrailers = async (): Promise<Trailer[]> => {
         }
         
         const data = await response.json();
-        setUnassignedTrailers(data);
+        // Filter for truly unassigned trailers - available status
+        const availableTrailers = data.filter((trailer: Trailer) => 
+            trailer.trailer_status === 'AVAILABLE'
+        );
+        setUnassignedTrailers(availableTrailers);
         setError(null);
-        return data; // Return the data
+        return availableTrailers; // Return the filtered available trailers
     } catch (error) {
         console.error('Error fetching unassigned trailers:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
@@ -152,10 +160,11 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
         }
         
         const data = await response.json();
-        let unassignedLoads = data.filter((load: Load) => !load.assigned_driver || !load.assigned_truck || !load.assigned_trailer);
+        // let unassignedLoads = data.filter((load: Load) => !load.assigned_driver || !load.assigned_truck || !load.assigned_trailer);
+        let unassignedLoads = data.filter((load: Load) => load.status === 'UNASSIGNED');
         setUnassignedLoads(unassignedLoads);
         setError(null);
-        return data; // Return the data
+        return unassignedLoads; // Return the filtered unassigned loads
     } catch (error) {
         console.error('Error fetching unassigned loads:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
