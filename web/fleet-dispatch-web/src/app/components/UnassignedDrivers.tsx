@@ -38,7 +38,7 @@ export default function UnassignedDrivers() {
                 throw new Error('Invalid response format: expected array or object with drivers property');
             }
             
-            const availableDrivers = driversArray.filter((driver: Driver) => driver.is_available);
+            const availableDrivers = driversArray.filter((driver: Driver) => driver.driver_status === 'AVAILABLE');
             setDrivers(availableDrivers);
             setError(null);
         } catch (error) {
@@ -137,11 +137,11 @@ export default function UnassignedDrivers() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                        driver.is_available 
+                                        driver.driver_status === 'AVAILABLE'
                                             ? 'bg-green-100 text-green-800' 
                                             : 'bg-red-100 text-red-800'
                                     }`}>
-                                        {driver.is_available ? 'Available' : 'Not Available'}
+                                        {driver.is_available ? 'Not Available' : 'Available' }
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

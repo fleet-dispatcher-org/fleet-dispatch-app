@@ -61,7 +61,7 @@ export default function AIBoard() {
             throw new Error('Invalid response format: expected array or object with drivers property');
         }
         
-        const availableDrivers = driversArray.filter((driver: Driver) => driver.is_available);
+        const availableDrivers = driversArray.filter((driver: Driver) => driver.driver_status === 'AVAILABLE');
         setUnassignedDrivers(availableDrivers);
         setError(null);
         return availableDrivers; // Return the data

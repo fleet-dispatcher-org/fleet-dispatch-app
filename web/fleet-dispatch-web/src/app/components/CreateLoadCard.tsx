@@ -9,7 +9,7 @@ import { X, Plus, Loader2, CheckCircle, AlertCircle, Calendar } from 'lucide-rea
 export default function CreateLoadCard() {
     const { data: session, status } = useSession()
     const [loads, setLoads] = useState<Load[]>([]);
-    const [loading, setLoading] = useState(false); // Changed from true
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState({type: '', message: ''});
@@ -32,6 +32,16 @@ export default function CreateLoadCard() {
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
+    // Set default fleet value when session loads
+    useEffect(() => {
+        if (session?.user?.assigned_fleet && formData.assigned_fleet === '') {
+            setFormData(prev => ({
+                ...prev,
+                assigned_fleet: session.user.assigned_fleet || ''
+            }));
+        }
+    }, [session?.user?.assigned_fleet, formData.assigned_fleet]);
+
     const openModal = () => {
         setIsOpen(true);
         document.body.style.overflow = 'hidden';
@@ -49,7 +59,7 @@ export default function CreateLoadCard() {
             destination: '',
             due_by: new Date(),
             weight: 0,
-            assigned_fleet: '',
+            assigned_fleet: session?.user?.assigned_fleet || '', // Reset to default
         });
         setMessage({type: '', message: ''});
         setLoading(false);
@@ -160,9 +170,6 @@ export default function CreateLoadCard() {
         
         try {
             setLoading(true);
-            const submitData = {
-                ...formData
-            }
 
             const response = await fetch('/api/dispatcher/loads', {
                 method: 'POST',
@@ -175,9 +182,12 @@ export default function CreateLoadCard() {
                     destination: formData.destination,
                     due_by: formData.due_by,
                     weight: formData.weight,
-                    fleet: {
-                        connect: { id: formData.assigned_fleet } // Connect to existing fleet
-                    },
+                    // Only connect fleet if ID is provided and not empty
+                    ...(formData.assigned_fleet && formData.assigned_fleet.trim() !== '' && {
+                        fleet: {
+                            connect: { id: formData.assigned_fleet }
+                        }
+                    }),
                     status: "UNASSIGNED",
                     createdAt: new Date(),
                 })
@@ -195,7 +205,7 @@ export default function CreateLoadCard() {
             setTimeout(() => {
                 setMessage({type: '', message: ''});
                 closeModal();
-            }, 2000); // Reduced from 5 seconds
+            }, 2000);
 
             resetForm();
             
@@ -210,13 +220,13 @@ export default function CreateLoadCard() {
         <div className="max-w-4xl mx-auto p-6">
             {/* Main Container */}
             <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 text-center">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center">
-                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                    </svg>
-                </div>
-                 <h3 className="text-lg font-semibold text-gray-400">Create New Load</h3>
+                <div className="flex items-center justify-center space-x-3 mb-8">
+                    <div className="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                        </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-400">Create New Load</h3>
                 </div>
                 <button
                     onClick={openModal}
@@ -312,7 +322,7 @@ export default function CreateLoadCard() {
                                     />
                                 </div>
 
-                                {/* Fleet Field */}
+                                {/* Fleet Field - Fixed */}
                                 <div>
                                     <label htmlFor="assigned_fleet" className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                                         Assigned Fleet *
@@ -321,11 +331,11 @@ export default function CreateLoadCard() {
                                         type="text"
                                         id="assigned_fleet"
                                         name="assigned_fleet"
-                                        value={session?.user.assigned_fleet || formData.assigned_fleet}
+                                        value={formData.assigned_fleet}
                                         onChange={handleInputChange}
                                         required
                                         disabled={loading}
-                                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-gray-300 rounded-lg focus:border-gray-500 focus:ring-2 focus:ring-gray-600 transition-all duration-200 resize-vertical disabled:bg-gray-700 disabled:cursor-not-allowed"
+                                        className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-gray-300 rounded-lg focus:border-gray-500 focus:ring-2 focus:ring-gray-600 transition-all duration-200 disabled:bg-gray-700 disabled:cursor-not-allowed"
                                         placeholder="Enter fleet assignment"
                                     />
                                 </div>

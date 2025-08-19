@@ -9,7 +9,7 @@ export async function GET(request: Request) {
         if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-        const drivers = await prisma.driver.findMany({ where: { driver_status: "AVAILABLE" } });
+        const drivers = await prisma.driver.findMany();
         return NextResponse.json({ drivers });
     } catch (error) {
         console.error(error);
