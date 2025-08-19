@@ -25,6 +25,7 @@ model Driver {
   emergency_contact_phone String            @db.VarChar(15)
   certifications          String[]
   drug_test_current       Boolean?
+  current_coordinates Json? 
   employment_status       Employment_Status @default(HIRED)
   hire_date               DateTime?         @db.Date
   // Remove user_id field since id now serves this purpose
@@ -80,6 +81,7 @@ model Trailer {
   required_permits          String[]
   assigned_fleet            String? 
   insurance_valid           Boolean?
+  current_coordinates Json? 
   attributes                Json? 
   load                      Load[]
   truck_id                  Truck?    @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -100,6 +102,7 @@ model Load {
   percent_complete Int       @default(0)
   is_active        Boolean   @default(true)
   assigned_fleet   String?
+  current_coordinates Json? 
   attributes       Json? 
   createdAt        DateTime @default(now())
   truck            Truck?    @relation(fields: [assigned_truck], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -144,6 +147,7 @@ model Truck {
   assigned_trailer Boolean?  @default(false)
   trailer_id       String?
   truck_number     String? 
+  current_coordinates Json? 
   // This would be "permit": Expiration Time. 
   required_certs   Json? 
   created_at       DateTime? @default(now()) @db.Timestamp(6)
