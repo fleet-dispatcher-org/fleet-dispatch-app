@@ -2,6 +2,8 @@ import { Agent, tool, setDefaultOpenAIKey, RunContext, run } from "@openai/agent
 import { z } from "zod"
 import { Driver, Load, Trailer, Truck } from "@prisma/client";
 
+// When we implement the Haversine formula. We should potentially look into spacial indexing that way we can query by location and have more accurate results. 
+
 setDefaultOpenAIKey(process.env.OPENAI_API_KEY!);
 
 export interface AssignmentContext {
