@@ -16,3 +16,18 @@ export async function GET(request: Request) {
         return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
     }
 }
+
+export async function POST(request: Request) {
+    try {
+        const session = await auth();
+        if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        const body = await request.json();
+        const newDriver = await prisma.driver.create({ data: body });
+        return NextResponse.json(newDriver);
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
+    }
+}
+

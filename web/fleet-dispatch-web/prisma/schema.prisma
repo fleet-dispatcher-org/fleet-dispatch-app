@@ -196,6 +196,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   attached_driver        Driver?
+  requested_time_off DateTime?
   weeks          Week[] 
   accounts      Account[]
   sessions      Session[]
