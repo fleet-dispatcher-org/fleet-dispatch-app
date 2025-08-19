@@ -321,7 +321,7 @@ export default function CreateLoadCard() {
                                         type="text"
                                         id="assigned_fleet"
                                         name="assigned_fleet"
-                                        value={formData.assigned_fleet}
+                                        value={session?.user.assigned_fleet || formData.assigned_fleet}
                                         onChange={handleInputChange}
                                         required
                                         disabled={loading}

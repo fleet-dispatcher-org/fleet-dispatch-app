@@ -68,7 +68,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Fetch the full user data including role
           const dbUser = await prisma.user.findUnique({
             where: { id: user.id },
-            select: { role: true, id: true }
+            select: { role: true, id: true, name: true, email: true, assigned_fleet: true }
           });
           
           console.log("DB User found:", dbUser); // Add this log to debug
