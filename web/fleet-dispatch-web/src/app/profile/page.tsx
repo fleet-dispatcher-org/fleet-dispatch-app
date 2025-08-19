@@ -14,6 +14,7 @@ import DriverLoadsWrapper from "../components/DriverLoadsWrapper";
 import { Helmet } from "react-helmet";
 import { Metadata } from "next";
 import { run } from "@openai/agents";
+import CreateLoadCard from "../components/CreateLoadCard";
 
 export const metadata: Metadata = {
     title: 'Profile',
@@ -145,7 +146,9 @@ export default async function Profile() {
                             <h3 className="text-lg font-semibold text-gray-400">Loads Management</h3>
                         </div>
                         <MiniLoadsBoard />
+                        <CreateLoadCard/>
                     </div>
+
                 </ProfileLayout>
             </RoleGuard>
         );
