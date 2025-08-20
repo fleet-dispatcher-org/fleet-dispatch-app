@@ -5,6 +5,7 @@ import { Metadata } from 'next'
 import UnassignedDrivers from "../components/UnassignedDrivers";
 import UnassignedTrucksBoard from "../components/UnassignedTrucksBoard";
 import UnassignedTrailersBoard from "../components/UnassignedTrailersBoard";
+import CreateLoadCard from "../components/CreateLoadCard";
 
 export const metadata: Metadata = {
   title: 'Dispatcher Dashboard',
@@ -18,6 +19,7 @@ export default function Dispatcher() {
       <AIBoard
     />
     <UnassignedBoardMini/>
+    <CreateLoadCard/>
       <div className="flex flex-row">
         <div>
           <UnassignedDrivers/>
