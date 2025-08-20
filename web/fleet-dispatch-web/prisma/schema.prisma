@@ -15,7 +15,7 @@ model Driver {
   license_expiration      String?           @db.VarChar(20)   
   license_class           String?           @db.VarChar(1)
   current_location        String?           @db.VarChar(20)
-  expected_location       String?
+  expected_locations      String[]
   in_range                Boolean?          @default(false)
   is_available            Boolean?          @default(true)
   driver_reports_ready    Boolean?          @default(false)
