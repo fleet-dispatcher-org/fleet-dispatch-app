@@ -64,14 +64,16 @@ export async function assignLoadsToResources(assignmentData: AssignmentContext):
             destination: load.destination,
             due_by: load.due_by,
             weight: load.weight,
-            status: load.status
+            status: load.status,
+            current_coordinates: load.current_coordinates,
         }));
 
         const driversData = assignmentData.unassignedDrivers.map(driver => ({
             id: driver.id,
             name: `${driver.first_name || ''} ${driver.last_name || ''}`.trim() || 'Unknown',
             location: driver.current_location,
-            status: driver.employment_status
+            status: driver.employment_status,
+            current_coordinates: driver.current_coordinates,
         }));
 
         const trucksData = assignmentData.unassignedTrucks.map(truck => ({
@@ -79,7 +81,8 @@ export async function assignLoadsToResources(assignmentData: AssignmentContext):
             model: truck.model || 'Unknown',
             location: truck.current_location,
             status: truck.truck_status,
-            capacity: truck.capacity_tons
+            capacity: truck.capacity_tons,
+            current_coordinates: truck.current_coordinates,
         }));
 
         const trailersData = assignmentData.unassignedTrailers.map(trailer => ({
@@ -87,7 +90,8 @@ export async function assignLoadsToResources(assignmentData: AssignmentContext):
             type: trailer.model || 'Standard',
             location: trailer.current_location,
             status: trailer.trailer_status,
-            capacity: trailer.max_cargo_capacity
+            capacity: trailer.max_cargo_capacity,
+            current_coordinates: trailer.current_coordinates,
         }));
 
         // Create agent with closure-capturing tool
