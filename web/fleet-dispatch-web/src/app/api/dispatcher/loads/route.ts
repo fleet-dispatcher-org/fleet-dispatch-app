@@ -28,6 +28,7 @@ export async function GET() {
                 assigned_truck: true,
                 percent_complete: true,
                 is_active: true,
+                current_coordinates: true,
             },
             orderBy: {
             started_at: 'desc'
