@@ -2,7 +2,28 @@ import { Agent, tool, setDefaultOpenAIKey, RunContext, run } from "@openai/agent
 import { z } from "zod"
 import { Driver, Load, Trailer, Truck } from "@prisma/client";
 
-// When we implement the Haversine formula. We should potentially look into spacial indexing that way we can query by location and have more accurate results. 
+// When we implement the Haversine formula. We should potentially look into spacial indexing that way we can query by location and have more accurate results.
+
+/**
+ * Calculate the distance between two points on Earth using the Haversine formula
+ * @param lat1 Latitude of first point in degrees
+ * @param lon1 Longitude of first point in degrees
+ * @param lat2 Latitude of second point in degrees
+ * @param lon2 Longitude of second point in degrees
+ * @returns Distance in miles
+ */
+function calculateHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
 
 setDefaultOpenAIKey(process.env.OPENAI_API_KEY!);
 
@@ -31,25 +52,28 @@ const AGENT_INSTRUCTIONS = `You are a logistics assignment agent that creates op
 
 ## WORKFLOW:
 1. Analyze the provided context data
-2. Create optimized assignments based on logistics best practices
-3. Call create_assignments tool with your final results
+2. Use calculate_distance tool to determine proximity between resources and loads
+3. Create optimized assignments based on logistics best practices
+4. Call create_assignments tool with your final results
 
 ## ASSIGNMENT CRITERIA:
 1. **Urgency Priority**: Assign loads with earliest due_by dates first
-2. **Proximity Matching**: Match drivers/equipment closest to load origin
+2. **Proximity Matching**: Use calculate_distance tool to match drivers/equipment closest to load origin
 3. **Capacity Validation**: Ensure truck+trailer capacity >= load weight
-4. **Efficiency**: Minimize total travel distance
+4. **Efficiency**: Minimize total travel distance using distance calculations
 
 ## ASSIGNMENT PROCESS:
 1. Sort unassigned loads by due_by date (earliest first)
-2. For each load, find the best combination of available resources
-3. Validate weight capacity: load.weight <= min(truck.capacity, trailer.capacity)
-4. Create assignment with rationale explaining the choice
+2. For each load, use calculate_distance tool to find distances to available drivers, trucks, and trailers
+3. Select the combination with shortest total distance that meets capacity requirements
+4. Validate weight capacity: load.weight <= min(truck.capacity, trailer.capacity)
+5. Create assignment with rationale explaining the choice and distance calculations
 
 ## RULES:
 - Only use exact IDs from the context data
 - Each resource can only be assigned once
 - Load weight must not exceed both truck AND trailer capacity
+- Always use calculate_distance tool for proximity decisions
 - Call create_assignments tool with ALL assignments at once`;
 
 export async function assignLoadsToResources(assignmentData: AssignmentContext): Promise<AssignmentResults> {
@@ -99,21 +123,37 @@ export async function assignLoadsToResources(assignmentData: AssignmentContext):
             name: "Load Assignment Optimizer",
             model: "gpt-4o",
             instructions: AGENT_INSTRUCTIONS,
-            tools: [tool({
-                name: "create_assignments",
-                description: "Create and return the final assignment results.",
-                parameters: z.object({
-                    assignments: z.array(z.object({
-                        load_id: z.string(),
-                        driver_id: z.string(),
-                        truck_id: z.string(),
-                        trailer_id: z.string(),
-                        rationale: z.string()
-                    })),
-                    summary: z.string()
+            tools: [
+                tool({
+                    name: "calculate_distance",
+                    description: "Calculate the distance between two geographic points using the Haversine formula. Returns distance in miles.",
+                    parameters: z.object({
+                        lat1: z.number().describe("Latitude of first point in degrees"),
+                        lon1: z.number().describe("Longitude of first point in degrees"),
+                        lat2: z.number().describe("Latitude of second point in degrees"),
+                        lon2: z.number().describe("Longitude of second point in degrees")
+                    }),
+                    strict: true,
+                    execute: async (args): Promise<{ distance_miles: number }> => {
+                        const distance = calculateHaversineDistance(args.lat1, args.lon1, args.lat2, args.lon2);
+                        return { distance_miles: Math.round(distance * 100) / 100 }; // Round to 2 decimal places
+                    }
                 }),
-                strict: true,
-                execute: async (args, runContext?: RunContext<AssignmentContext>): Promise<AssignmentResults> => {
+                tool({
+                    name: "create_assignments",
+                    description: "Create and return the final assignment results.",
+                    parameters: z.object({
+                        assignments: z.array(z.object({
+                            load_id: z.string(),
+                            driver_id: z.string(),
+                            truck_id: z.string(),
+                            trailer_id: z.string(),
+                            rationale: z.string()
+                        })),
+                        summary: z.string()
+                    }),
+                    strict: true,
+                    execute: async (args, runContext?: RunContext<AssignmentContext>): Promise<AssignmentResults> => {
                     const context = runContext?.context;
                     if (!context) {
                         const result = { assignments: [], summary: "Error: No context available" };

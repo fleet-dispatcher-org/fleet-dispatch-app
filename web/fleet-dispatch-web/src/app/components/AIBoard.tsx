@@ -22,15 +22,11 @@ export default function AIBoard() {
     const [trailers, setTrailers] = useState<Record<string, string>>({});
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
     const [unassignedLoads, setUnassignedLoads] = useState<Load[]>([]);
+    const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
 
     useEffect(() => {
-        try {
-            makeSuggestions();
-        } catch (error) {
-            console.error('Error making suggestions:', error);
-        } finally {
-            getSuggestions();   
-        }
+        // Only load existing suggestions on mount, don't automatically generate new ones
+        getSuggestions();   
     }, []);
     const fetchUnassignedDrivers = async (): Promise<Driver[]> => {
     try {
@@ -176,65 +172,84 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
     }
 
 const makeSuggestions = async () => {
-    // Get the actual data from the fetch functions
-    const [drivers, trucks, trailers, loads] = await Promise.all([
-        fetchUnassignedDrivers(), 
-        fetchUnassignedTrucks(), 
-        fetchUnassignedTrailers(),
-        fetchUnassignedLoads()
-    ]);
+    try {
+        setGeneratingSuggestions(true);
+        setError(null);
+        
+        // Get the actual data from the fetch functions
+        const [drivers, trucks, trailers, loads] = await Promise.all([
+            fetchUnassignedDrivers(), 
+            fetchUnassignedTrucks(), 
+            fetchUnassignedTrailers(),
+            fetchUnassignedLoads()
+        ]);
 
-    const assignmentData: AssignmentContext = {
-        unassignedDrivers: drivers,     // Use returned data
-        unassignedTrucks: trucks,       // Use returned data
-        unassignedTrailers: trailers,   // Use returned data
-        unassignedLoads: loads
-    }
-
-    console.log(assignmentData);
-
-    const response_ai = await fetch('/api/agent/assign-loads', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(assignmentData)
-    });
-
-    if (!response_ai.ok) {
-        const errorData = await response_ai.json();
-        throw new Error(errorData.message || `HTTP ${response_ai.status}: ${response_ai.statusText}`);
-    }
-
-    const results = await response_ai.json();
-
-    // Process assignments
-    results.assignments.forEach(async (assignment: Assignment) => {
-        try {
-            const response = await fetch(`/api/dispatcher/${assignment.load_id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    assigned_driver: assignment.driver_id,
-                    assigned_truck: assignment.truck_id,
-                    assigned_trailer: assignment.trailer_id,
-                    status: 'SUGGESTED'  
-                })
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            console.log('Successfully updated load:', assignment.load_id);
-            
-        } catch (error) {
-            console.error('Error updating load:', error);
+        const assignmentData: AssignmentContext = {
+            unassignedDrivers: drivers,     // Use returned data
+            unassignedTrucks: trucks,       // Use returned data
+            unassignedTrailers: trailers,   // Use returned data
+            unassignedLoads: loads
         }
-    })
+
+        console.log(assignmentData);
+
+        const response_ai = await fetch('/api/agent/assign-loads', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(assignmentData)
+        });
+
+        if (!response_ai.ok) {
+            const errorData = await response_ai.json();
+            throw new Error(errorData.message || `HTTP ${response_ai.status}: ${response_ai.statusText}`);
+        }
+
+        const results = await response_ai.json();
+
+        // Process assignments
+        await Promise.all(results.assignments.map(async (assignment: Assignment) => {
+            try {
+                const response = await fetch(`/api/dispatcher/${assignment.load_id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        assigned_driver: assignment.driver_id,
+                        assigned_truck: assignment.truck_id,
+                        assigned_trailer: assignment.trailer_id,
+                        status: 'SUGGESTED'  
+                    })
+                })
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                console.log('Successfully updated load:', assignment.load_id);
+                
+            } catch (error) {
+                console.error('Error updating load:', error);
+                throw error;
+            }
+        }));
+
+        // Refresh the suggestions display after successful generation
+        await getSuggestions();
+        
+    } catch (error) {
+        console.error('Error making suggestions:', error);
+        setError(error instanceof Error ? error.message : 'Failed to generate suggestions');
+    } finally {
+        setGeneratingSuggestions(false);
+    }
+}
+
+const handleGetSuggestions = async () => {
+    await makeSuggestions();
 }
     const getSuggestions = async () => {
         try {
@@ -378,10 +393,21 @@ const makeSuggestions = async () => {
             <div className="bg-gray-900 shadow rounded-lg overflow-hidden">
                 {/* Table Header */}
                 <div className="px-6 py-4 border-b border-gray-900">
-                    <h2 className="text-xl font-semibold text-gray-400">AI Suggested Loads</h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                        Accept or Deny suggested loads here
-                    </p>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-400">AI Suggested Loads</h2>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Accept or Deny suggested loads here
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleGetSuggestions}
+                            disabled={generatingSuggestions}
+                            className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                        >
+                            {generatingSuggestions ? 'Generating Suggestions...' : 'Get Suggestions'}
+                        </button>
+                    </div>
                     {error && (
                         <div className="mt-2 p-2 bg-red-900 border border-red-700 rounded text-red-300 text-sm">
                             {error}
@@ -472,10 +498,10 @@ const makeSuggestions = async () => {
             <div className="mt-6 flex justify-end">
                 <button
                     onClick={getSuggestions}
-                    disabled={loading}
+                    disabled={loading || generatingSuggestions}
                     className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {loading ? 'Refreshing...' : 'Refresh Data'}
+                    {loading ? 'Refreshing...' : 'Refresh Display'}
                 </button>
             </div>
         </div>
