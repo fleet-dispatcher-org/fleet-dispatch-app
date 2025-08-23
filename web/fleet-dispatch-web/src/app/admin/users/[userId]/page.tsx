@@ -75,6 +75,7 @@ export default async function UserView({ params }: UserViewProps) {
                     origin: true,
                     destination: true,
                     status: true,
+                    due_by: true,
                 },
                 orderBy: {
                     started_at: 'desc'
@@ -143,7 +144,7 @@ export default async function UserView({ params }: UserViewProps) {
                 <AdminUserLoads loads={loads || []}/>
                 
                 {/* Employment Status */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6 flex flex-col">
                         <div className="flex items-center space-x-3 mb-4">
                             <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -167,6 +168,20 @@ export default async function UserView({ params }: UserViewProps) {
                         </div>
                         <p className="text-gray-400">{driver?.current_location}</p>
                     </div>
+                </div>
+                <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6 mt-6">
+                        <div className="flex items-center space-x-3 mb-4">
+                            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                            <svg className="w-5 h-5 text-red-600" fill="currentColor" stroke="none" viewBox="0 0 24 24">
+                                <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM9 8.5c0-.83.67-1.5 1.5-1.5S12 7.67 12 8.5 11.33 10 10.5 10 9 9.33 9 8.5zm2.5 5.5H8c0-1.1.9-2 2-2s2 .9 2 2zM20 16H14v-1h6v1zm0-2H14v-1h6v1zm0-2H14v-1h6v1z"/>
+                            </svg>
+                            </div>
+                                <h3 className="text-lg font-semibold text-gray-400">Driver Info.</h3>
+                        </div>
+                        {driver?.license_class && <p className="text-gray-400">License Class: {driver?.license_class}</p>}
+                        {driver?.license_number && <p className="text-gray-400">License Number: {driver?.license_number}</p>}
+                        {driver?.certifications && driver.certifications.length > 0 && <p className="text-gray-400">Certifications: {driver.certifications.join(', ')}</p>}
+                        {driver?.license_expiration && <p className="text-gray-400">License Expiration: {driver?.license_expiration}</p>}
                 </div>
                 
                 

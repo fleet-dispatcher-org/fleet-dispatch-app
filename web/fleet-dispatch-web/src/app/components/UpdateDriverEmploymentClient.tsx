@@ -14,7 +14,7 @@ export default function UpdateDriverEmploymentClient({ driver }: Props) {
 
     const updateEmploymentStatus = async  (newStatus: Employment_Status ) => {
         try {
-            const response = await fetch(`/api/driver/${driver.id}`, {
+            const response = await fetch(`/api/dispatcher/drivers/${driver.id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
