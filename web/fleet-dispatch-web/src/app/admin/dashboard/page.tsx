@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Suspense } from 'react';
 import AdminDashboardContent from "../../components/DashboardContent";
+import Link from "next/link";
 
 export default async function AdminDashboard() {
     const session = await auth();
@@ -21,6 +22,7 @@ export default async function AdminDashboard() {
     return (
         <Suspense fallback={<div>Loading dashboard...</div>}>
             <AdminDashboardContent />
+            
         </Suspense>
     )
     

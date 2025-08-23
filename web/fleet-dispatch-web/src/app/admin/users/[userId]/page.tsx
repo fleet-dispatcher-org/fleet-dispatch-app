@@ -7,6 +7,7 @@ import AdminUserLoads from "@/src/app/components/AdminUserLoads";
 import AdminFleetUsers from "@/src/app/components/AdminFleetUsers";
 import prisma  from "@/prisma/prisma";
 import UpdateDriverEmploymentClient from "@/src/app/components/UpdateDriverEmploymentClient";
+import Link from "next/link";
 
 interface User {
     id: string;
@@ -186,7 +187,13 @@ export default async function UserView({ params }: UserViewProps) {
                 
                 
             </main>
-            
+            <footer className="text-gray-600 py-4 flex flex-col items-center justify-center">
+                <Link
+                    href="/profile">
+                    <p className="text-gray-500 hover:underline">Back to Profile</p>
+                </Link>
+                <p className="text-sm text-gray-400 mt-4">&copy; 2023 Fleet Dispatch. All rights reserved.</p>
+            </footer>
         </div>
     )
     }
