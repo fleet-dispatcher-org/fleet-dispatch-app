@@ -5,6 +5,7 @@ import Calendar from "./Calendar";
 import Button from "./Button";
 import { DayPicker, DateRange } from 'react-day-picker';
 import { time } from "console";
+import TimeOffModal from "./TimeOffModal";
 
 interface CalendarProps {
     children?: React.ReactNode
@@ -64,6 +65,7 @@ export default function CalendarCombo({height, width, className, x, y, children,
                     setSingleVisible(prev => !prev);
                 }}>Create Request: </Button>
                 <Calendar type="range" id="calendarNextAvailable" isVisible={singleVisible}></Calendar>
+                <TimeOffModal range={range} />
             </div>
         )
     }
