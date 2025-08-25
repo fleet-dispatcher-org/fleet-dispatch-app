@@ -5,8 +5,7 @@ import { Role, Status, Trailer, Load, Driver, Truck } from "@prisma/client";
 import Logo from './Logo';
 import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
 import Link from 'next/link';
-import { assignLoadsToResources, Assignment, AssignmentContext } from '../agent/agent';
-import { setDefaultOpenAIKey } from '@openai/agents'
+import { assignLoadsToResources, Assignment, AssignmentContext } from '../agent';
 
 
 export default function AIBoard() {
