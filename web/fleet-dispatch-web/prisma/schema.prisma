@@ -100,6 +100,7 @@ model Load {
   assigned_driver  String?
   assigned_trailer String?
   assigned_truck   String?
+  assigned_by      String?
   percent_complete Int       @default(0)
   is_active        Boolean   @default(true)
   assigned_fleet   String?
@@ -110,6 +111,7 @@ model Load {
   driver           Driver?   @relation(fields: [assigned_driver], references: [id], onDelete: NoAction, onUpdate: NoAction)
   trailer          Trailer?  @relation(fields: [assigned_trailer], references: [id], onDelete: NoAction, onUpdate: NoAction)
   fleet            Fleet?     @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  dispatcher       User?      @relation(fields: [assigned_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model CustomerRequest {
@@ -201,13 +203,18 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   attached_driver        Driver?
-  requested_time_off DateTime?
+  timeOffStart DateTime?
+  timeOffEnd   DateTime?
   weeks          Week[] 
   accounts      Account[]
   sessions      Session[]
   assigned_fleet  String?
   attributes      Json? 
   fleet      Fleet? @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction)
+
+  assignments Load[]
+
+  TimeOffRequest TimeOffRequest[]
 }
 
 model VerificationToken {
@@ -216,6 +223,17 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model TimeOffRequest {
+  id    String @default(cuid()) @unique
+  timeOffStart  DateTime?
+  timeOffEnd    DateTime?
+  requestingUser  String
+  status        Time_Off_Status?
+  reason        String? @db.Text()
+
+  user  User @relation(fields: [requestingUser], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 enum Role {
@@ -250,4 +268,10 @@ enum Availability_Status {
   UNAVAILABLE
   SUGGESTED
   SECONDARY_DUTY
+}
+
+enum Time_Off_Status {
+  APPROVED
+  DENIED
+  POSTPONE
 }

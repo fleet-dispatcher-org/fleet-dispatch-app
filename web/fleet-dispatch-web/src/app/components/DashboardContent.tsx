@@ -229,7 +229,10 @@ export default function AdminDashboardContent() {
                                     Joined
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
+                                    Update Role
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Manage
                                 </th>
                             </tr>
                         </thead>
@@ -300,6 +303,12 @@ export default function AdminDashboardContent() {
                                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                                             )}
                                         </div>
+                                    </td>
+                                    <td>
+                                        <Link
+                                            href={`/admin/users/${user.id}`}>
+                                            <button className="text-white hover:text-gray-300 hover:underline hover:cursor-pointer">Manage</button>
+                                            </Link>
                                     </td>
                                 </tr>
                             ))}

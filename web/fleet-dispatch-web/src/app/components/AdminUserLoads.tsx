@@ -11,6 +11,7 @@ interface MiniLoad {
     origin: string;
     destination: string;
     status: string;
+    due_by: Date;
 }
 
 interface MiniLoadsBoardProps {
@@ -34,6 +35,9 @@ export default function MiniLoadsBoard({ loads }: MiniLoadsBoardProps) {
                             Destination
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">
+                            Due By
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">
                             Status
                         </th>
                     </tr>
@@ -46,6 +50,9 @@ export default function MiniLoadsBoard({ loads }: MiniLoadsBoardProps) {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
                                 {load.destination}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                                {load.due_by && new Date(load.due_by).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
