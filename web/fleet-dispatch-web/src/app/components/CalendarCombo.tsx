@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Calendar from "./Calendar";
 import Button from "./Button";
 import { DayPicker, DateRange } from 'react-day-picker';
+import { time } from "console";
 
 interface CalendarProps {
     children?: React.ReactNode
@@ -62,7 +63,7 @@ export default function CalendarCombo({height, width, className, x, y, children,
                 onClick={() => {
                     setSingleVisible(prev => !prev);
                 }}>Create Request: </Button>
-                <Calendar type="single" id="calendarNextAvailable" isVisible={singleVisible}></Calendar>
+                <Calendar type="range" id="calendarNextAvailable" isVisible={singleVisible}></Calendar>
             </div>
         )
     }

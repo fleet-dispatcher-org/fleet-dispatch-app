@@ -274,4 +274,5 @@ enum Time_Off_Status {
   APPROVED
   DENIED
   POSTPONE
+  PENDING
 }
