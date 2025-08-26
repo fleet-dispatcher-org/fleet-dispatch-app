@@ -35,6 +35,12 @@ export default function CalendarCombo({height, width, className, x, y, children,
         });
     }, []);
 
+    // Callback function to receive selected dates from Calendar component
+    const handleDateRangeChange = (newRange: DateRange | undefined) => {
+        setRange(newRange);
+        console.log("Range updated:", newRange);
+    };
+
     // Don't render anything until mounted to prevent hydration mismatch
     if (!mounted) {
         return null;
@@ -51,7 +57,12 @@ export default function CalendarCombo({height, width, className, x, y, children,
                     setRangeVisible(prev => !prev);
                     console.log(isVisible);
                 }}>Set Next Available</Button>
-                <Calendar type="range" id="calendarTimeOff" isVisible={rangeVisible}></Calendar>
+                <Calendar 
+                    type="range" 
+                    id="calendarTimeOff" 
+                    isVisible={rangeVisible}
+                    onRangeChange={handleDateRangeChange}
+                />
             </div> 
         )
     } else if (type === "range") {
@@ -64,12 +75,17 @@ export default function CalendarCombo({height, width, className, x, y, children,
                 onClick={() => {
                     setSingleVisible(prev => !prev);
                 }}>Create Request: </Button>
-                <Calendar type="range" id="calendarNextAvailable" isVisible={singleVisible}></Calendar>
+                <Calendar 
+                    type="range" 
+                    id="calendarNextAvailable" 
+                    isVisible={singleVisible}
+                    onRangeChange={handleDateRangeChange}
+                />
                 <TimeOffModal range={range} />
+                
             </div>
         )
     }
 
-    // Return null for all other cases to prevent hydration issues
     return null;
 }

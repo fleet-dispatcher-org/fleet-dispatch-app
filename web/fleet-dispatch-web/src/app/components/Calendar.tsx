@@ -14,9 +14,23 @@ interface CalendarProps {
     width?: number;
     x?: number;
     y?: number;
+    onRangeChange?: (range: DateRange | undefined) => void; // Add this prop
+    onSingleChange?: (date: Date | undefined) => void; // Add this for single date mode too
 }
 
-export default function Calendar({height, width, className, x, y, children, type, id, isVisible=false}: CalendarProps) {
+export default function Calendar({
+    height, 
+    width, 
+    className, 
+    x, 
+    y, 
+    children, 
+    type, 
+    id, 
+    isVisible=false,
+    onRangeChange,
+    onSingleChange
+}: CalendarProps) {
     const [selected, setSelected] = useState<Date | undefined>();
     const [range, setRange] = useState<DateRange | undefined>();
     const [mounted, setMounted] = useState(false);
@@ -30,6 +44,22 @@ export default function Calendar({height, width, className, x, y, children, type
         });
     }, []);
 
+    // Handle single date selection
+    const handleSingleSelect = (date: Date | undefined) => {
+        setSelected(date);
+        if (onSingleChange) {
+            onSingleChange(date);
+        }
+    };
+
+    // Handle range selection
+    const handleRangeSelect = (newRange: DateRange | undefined) => {
+        setRange(newRange);
+        if (onRangeChange) {
+            onRangeChange(newRange);
+        }
+    };
+
     // Don't render anything until mounted to prevent hydration mismatch
     if (!mounted) {
         return null;
@@ -41,7 +71,7 @@ export default function Calendar({height, width, className, x, y, children, type
                 <DayPicker
                     mode="single"
                     selected={selected}
-                    onSelect={setSelected}
+                    onSelect={handleSingleSelect}
                     disabled={{ before: new Date() }}
                 />
                 {selected && (
@@ -57,7 +87,7 @@ export default function Calendar({height, width, className, x, y, children, type
                 <DayPicker
                     mode="range"
                     selected={range}
-                    onSelect={setRange}
+                    onSelect={handleRangeSelect}
                     disabled={{ before: new Date() }}
                 />
                 {range?.from && range?.to && (
