@@ -3,6 +3,7 @@ import { Availability_Status, Driver } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 interface AssignDriverClientProps {
     loadId: string;
@@ -14,6 +15,7 @@ export default function AssignDriverClient({  loadId, assignedDriver }: AssignDr
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const { data: session } = useSession();
 
     useEffect(() => {
         fetchUnassignedDrivers();
@@ -32,7 +34,7 @@ export default function AssignDriverClient({  loadId, assignedDriver }: AssignDr
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ assigned_driver: assignedDriver }),
+                    body: JSON.stringify({ assigned_driver: assignedDriver, assigned_by: session?.user?.id }),
                  })
             ]);
 

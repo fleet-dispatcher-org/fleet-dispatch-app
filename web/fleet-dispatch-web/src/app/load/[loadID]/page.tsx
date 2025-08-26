@@ -106,14 +106,33 @@ export default async function Page({ params }: any) {
         }
     }
 
+    async function getAssignedBy(load: Load) {
+        try {
+            if (!load.assigned_by) {
+                return null;
+            } else {
+                const user = await prisma.user?.findUnique({ where: { id: load.assigned_by } });
+                if (!user) {
+                    throw new Error('User not found');
+                }
+                return user;    
+            }
+            
+        } catch (error) {
+            console.error('Error fetching driver:', error);
+            return null;
+        }
+    }
+
     const { loadId } = await params;
     const [load] = await Promise.all([
         getLoad(loadId),
     ]);
-    const [assignedDriver, assigned_truck, assigned_trailer] = await Promise.all([
+    const [assignedDriver, assigned_truck, assigned_trailer, assigned_by] = await Promise.all([
         getAssignedDriver(load as Load),
         getAssignedTruck(load as Load),
         getAssignedTrailer(load as Load),
+        getAssignedBy(load as Load),
     ])
     
     if (!load) {
@@ -320,7 +339,12 @@ export default async function Page({ params }: any) {
                             </div>
                         </div>
                     </div>
+                    <div>
+
+                    </div>
                 </div>
+
+                
 
                 {/* Load Status Section */}
                 <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">

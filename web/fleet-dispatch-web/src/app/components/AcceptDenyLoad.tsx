@@ -1,5 +1,8 @@
 "use client";
 
+import { auth } from "@/auth";
+import { useSession } from "next-auth/react";
+
 interface AcceptDenyButtonsProps {
     loadId: string;
     driverId: string; 
@@ -8,6 +11,7 @@ interface AcceptDenyButtonsProps {
 }
 
 export default function AcceptDenyButtons({ loadId, driverId, trailerId, truckId }: AcceptDenyButtonsProps) {
+    const session = useSession().data;
     const handleAccept = async (loadId: string,) => {
     try {
         // Execute all requests concurrently and get responses
@@ -22,6 +26,7 @@ export default function AcceptDenyButtons({ loadId, driverId, trailerId, truckId
                     assigned_driver: driverId,
                     assigned_truck: truckId,
                     assigned_trailer: trailerId,
+                    assigned_by: session?.user?.id,
                     status: "PENDING"
                 })
             }),

@@ -7,6 +7,12 @@ import SignIn from "../components/Sign-In";
 import { login } from "../lib/actions/auth";
 import { Input } from "@material-tailwind/react";
 import Image from "next/image";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Login",
+    
+};
 
 export default async function Login() {
     return (
