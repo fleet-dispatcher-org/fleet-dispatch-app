@@ -344,7 +344,9 @@ export default async function Page({ params }: any) {
                     </div>
                 </div>
 
-                
+                <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
+
+                </div>
 
                 {/* Load Status Section */}
                 <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
