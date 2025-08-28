@@ -17,7 +17,7 @@ const prismaClientSingleton = () => {
                 user: {
                   connect: {
                     id: result.id,
-                    assigned_fleet: result.assigned_fleet
+                    
                     
                   }
                 },
