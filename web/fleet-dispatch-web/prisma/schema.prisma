@@ -94,8 +94,9 @@ model Load {
   origin           String    @db.VarChar(20)
   destination      String    @db.VarChar(20)
   weight           Decimal
+  pick_up_by       DateTime   @default(now())
   due_by           DateTime  @default(now())
-  status           Status
+  status           Status     @default(UNASSIGNED)
   started_at       DateTime?
   assigned_driver  String?
   assigned_trailer String?
