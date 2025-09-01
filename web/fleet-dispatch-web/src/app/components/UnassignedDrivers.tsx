@@ -121,7 +121,7 @@ export default function UnassignedDrivers() {
                     <tbody className="bg-gray-800 divide-y divide-gray-200">
                         {drivers.map((driver) => (
                             <tr key={driver.id} className="hover:bg-gray-700">
-                                <td className='px-6 py-4 whitespace-nowrap'>
+                                <td className='pr-20 pl-6 py-4 whitespace-nowrap'>
                                     <div className='flex items-center'>
                                         <div className='flex-shrink-0 h-10 w-10'>
                                             <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer hover:underline'>

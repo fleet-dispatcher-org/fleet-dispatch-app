@@ -15,21 +15,6 @@ export async function GET() {
 
     try {
         const loads = await prisma.load.findMany({
-            select: {
-                id: true,
-                origin: true,
-                destination: true,
-                due_by: true, 
-                weight: true,
-                status: true,
-                started_at: true,
-                assigned_driver: true,
-                assigned_trailer: true,
-                assigned_truck: true,
-                percent_complete: true,
-                is_active: true,
-                current_coordinates: true,
-            },
             orderBy: {
             started_at: 'desc'
             },

@@ -105,7 +105,8 @@ model Load {
   percent_complete Int       @default(0)
   is_active        Boolean   @default(true)
   assigned_fleet   String?
-  current_coordinates Json? 
+  current_coordinates Json?
+  destination_coordinates Json?  
   attributes       Json? 
   createdAt        DateTime @default(now())
   truck            Truck?    @relation(fields: [assigned_truck], references: [id], onDelete: NoAction, onUpdate: NoAction)
