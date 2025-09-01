@@ -105,7 +105,7 @@ model Load {
   percent_complete Int       @default(0)
   is_active        Boolean   @default(true)
   assigned_fleet   String?
-  current_coordinates Json?
+  origin_coordinates Json?
   destination_coordinates Json?  
   attributes       Json? 
   createdAt        DateTime @default(now())
