@@ -20,11 +20,11 @@ const LOGISTICS_AGENT_INSTRUCTIONS = `You are a logistics assignment agent that 
 1. **Urgency Priority**: Assign loads with earliest due_by dates first
 2. **Proximity Matching**: Use calculate_distance tool to match drivers/equipment closest to load origin
 3. **Capacity Validation**: Ensure truck+trailer capacity >= load weight
-4. **Efficiency**: Minimize total travel distance using distance calculations
+4. **Efficiency**: Minimize total travel distance without a load attached to a driver. Always assign the driver back to their home location on the last load
 
 ## ASSIGNMENT PROCESS:
 1. Sort unassigned loads by due_by date (earliest first)
-2. For each load, use calculate_distance tool to find distances to available drivers, trucks, and trailers
+2. For each load, use calculate_distance tool to find distances to available drivers, trucks, and trailers. Assign closest driver, truck, and trailer
 3. Select the combination with shortest total distance that meets capacity requirements
 4. Validate weight capacity: load.weight <= min(truck.capacity, trailer.capacity)
 5. Create assignment with rationale explaining the choice and distance calculations
@@ -33,6 +33,7 @@ const LOGISTICS_AGENT_INSTRUCTIONS = `You are a logistics assignment agent that 
 - Only use exact IDs from the context data
 - Each resource can only be assigned once
 - Load weight must not exceed both truck AND trailer capacity
+- Assign multiple loads and prioritize bringing the driver back to their home location on the last load
 - Always use calculate_distance tool for proximity decisions
 - Call create_assignments tool with ALL assignments at once`;
 
@@ -76,7 +77,8 @@ export class LogisticsAgent extends BaseAgent {
                 due_by: load.due_by,
                 weight: load.weight,
                 status: load.status,
-                current_coordinates: load.current_coordinates,
+                origin_coordinates: load.origin_coordinates,
+                destination_coordinates: load.destination_coordinates
             }));
 
             const driversData = context.unassignedDrivers.map(driver => ({
