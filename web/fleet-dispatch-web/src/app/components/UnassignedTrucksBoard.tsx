@@ -108,7 +108,7 @@ export default function UnassignedTrucksBoard() {
                                 <td>
                                     <div className='flex items-center'>
                                         <div className='flex-shrink-0 h-10 w-10'>
-                                            <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer px-2'>
+                                            <div className='px-6 py-4 h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer'>
                                                 <span className="text-sm font-medium text-gray-300">
                                                     {truck.license_plate}
                                                 </span>

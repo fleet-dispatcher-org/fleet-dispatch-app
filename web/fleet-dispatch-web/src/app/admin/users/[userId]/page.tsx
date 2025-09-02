@@ -8,6 +8,7 @@ import AdminFleetUsers from "@/src/app/components/AdminFleetUsers";
 import prisma  from "@/prisma/prisma";
 import UpdateDriverEmploymentClient from "@/src/app/components/UpdateDriverEmploymentClient";
 import Link from "next/link";
+import AdminUserApprovedLoads from "@/src/app/components/AdminUserApprovedLoads";
 
 interface User {
     id: string;
@@ -200,22 +201,31 @@ export default async function UserView({ params }: UserViewProps) {
 
     if (user.role === "DISPATCHER") {
         return (
-        <div>
-            <div className="flex flex-row space-x-0">
-                <Logo
-                    path="/fleet-dispatch-logo-no-background.png"
-                    alt="Inverted Logo"
-                    width={38}
-                    height={38}
-                    reroute="/"
-                />
-                <h4 className="text-3xl mt-0.5 ml-1 font-bold">Fleet Dispatch</h4>
-            </div>
-            <header className="flex flex-col mx-auto mt-15 justify-center space-x-0">
-                <AdminUserProfileCard id={user.id} name={user.name || ''} image={user.image || ''} email={user.email || ''} role={user.role || ''} />
+        <div className="min-h-screen bg-black">
+            <header className="bg-gray-900 shadow-sm border-b border-gray-400 px-6 py-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                        <Logo
+                            path="/fleet-dispatch-logo-no-background.png"
+                            alt="Inverted Logo"
+                            width={38}
+                            height={38}
+                            reroute="/"
+                        />
+                        <h1 className="text-2xl font-bold text-white">Fleet Dispatch</h1>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                        User ID: {user.id}
+                    </div>
+                </div>
             </header>
-            <main>
-                <AdminFleetUsers fleetUsers={fleetUsers || []}/>
+            
+            <main className="max-w-7xl mx-auto px-6 py-8 bg-gray-900 border border-gray-700 mt-4 rounded-lg">
+                <AdminUserProfileCard id={user.id} name={user.name || ''} image={user.image || ''} email={user.email || ''} role={user.role || ''} />
+                <AdminUserApprovedLoads userId={user.id} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+
+                </div>
             </main>
         </div>
     )
