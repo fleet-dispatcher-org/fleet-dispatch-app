@@ -67,11 +67,11 @@ export default function CalendarCombo({height, width, className, x, y, children,
         )
     } else if (type === "range") {
         return (
-            <div>
+            <div className="flex flex-col items-center">
                 <Button type="hollow" 
                 className="bg-gray-900 text-white border-white rounded-full border border-solid transition-colors 
                 flex items-center justify-center hover:bg-gray-50 hover:text-black mt-3 cursor-pointer 
-                gap-2 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto mx-auto"
+                gap-2 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto mx-auto mb-3"
                 onClick={() => {
                     setSingleVisible(prev => !prev);
                 }}>Create Request: </Button>
