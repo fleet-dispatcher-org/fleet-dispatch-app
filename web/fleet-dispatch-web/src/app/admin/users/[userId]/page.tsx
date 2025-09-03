@@ -4,11 +4,12 @@ import Logo from "@/src/app/components/Logo";
 import { NextResponse } from "next/server";
 import AdminUserProfileCard from "@/src/app/components/AdminUserProfileCard";
 import AdminUserLoads from "@/src/app/components/AdminUserLoads";
-import AdminFleetUsers from "@/src/app/components/AdminFleetUsers";
 import prisma  from "@/prisma/prisma";
 import UpdateDriverEmploymentClient from "@/src/app/components/UpdateDriverEmploymentClient";
 import Link from "next/link";
 import AdminUserApprovedLoads from "@/src/app/components/AdminUserApprovedLoads";
+import AdminDispatcherPendingLoads from "@/src/app/components/AdminDispatcherPendingLoads";
+import UnassignedBoardMini from "@/src/app/components/UnassignedBoardMini";
 
 interface User {
     id: string;
@@ -224,7 +225,8 @@ export default async function UserView({ params }: UserViewProps) {
                 <AdminUserProfileCard id={user.id} name={user.name || ''} image={user.image || ''} email={user.email || ''} role={user.role || ''} />
                 <AdminUserApprovedLoads userId={user.id} />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-
+                    <AdminDispatcherPendingLoads />
+                    <UnassignedBoardMini/>
                 </div>
             </main>
         </div>

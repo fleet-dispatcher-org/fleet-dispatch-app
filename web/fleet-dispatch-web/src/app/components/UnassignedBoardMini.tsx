@@ -92,12 +92,9 @@ export default function UnassignedBoardMini() {
 
             {/* Table Body */}
             <div className="overflow-x-auto">
-                <table className="w-full divide-y divide-gray-400">
+                <table className="table-fixed w-full divide-y divide-gray-400">
                     <thead className="bg-gray-800">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                ID
-                            </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Origin
                             </th>
@@ -116,21 +113,10 @@ export default function UnassignedBoardMini() {
                     <tbody className="bg-gray-800 divide-y divide-gray-200">
                         {loads.map((load) => (
                             <tr key={load.id} className="hover:bg-gray-700">
-                                <td className='pr-10 pl-4 py-4 whitespace-nowrap'> {/* Add this line */}
-                                    <div className='flex items-center'>
-                                        <div className='flex-shrink-0 h-10 w-10'>
-                                            <div className='h-10 w-10 rounded-full flex items-center justify-left hover:cursor-pointer px-2'>
-                                                <span className="text-sm font-medium text-gray-300">
-                                                    {load.id}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
                                 <td className='px-6 py-4 whitespace-nowrap'>
                                     <div className='flex items-center'>
                                         <div className='flex-shrink-0 h-10 w-10'>
-                                            <div className='h-10 w-10 rounded-full flex items-center justify-start hover:cursor-pointer'>
+                                            <div className='h-10 w-10 rounded-full flex items-center justify-start hover:cursor-pointer pr-25'>
                                                 <span className="text-sm font-medium text-gray-300">
                                                     {load.origin}
                                                 </span>

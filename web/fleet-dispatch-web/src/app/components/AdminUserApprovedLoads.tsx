@@ -37,41 +37,76 @@ export default function AdminUserApprovedLoads({ userId }: params) {
     }
 
     if (approvedLoads.length === 0) {
-        return <div className=" flex flex-col max-w-4xl mx-auto p-6 items-center">
-            <div className="bg-gray-900 border border-gray-700 rounded-md p-12">
-                <h2 className="text-2xl font-bold mb-4 text-white ">Approved Loads</h2>
+        return <div className='overflow-x-auto'>
+                
+            <div className="flex flex-col bg-gray-900 border border-gray-700 rounded-md p-4 items-center mt-2">
+                <div className='flex items-center space-x-3 mb-4'>
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex flex-row items-center justify-center">
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h3 className="text-2xl font-semibold text-gray-400">Approved Loads</h3>
+                </div>
                 <p className="text-gray-300">No loads found.</p>
             </div>
         </div>;
     }
     
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <div className="bg-gray-900 border border-gray-700 rounded-md p-4">
-                <h2 className="text-2xl font-bold mb-4 text-white">Approved Loads</h2>
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-600">
-                        <thead>
-                            <tr className="bg-gray-800">
-                                <th className="border border-gray-600 px-4 py-2 text-left text-white">Origin</th>
-                                <th className="border border-gray-600 px-4 py-2 text-left text-white">Destination</th>
-                                <th className="border border-gray-600 px-4 py-2 text-left text-white">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {approvedLoads.map((load: Load) => (
-                                <tr key={load.id}>
-                                    <td className="border border-gray-600 px-4 py-2">{load.origin}</td>
-                                    <td className="border border-gray-600 px-4 py-2">{load.destination}</td>
-                                    <td className="border border-gray-600 px-4 py-2">
-                                        <Link href={`/dispatcher/loads/${load.id}`} className="text-blue-500 hover:underline">View</Link>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+        <div className='overflow-x-auto'>
+            <Link href="/dispatcher" className='text-white hover:underline mb-2'>See All Loads &rarr;</Link>
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <div className="flex flex-col bg-gray-900 border border-gray-700 rounded-md p-4 items-center mt-2">
+                <h2 className="text-2xl font-bold mb-4 text-white ">Approved Loads</h2>
             </div>
+            <table className="table-auto w-full border-collapse border border-gray-600">
+                <thead className="bg-gray-800">
+                    <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">
+                            Origin
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">
+                            Destination
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">
+                            Due By
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider border-b border-gray-700">
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody className="bg-gray-900 divide-y divide-gray-700">
+                    {approvedLoads?.map((load) => (
+                        <tr key={load.id} className="hover:bg-gray-800 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                                {load.origin}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                                {load.destination}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                                {load.due_by && new Date(load.due_by).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    load.status === 'DELIVERED' ? 'bg-green-800 text-green-200' :
+                                    load.status === 'IN_PROGRESS' ? 'bg-blue-800 text-blue-200' :
+                                    load.status === 'PENDING' ? 'bg-yellow-800 text-yellow-200' :
+                                    load.status === 'TERMINATED' ? 'bg-red-800 text-red-200' :
+                                    'bg-gray-800 text-gray-200'
+                                }`}>
+                                    {load.status}
+                                </span>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+            
         </div>
     );
 }
