@@ -1,11 +1,15 @@
 "use client";
 
 import { Load } from "@prisma/client";
-import { useEffect, useState } from "react";
+import { JSX, useEffect, useState } from "react";
 import Link from 'next/link';
 import Logo from './Logo';
 
-export default function UnassignedBoardMini() {
+interface Props {
+    limit?: number;
+}
+
+export default function UnassignedBoardMini({ limit }: Props) {
     const [loads, setLoads] = useState<Load[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -33,7 +37,8 @@ export default function UnassignedBoardMini() {
                 throw new Error('Expected array but got: ' + typeof data);
             }
             
-            const unassignedLoads = data.filter((load: Load) => load.status === "UNASSIGNED");
+            let unassignedLoads = data.filter((load: Load) => load.status === "UNASSIGNED");
+            unassignedLoads = limit ? unassignedLoads.slice(0, limit) : unassignedLoads;
             setLoads(unassignedLoads);
             setError(null);
         } catch (error) {
@@ -91,7 +96,7 @@ export default function UnassignedBoardMini() {
             </div>
 
             {/* Table Body */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto ">
                 <table className="table-fixed w-full divide-y divide-gray-400">
                     <thead className="bg-gray-800">
                         <tr>

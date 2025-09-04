@@ -226,7 +226,7 @@ export default async function UserView({ params }: UserViewProps) {
                 <AdminUserApprovedLoads userId={user.id} />
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                     <AdminDispatcherPendingLoads />
-                    <UnassignedBoardMini/>
+                    <UnassignedBoardMini limit={5}/>
                 </div>
             </main>
         </div>
