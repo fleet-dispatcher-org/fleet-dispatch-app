@@ -49,7 +49,7 @@ export class LogisticsAgent extends BaseAgent {
 
         super({
             name: "Load Assignment Optimizer",
-            model: "gpt-4o",
+            model: "gpt-5",
             instructions: LOGISTICS_AGENT_INSTRUCTIONS,
             tools: [distanceTool, assignmentTool]
         });
@@ -87,6 +87,7 @@ export class LogisticsAgent extends BaseAgent {
                 location: driver.current_location,
                 status: driver.employment_status,
                 current_coordinates: driver.current_coordinates,
+                home_coordinates: driver.home_coordinates
             }));
 
             const trucksData = context.unassignedTrucks.map(truck => ({
