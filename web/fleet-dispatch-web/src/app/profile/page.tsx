@@ -16,6 +16,7 @@ import { Metadata } from "next";
 import { run } from "@openai/agents";
 import CreateLoadCard from "../components/CreateLoadCard";
 
+
 export const metadata: Metadata = {
     title: 'Profile',
 }

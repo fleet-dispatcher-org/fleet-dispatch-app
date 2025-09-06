@@ -6,15 +6,17 @@ interface ButtonProps {
     children: React.ReactNode;
     type: "add" | "general" | "hollow" | "text"| "sign-in" | "none";
     className?: string;
+    disabled?: boolean;
     onClick?: () => void;
 }
 
-export default function Button({ children, type, className, onClick }: ButtonProps) {
+export default function Button({ children, type, className, onClick, disabled }: ButtonProps) {
     if(type === "add") {
         return (
         <button
             className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto cursor-pointer"
             onClick={onClick}
+            disabled={disabled}
         >
             
             {children}

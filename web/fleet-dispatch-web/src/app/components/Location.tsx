@@ -3,6 +3,7 @@
 import React from "react";
 import { useEffect, useState, useRef } from "react";
 import Button from "./Button";
+import  LocationFinder from "../components/LocationFinder";
 
 interface LocationProps {
     className?: string
@@ -51,5 +52,6 @@ export default function Location({className}: LocationProps) {
                             {location}
                             </Button>
                         )}
+                   <LocationFinder />     
                 </div>
             }
