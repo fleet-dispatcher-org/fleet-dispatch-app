@@ -4,6 +4,7 @@ import React from "react";
 import { useEffect, useState, useRef } from "react";
 import Button from "./Button";
 import  LocationFinder from "../components/LocationFinder";
+import { useSession } from "next-auth/react";
 
 interface LocationProps {
     className?: string
@@ -11,14 +12,29 @@ interface LocationProps {
 
 export default function Location({className}: LocationProps) {
     const [isEditing, setIsEditing] = useState(false);
-    const [location, setLocation] = useState('San Diego, CA');
+    const [location, setLocation] = useState('');
     const [tempValue, setTempValue] = useState(location);
     const inputRef = useRef<HTMLInputElement>(null);
+    const { data: session } = useSession();
+
+    async function getLocationdb() {
+        const location = await fetch(`/api/dispatcher/drivers/${session?.user?.id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        const locationJson = await location.json();
+        setLocation(locationJson.current_location);
+    }
+
+    
 
     useEffect(() => {
         if(isEditing && inputRef.current) {
             inputRef.current.focus();
         }
+        getLocationdb();
     }, [isEditing]);
 
     const handleBlur = () => {
