@@ -4,7 +4,10 @@ import React from "react";
 import { useEffect, useState, useRef } from "react";
 import Button from "./Button";
 import  LocationFinder from "../components/LocationFinder";
+import { useCityState } from "../hooks/useCityState";
 import { useSession } from "next-auth/react";
+import { get } from "http";
+import { useRouter } from "next/navigation";
 
 interface LocationProps {
     className?: string
@@ -16,6 +19,8 @@ export default function Location({className}: LocationProps) {
     const [tempValue, setTempValue] = useState(location);
     const inputRef = useRef<HTMLInputElement>(null);
     const { data: session } = useSession();
+    const { getCoordinates } = useCityState();
+    const router = useRouter();
 
     async function getLocationdb() {
         const location = await fetch(`/api/dispatcher/drivers/${session?.user?.id}`, {
@@ -49,9 +54,10 @@ export default function Location({className}: LocationProps) {
                                 value={tempValue}
                                 onChange={(e) => setTempValue(e.target.value)}
                                 onBlur={handleBlur}
-                                onKeyDown={(e) => {
+                                onKeyDown={ async (e) => {
                                     if (e.key === 'Enter') {
                                     handleBlur(); // Save on Enter
+                                    await getCoordinates(tempValue);
                                     }
                                     if (e.key === 'Escape') {
                                     setTempValue(location); // Revert
