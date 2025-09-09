@@ -133,7 +133,7 @@ export const useCityState = () => {
     const longitude = coordinates[0].lon;
     const accuracy = coordinates[0].accuracy;
 
-    return { latitude, longitude };
+    return { lat: latitude, long: longitude };
 
   }
   return { state, getCoordinates, setNewCoordinates };

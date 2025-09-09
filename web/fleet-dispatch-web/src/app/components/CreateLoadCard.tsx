@@ -191,8 +191,8 @@ export default function CreateLoadCard() {
                             connect: { id: formData.assigned_fleet }
                         }
                     }),
-                    origin_coordinates: await setNewCoordinates(formData.origin),
-                    destination_coordinates: await setNewCoordinates(formData.destination),
+                    origin_coordinates: [await setNewCoordinates(formData.origin)],
+                    destination_coordinates: [await setNewCoordinates(formData.destination)],
                     status: "UNASSIGNED",
                     createdAt: new Date(),
                 })
