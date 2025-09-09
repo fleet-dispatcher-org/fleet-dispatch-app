@@ -5,6 +5,8 @@ import type { Load } from "@prisma/client";
 import Link from 'next/link';
 import { createId } from '@paralleldrive/cuid2';
 import { X, Plus, Loader2, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
+import { useCityState } from '../hooks/useCityState';
+import { get } from 'http';
 
 export default function CreateLoadCard() {
     const { data: session, status } = useSession()
@@ -13,6 +15,7 @@ export default function CreateLoadCard() {
     const [error, setError] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState({type: '', message: ''});
+    const { setNewCoordinates } = useCityState();
     const [formData, setFormData] = useState({
         origin: '',
         destination: '',
@@ -170,7 +173,7 @@ export default function CreateLoadCard() {
         
         try {
             setLoading(true);
-
+            
             const response = await fetch('/api/dispatcher/loads', {
                 method: 'POST',
                 headers: {
@@ -188,6 +191,8 @@ export default function CreateLoadCard() {
                             connect: { id: formData.assigned_fleet }
                         }
                     }),
+                    origin_coordinates: setNewCoordinates(formData.origin),
+                    destination_coordinates: setNewCoordinates(formData.destination),
                     status: "UNASSIGNED",
                     createdAt: new Date(),
                 })

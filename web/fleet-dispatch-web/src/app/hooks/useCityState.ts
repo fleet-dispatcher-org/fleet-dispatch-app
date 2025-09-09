@@ -1,6 +1,7 @@
 "use client";
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
+import { set } from 'zod/v4';
 
 
 interface LocationData {
@@ -110,5 +111,30 @@ export const useCityState = () => {
       }));
     }
   };
-  return { state, getCoordinates };
+
+  const setNewCoordinates = async (value: string) => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
+    const city = value.split(",")[0];
+    const state = value.split(",")[1];
+
+    if (!navigator.geolocation) {
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Geolocation is not supported by this browser.',
+      }));
+      return;
+    }
+    
+    const coordinatesResponse = await fetch(`https://nominatim.openstreetmap.org/search?q=${city}+${expandState(state)}&format=json`);
+    const coordinates = await coordinatesResponse.json();
+    const latitude = coordinates[0].lat;
+    const longitude = coordinates[0].lon;
+    const accuracy = coordinates[0].accuracy;
+
+    return { latitude, longitude };
+
+  }
+  return { state, getCoordinates, setNewCoordinates };
 }
