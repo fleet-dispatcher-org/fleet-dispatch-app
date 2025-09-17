@@ -1,0 +1,646 @@
+import {Driver, Truck, Trailer, Load} from "@prisma/client";
+
+export type RoutePlannerContext = {
+    drivers: Driver[];
+    trucks: Truck[];
+    trailers: Trailer[];
+    loads: Load[];
+}
+
+interface DriverGroup {
+    driver: Driver;
+    truck: Truck;
+    trailer: Trailer;
+}
+
+interface AssignmentContext {
+    driverGroups: DriverGroup[];
+    unassignedLoads: Load[];
+}
+
+// Tree-based route structure with alternatives
+export type RouteNode = {
+    id: string;
+    load: Load;
+    nodeType: 'START' | 'PICKUP' | 'DELIVERY' | 'END';
+    location: {
+        coordinates: { lat: number; long: number };
+        address: string;
+    };
+    estimatedArrivalTime?: Date;
+    serviceTime: number;
+    sequence: number;
+    // Tree-specific properties
+    parentNode?: RouteNode;
+    childNodes: RouteNode[];
+    depth: number; // How deep in the route tree
+}
+
+interface RouteSegment {
+    id: string;
+    fromNode: RouteNode;
+    toNode: RouteNode;
+    distance: number;
+    duration: number;
+    cost: number;
+    drivingTime: number;
+}
+
+interface RouteTree {
+    id: string;
+    rootNode: RouteNode; // Starting point (driver's home base)
+    segments: RouteSegment[]; // All the connections between nodes
+    leafNodes: RouteNode[]; // End points (could be multiple if exploring alternatives)
+    totalCost: number;
+    totalDistance: number;
+    totalDuration: number;
+    isValid: boolean;
+    routePath: RouteNode[]; // The actual sequence of nodes for this route
+    feasibilityScore: number; // Higher is better
+}
+
+export type TreeBasedAssignment =  {
+    driverGroup: DriverGroup;
+    primaryRoute: RouteTree; // Best route selected
+    alternativeRoutes: RouteTree[]; // Other possible routes
+    selectionCriteria: {
+        criteriaUsed: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY';
+        scores: { [routeId: string]: number };
+    };
+    totalLoadsHandled: number;
+    routeComparison: RouteComparison;
+}
+
+interface RouteComparison {
+    bestDistance: { routeId: string; value: number };
+    bestTime: { routeId: string; value: number };
+    bestCost: { routeId: string; value: number };
+    mostLoads: { routeId: string; value: number };
+}
+
+export class RoutePlanner {
+    constructor() {}
+    private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+        const R = 6371; // Radius of the Earth in kilometers
+        const dLat = (lat2 - lat1) * (Math.PI / 180);
+        const dLon = (lon2 - lon1) * (Math.PI / 180);
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    private createRouteNode(
+        load: Load, 
+        nodeType: 'START' | 'PICKUP' | 'DELIVERY' | 'END',
+        serviceTime: number = 0,
+        parentNode?: RouteNode,
+    ): RouteNode {
+        const coords = nodeType === 'PICKUP' || nodeType === 'START' 
+            ? load.origin_coordinates as Array<{lat: number, long: number}> | null
+            : load.destination_coordinates as Array<{lat: number, long: number}> | null;
+        
+        const address = nodeType === 'PICKUP' || nodeType === 'START' 
+            ? load.origin || ''
+            : load.destination || '';
+        return {
+            id: `${nodeType.toLowerCase()}_${load.id}_${Date.now()}`,
+            load: load,
+            nodeType: nodeType,
+            location: {
+                coordinates: {
+                    lat: coords?.[0]?.lat || 0,
+                    long: coords?.[0]?.long || 0
+                },
+                address: address
+            },
+            serviceTime: serviceTime,
+            sequence: 0, // Will be set when building path
+            parentNode: parentNode,
+            childNodes: [],
+            depth: parentNode ? parentNode.depth + 1 : 0
+        };
+    }
+
+    private createRouteSegment(fromNode: RouteNode, toNode: RouteNode) {
+        const distance = this.calculateDistance(
+            fromNode.location.coordinates.lat,
+            fromNode.location.coordinates.long,
+            toNode.location.coordinates.lat,
+            toNode.location.coordinates.long
+        );
+        
+        const drivingTime = (distance / 60) * 60; // Assume 60 km/h average speed
+        const duration = drivingTime + fromNode.serviceTime;
+        const cost = distance * 2.5 + drivingTime * 0.5; // Example cost calculation
+
+        return {
+            id: `segment_${fromNode.id}_to_${toNode.id}`,
+            fromNode,
+            toNode,
+            distance,
+            duration,
+            cost,
+            drivingTime
+        };
+    }
+
+    private getCombinations<T>(arr: T[], size: number): T[][] {
+        if (size === 1) return arr.map(el => [el]);
+        
+        const combinations: T[][] = [];
+        for (let i = 0; i <= arr.length - size; i++) {
+            const first = arr[i];
+            const rest = this.getCombinations(arr.slice(i + 1), size - 1);
+            combinations.push(...rest.map(combo => [first, ...combo]));
+        }
+        
+        return combinations;
+    }
+
+    private buildRouteTreeForLoads(
+        driverGroup: DriverGroup, 
+        homeLoad: Load, 
+        loads: Load[], 
+        treeIndex: number
+    ): RouteTree {
+        // Create start node
+        const startNode = this.createRouteNode(homeLoad, 'START', 0);
+        
+        // Create all pickup and delivery nodes
+        const allNodes: RouteNode[] = [startNode];
+        const pickupNodes: RouteNode[] = [];
+        const deliveryNodes: RouteNode[] = [];
+        
+        loads.forEach(load => {
+            const pickup = this.createRouteNode(load, 'PICKUP', 30);
+            const delivery = this.createRouteNode(load, 'DELIVERY', 20);
+            
+            allNodes.push(pickup, delivery);
+            pickupNodes.push(pickup);
+            deliveryNodes.push(delivery);
+        });
+        
+        // Create end node
+        const endNode = this.createRouteNode(homeLoad, 'END', 0);
+        allNodes.push(endNode);
+        
+        // Generate optimized path (simple nearest neighbor for now)
+        const optimizedPath = this.optimizeNodeOrder([startNode, ...pickupNodes, ...deliveryNodes, endNode]);
+        
+        // Create segments for the optimized path
+        const segments: RouteSegment[] = [];
+        const leafNodes: RouteNode[] = [];
+        
+        for (let i = 0; i < optimizedPath.length - 1; i++) {
+            const segment = this.createRouteSegment(optimizedPath[i], optimizedPath[i + 1]);
+            segments.push(segment);
+            
+            // Set up parent-child relationships
+            optimizedPath[i].childNodes.push(optimizedPath[i + 1]);
+            optimizedPath[i + 1].parentNode = optimizedPath[i];
+            optimizedPath[i + 1].sequence = i + 1;
+        }
+        
+        // Last node is a leaf
+        if (optimizedPath.length > 0) {
+            leafNodes.push(optimizedPath[optimizedPath.length - 1]);
+        }
+        
+        // Calculate totals
+        const totalDistance = segments.reduce((sum, seg) => sum + seg.distance, 0);
+        const totalDuration = segments.reduce((sum, seg) => sum + seg.duration, 0);
+        const totalCost = segments.reduce((sum, seg) => sum + seg.cost, 0);
+        
+        // Calculate feasibility score (higher is better)
+        const feasibilityScore = this.calculateFeasibilityScore(totalDistance, totalDuration, loads.length);
+        
+        return {
+            id: `route_tree_${driverGroup.driver.id}_${treeIndex}`,
+            rootNode: startNode,
+            segments,
+            leafNodes,
+            totalCost,
+            totalDistance,
+            totalDuration,
+            isValid: totalDuration <= 600 && loads.length > 0, // 10 hours max
+            routePath: optimizedPath,
+            feasibilityScore
+        };
+    }
+
+    private generateAlternativeRoutes(
+        driverGroup: DriverGroup,
+        availableLoads: Load[],
+        maxLoadsPerRoute: number = 4,
+        maxAlternatives: number = 10
+    ): RouteTree[] {
+        const allRouteTrees: RouteTree[] = [];
+        
+        // Create home base dummy load
+        const homeLoad = {
+            id: `home_${driverGroup.driver.id}`,
+            origin: driverGroup.driver.home_base,
+            destination: driverGroup.driver.home_base,
+            origin_coordinates: driverGroup.driver.home_coordinates,
+            destination_coordinates: driverGroup.driver.home_coordinates
+        } as Load;
+
+        // Generate different combinations of loads
+        const loadCombinations = this.generateLoadCombinations(availableLoads, maxLoadsPerRoute);
+        
+        for (let i = 0; i < Math.min(loadCombinations.length, maxAlternatives); i++) {
+            const loadCombo = loadCombinations[i];
+            const routeTree = this.buildRouteTreeForLoads(driverGroup, homeLoad, loadCombo, i);
+            
+            if (routeTree.isValid) {
+                allRouteTrees.push(routeTree);
+            }
+        }
+
+        return allRouteTrees;
+    }
+
+    // Generate different combinations of loads
+    private generateLoadCombinations(loads: Load[], maxPerRoute: number): Load[][] {
+        const combinations: Load[][] = [];
+        
+        // Generate combinations of different sizes (1 to maxPerRoute)
+        for (let size = 1; size <= Math.min(maxPerRoute, loads.length); size++) {
+            const combos = this.getCombinations(loads, size);
+            combinations.push(...combos);
+        }
+        
+        return combinations;
+    }
+
+    // Simple node ordering (you can replace with more sophisticated algorithms)
+    private optimizeNodeOrder(nodes: RouteNode[]): RouteNode[] {
+        if (nodes.length <= 2) return nodes;
+        
+        const optimized: RouteNode[] = [];
+        const remaining = [...nodes];
+        
+        // Start with START node
+        const startNode = remaining.find(n => n.nodeType === 'START');
+        if (startNode) {
+            optimized.push(startNode);
+            remaining.splice(remaining.indexOf(startNode), 1);
+        }
+        
+        // Use nearest neighbor for middle nodes
+        let currentNode = startNode;
+        
+        while (remaining.length > 1) { // Keep END node for last
+            let nearestNode: RouteNode | null = null;
+            let nearestDistance = Infinity;
+            
+            for (const node of remaining) {
+                if (node.nodeType === 'END') continue;
+                
+                if (currentNode) {
+                    const distance = this.calculateDistance(
+                        currentNode.location.coordinates.lat,
+                        currentNode.location.coordinates.long,
+                        node.location.coordinates.lat,
+                        node.location.coordinates.long
+                    );
+                    
+                    if (distance < nearestDistance) {
+                        nearestDistance = distance;
+                        nearestNode = node;
+                    }
+                }
+            }
+            
+            if (nearestNode) {
+                optimized.push(nearestNode);
+                currentNode = nearestNode;
+                remaining.splice(remaining.indexOf(nearestNode), 1);
+            } else {
+                break;
+            }
+        }
+        
+        // Add END node
+        const endNode = remaining.find(n => n.nodeType === 'END');
+        if (endNode) {
+            optimized.push(endNode);
+        }
+        
+        return optimized;
+    }
+
+    // Calculate how feasible/good a route is
+    private calculateFeasibilityScore(distance: number, duration: number, loadCount: number): number {
+        // Higher score is better
+        // Factors: more loads is good, shorter distance is good, reasonable duration is good
+        const loadScore = loadCount * 100;
+        const distanceScore = Math.max(0, 1000 - distance); // Penalty for long distances
+        const timeScore = Math.max(0, 600 - duration); // Penalty for long duration (600 = 10 hours)
+        
+        return loadScore + distanceScore * 0.5 + timeScore * 0.3;
+    }
+
+    private selectBestRoute(
+        routeTrees: RouteTree[], 
+        criteria: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY' = 'HIGHEST_FEASIBILITY'
+    ): { best: RouteTree; scores: { [routeId: string]: number } } {
+        const scores: { [routeId: string]: number } = {};
+        
+        routeTrees.forEach(tree => {
+            switch (criteria) {
+                case 'SHORTEST_DISTANCE':
+                    scores[tree.id] = -tree.totalDistance; // Negative because lower is better
+                    break;
+                case 'SHORTEST_TIME':
+                    scores[tree.id] = -tree.totalDuration;
+                    break;
+                case 'LOWEST_COST':
+                    scores[tree.id] = -tree.totalCost;
+                    break;
+                case 'HIGHEST_FEASIBILITY':
+                default:
+                    scores[tree.id] = tree.feasibilityScore;
+                    break;
+            }
+        });
+        
+        // Find the route with highest score
+        const bestRouteId = Object.keys(scores).reduce((best, current) => 
+            scores[current] > scores[best] ? current : best
+        );
+        
+        const bestRoute = routeTrees.find(tree => tree.id === bestRouteId)!;
+        
+        return { best: bestRoute, scores };
+    }
+
+    // Create route comparison data
+    private createRouteComparison(routeTrees: RouteTree[]): RouteComparison {
+        let bestDistance = { routeId: '', value: Infinity };
+        let bestTime = { routeId: '', value: Infinity };
+        let bestCost = { routeId: '', value: Infinity };
+        let mostLoads = { routeId: '', value: 0 };
+        
+        routeTrees.forEach(tree => {
+            if (tree.totalDistance < bestDistance.value) {
+                bestDistance = { routeId: tree.id, value: tree.totalDistance };
+            }
+            if (tree.totalDuration < bestTime.value) {
+                bestTime = { routeId: tree.id, value: tree.totalDuration };
+            }
+            if (tree.totalCost < bestCost.value) {
+                bestCost = { routeId: tree.id, value: tree.totalCost };
+            }
+            
+            const loadCount = tree.routePath.filter(node => 
+                node.nodeType === 'PICKUP'
+            ).length;
+            
+            if (loadCount > mostLoads.value) {
+                mostLoads = { routeId: tree.id, value: loadCount };
+            }
+        });
+        
+        return { bestDistance, bestTime, bestCost, mostLoads };
+    }
+
+    // Main function to create tree-based assignments
+    public makeTreeBasedAssignments(
+        context: RoutePlannerContext,
+        maxDistance: number = 100,
+        maxLoadsPerRoute: number = 4,
+        maxAlternatives: number = 10,
+        selectionCriteria: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY' = 'HIGHEST_FEASIBILITY'
+    ): TreeBasedAssignment[] {
+        // Get your assignment context
+        const assignmentContext = this.getAssignmentContext(
+            context.drivers,
+            context.trucks,
+            context.trailers,
+            context.loads,
+            maxDistance
+        );
+        
+        const assignments: TreeBasedAssignment[] = [];
+        const availableLoads = [...assignmentContext.unassignedLoads];
+        
+        for (const driverGroup of assignmentContext.driverGroups) {
+            // Find loads this driver can handle
+            const feasibleLoads = this.findFeasibleLoads(driverGroup, availableLoads, maxDistance);
+            
+            if (feasibleLoads.length === 0) continue;
+            
+            // Generate alternative routes
+            const alternativeRoutes = this.generateAlternativeRoutes(
+                driverGroup, 
+                feasibleLoads, 
+                maxLoadsPerRoute, 
+                maxAlternatives
+            );
+            
+            if (alternativeRoutes.length === 0) continue;
+            
+            // Select the best route
+            const { best: primaryRoute, scores } = this.selectBestRoute(alternativeRoutes, selectionCriteria);
+            
+            // Create route comparison
+            const routeComparison = this.createRouteComparison(alternativeRoutes);
+            
+            // Count loads in primary route
+            const totalLoadsHandled = primaryRoute.routePath.filter(node => 
+                node.nodeType === 'PICKUP'
+            ).length;
+            
+            // Create assignment
+            const assignment: TreeBasedAssignment = {
+                driverGroup,
+                primaryRoute,
+                alternativeRoutes: alternativeRoutes.filter(route => route.id !== primaryRoute.id),
+                selectionCriteria: {
+                    criteriaUsed: selectionCriteria,
+                    scores
+                },
+                totalLoadsHandled,
+                routeComparison
+            };
+
+            console.log('Assignment:', assignment);
+            
+            assignments.push(assignment);
+            
+            // Remove assigned loads from available loads
+            primaryRoute.routePath
+                .filter(node => node.nodeType === 'PICKUP')
+                .forEach(pickupNode => {
+                    const index = availableLoads.findIndex(load => load.id === pickupNode.load.id);
+                    if (index !== -1) {
+                        availableLoads.splice(index, 1);
+                    }
+                });
+        }
+        
+        return assignments;
+    }
+
+    // Helper functions (keeping your existing ones)
+    private assignTruckToDriver(driver: Driver, truck: Truck, maxDistance: number) {
+        if (driver.home_base === truck.current_location) {
+            return true;
+        }
+
+        const driverCoords = driver.home_coordinates as Array<{lat: number, long: number}> | null;
+        const driverLat = driverCoords?.[0]?.lat;
+        const driverLong = driverCoords?.[0]?.long;
+
+        const truckCoords = truck.current_coordinates as Array<{lat: number, long: number}> | null;
+        const truckLat = truckCoords?.[0]?.lat;
+        const truckLong = truckCoords?.[0]?.long;
+        const distance = this.calculateDistance(driverLat!, driverLong!, truckLat!, truckLong!);
+        return distance <= maxDistance;
+    }
+
+    private assignTrailerToDriver(driver: Driver, trailer: Trailer, maxDistance: number) {
+        if (driver.home_base === trailer.current_location) {
+            return true;
+        }
+
+        const driverCoords = driver.home_coordinates as Array<{lat: number, long: number}> | null;
+        const driverLat = driverCoords?.[0]?.lat;
+        const driverLong = driverCoords?.[0]?.long;
+
+        const trailerCoords = trailer.current_coordinates as Array<{lat: number, long: number}> | null;
+        const trailerLat = trailerCoords?.[0]?.lat;
+        const trailerLong = trailerCoords?.[0]?.long;
+        const distance = this.calculateDistance(driverLat!, driverLong!, trailerLat!, trailerLong!);
+        
+        return distance <= maxDistance;
+    }
+
+    private getAssignmentContext(drivers: Driver[], trucks: Truck[], trailers: Trailer[], Loads: Load[], maxDistance: number) {
+        const driverGroups: DriverGroup[] = [];
+        for (const driver of drivers) {
+            for (const truck of trucks) {
+                if (this.assignTruckToDriver(driver, truck, maxDistance)) {
+                    for (const trailer of trailers) {
+                        if (this.assignTrailerToDriver(driver, trailer, maxDistance)) {
+                            driverGroups.push({driver, truck, trailer});
+                        }
+                    }
+                }
+            }
+        }
+
+        const loads = Loads.filter(load => load.assigned_driver === null && load.assigned_truck === null && load.assigned_trailer === null && load.status === "UNASSIGNED");
+        return { driverGroups, unassignedLoads: loads } as AssignmentContext;
+    }
+
+    private findFeasibleLoads(
+        driverGroup: DriverGroup, 
+        unassignedLoads: Load[], 
+        maxDistance: number
+    ): Load[] {
+        const feasibleLoads: Load[] = [];
+        const driverCoords = driverGroup.driver.home_coordinates as Array<{lat: number, long: number}> | null;
+        const driverLat = driverCoords?.[0]?.lat;
+        const driverLong = driverCoords?.[0]?.long;
+        
+        for (const load of unassignedLoads) {
+            const originCoords = load.origin_coordinates as Array<{lat: number, long: number}> | null;
+            const originLat = originCoords?.[0]?.lat;
+            const originLong = originCoords?.[0]?.long;
+            
+            if (driverLat && driverLong && originLat && originLong) {
+                const distanceToPickup = this.calculateDistance(driverLat, driverLong, originLat, originLong);
+                
+                if (distanceToPickup <= maxDistance || load.origin === driverGroup.driver.home_base) {
+                    feasibleLoads.push(load);
+                }
+            }
+        }
+        
+        return feasibleLoads;
+    }
+}
+
+
+//  function findStartPoints(driverGroup: DriverGroup, unassignedLoads: Load[], maxDistance: number) {
+//     const possibleStarts = []; 
+    
+//          for (let load of unassignedLoads) {
+//              if (load.origin === driverGroup.driver.home_base) {
+//                  possibleStarts.push( {load} as StartNode);
+//              }
+
+             
+
+//              let originCoordinates = load.origin_coordinates as Array<{lat: number, long: number}> | null;
+             
+//              let originLat = originCoordinates?.[0]?.lat;
+//              let originLong = originCoordinates?.[0]?.long;
+
+//              let driverGroupCoordinates = driverGroup.driver.home_coordinates as Array<{lat: number, long: number}> | null;
+//              let driverGroupLat = driverGroupCoordinates?.[0]?.lat;
+//              let driverGroupLong = driverGroupCoordinates?.[0]?.long;
+//              let distance = calculateDistance(driverGroupLat!, driverGroupLong!, originLat!, originLong!);
+            
+//              if (distance <= maxDistance) {
+//                  possibleStarts.push({load} as StartNode);
+                 
+//              }
+
+//          }
+
+//          return possibleStarts;
+//      }
+
+//  function findEndPoints(driverGroup: DriverGroup, unassignedLoads: Load[], maxDistance: number) {
+//     const possibleEnds = [];
+    
+//          for (let load of unassignedLoads) {
+//             if (load.destination === driverGroup.driver.home_base) {
+//                  possibleEnds.push({load} as EndNode);
+//              }
+
+//             let destinationCoordinates = load.destination_coordinates as Array<{lat: number, long: number}> | null;
+//             let destinationLat = destinationCoordinates?.[0]?.lat;
+//             let destinationLong = destinationCoordinates?.[0]?.long;
+
+//             let driverGroupCoordinates = driverGroup.driver.home_coordinates as Array<{lat: number, long: number}> | null;
+//             let driverGroupLat = driverGroupCoordinates?.[0]?.lat;
+//             let driverGroupLong = driverGroupCoordinates?.[0]?.long;
+//             let distance = calculateDistance(driverGroupLat!, driverGroupLong!, destinationLat!, destinationLong!);
+            
+//             if (distance <= maxDistance) {
+//                 possibleEnds.push({load} as EndNode);
+//             }
+//         }
+
+//         return possibleEnds;
+//     }
+
+// function canConnectLoads(startLoad: Load, endLoad: Load) {
+    
+//     return true; 
+// }
+
+//  function makeAssignmentTree(assignmentContext: AssignmentContext) {
+//     const assignmentTrees: AssignmentTree[] = [];
+
+//     for (const driverGroup of assignmentContext.driverGroups) {
+//         const possibleStarts = findStartPoints(driverGroup, assignmentContext.unassignedLoads, 50);
+//         const possibleEnds = findEndPoints(driverGroup, assignmentContext.unassignedLoads, 50);
+
+//         for(const start of possibleStarts) {
+//             for (const end of possibleEnds) {
+//                 assignmentTrees.push({load: [start, end], driverGroup});
+//             }
+//         }
+//     }
+//  }
+
+
+ 
+
