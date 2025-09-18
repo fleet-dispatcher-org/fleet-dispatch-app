@@ -410,9 +410,9 @@ export class RoutePlanner {
     // Main function to create tree-based assignments
     public makeTreeBasedAssignments(
         context: RoutePlannerContext,
-        maxDistance: number = 100,
-        maxLoadsPerRoute: number = 4,
-        maxAlternatives: number = 10,
+        maxDistance: number = 400,
+        maxLoadsPerRoute: number = 6,
+        maxAlternatives: number = 6,
         selectionCriteria: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY' = 'HIGHEST_FEASIBILITY'
     ): TreeBasedAssignment[] {
         // Get your assignment context

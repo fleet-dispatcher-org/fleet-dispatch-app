@@ -193,7 +193,9 @@ const makeSuggestionsParallel = async () => {
         }
 
         const routePlanner = new RoutePlanner();
-        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 100, 5, 5, "HIGHEST_FEASIBILITY");
+        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 400, 6, 6, "HIGHEST_FEASIBILITY");
+
+        console.log("Suggestions:", suggestions);
         
         // Create all API calls as promises
         const allApiCalls: Promise<Response>[] = [];
@@ -202,28 +204,15 @@ const makeSuggestionsParallel = async () => {
             const driverId = suggestion.driverGroup.driver.id;
             const truckId = suggestion.driverGroup.truck.id;
             const trailerId = suggestion.driverGroup.trailer.id;
-
+            
+            if (!suggestion?.primaryRoute?.rootNode?.load?.id) {
+                console.error("Suggestion does not have a root node :", suggestion);
+                return;
+            }
             // Add root node update to promises array
-            const rootLoadId = suggestion.primaryRoute.rootNode.load.id;
-            allApiCalls.push(
-                fetch(`/api/dispatcher/loads/${rootLoadId}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        assigned_driver: driverId,
-                        assigned_truck: truckId,
-                        assigned_trailer: trailerId,
-                        status: "SUGGESTED"
-                    })
-                })
-            );
-
-            // Add all route path updates to promises array
-            suggestion.primaryRoute.routePath.forEach((node: RouteNode) => {
+            const rootLoadId: string = suggestion.primaryRoute.rootNode.load.id.split("_")[1] || suggestion.primaryRoute.rootNode.load.id;
                 allApiCalls.push(
-                    fetch(`/api/dispatcher/loads/${node.load.id}`, {
+                    fetch(`/api/dispatcher/${rootLoadId}`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
@@ -236,6 +225,32 @@ const makeSuggestionsParallel = async () => {
                         })
                     })
                 );
+
+            // Add null check for routePath and filter out invalid nodes
+            const routePath = suggestion.primaryRoute?.routePath || [];
+            routePath.forEach((node: RouteNode) => {
+                // Check if node has the required load data
+                if (!node?.load?.id) {
+                    console.warn('Skipping node due to missing load data:', node);
+                    return;
+                }
+                
+                const loadId: string = node.load.id.split("_")[1] || node.load.id;
+                allApiCalls.push(
+                    fetch(`/api/dispatcher/${loadId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            assigned_driver: driverId,
+                            assigned_truck: truckId,
+                            assigned_trailer: trailerId,
+                            status: "SUGGESTED"
+                        })
+                    })
+                );
+                console.log(`Updated load ${node.load.id} with driver ${driverId}, truck ${truckId}, and trailer ${trailerId}`);
             });
         });
 
