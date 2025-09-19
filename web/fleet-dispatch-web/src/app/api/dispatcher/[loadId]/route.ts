@@ -43,7 +43,7 @@ export async function GET({ params }: RouteParams) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
         
-        const { loadId } = await params;
+        const loadId = await params.loadId;
         
         const load = await prisma.load.findUnique({
             where: { id: loadId },

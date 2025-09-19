@@ -20,7 +20,8 @@ interface AssignmentContext {
 
 // Tree-based route structure with alternatives
 export type RouteNode = {
-    id: string;
+    id: string; // This will be the unique node identifier
+    loadId: string; // This preserves the original load.id for database lookup
     load: Load;
     nodeType: 'START' | 'PICKUP' | 'DELIVERY' | 'END';
     location: {
@@ -80,6 +81,7 @@ interface RouteComparison {
 
 export class RoutePlanner {
     constructor() {}
+    
     private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
         const R = 6371; // Radius of the Earth in kilometers
         const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -104,8 +106,11 @@ export class RoutePlanner {
         const address = nodeType === 'PICKUP' || nodeType === 'START' 
             ? load.origin || ''
             : load.destination || '';
+        
         return {
+            // Create unique node ID but preserve original load ID
             id: `${nodeType.toLowerCase()}_${load.id}_${Date.now()}`,
+            loadId: load.id, // ← PRESERVE ORIGINAL LOAD ID HERE
             load: load,
             nodeType: nodeType,
             location: {
@@ -143,6 +148,37 @@ export class RoutePlanner {
             duration,
             cost,
             drivingTime
+        };
+    }
+
+    // ADD: Method to transform load IDs for final output/database operations
+    private transformLoadIdsForFinalAssignment(assignment: TreeBasedAssignment): TreeBasedAssignment {
+        // This is where you can modify the load IDs for the final result
+        const transformNode = (node: RouteNode): RouteNode => ({
+            ...node,
+            // Example transformations - modify as needed:
+            loadId: `ASSIGNED_${node.loadId}`, // Add prefix
+            // OR: loadId: node.loadId.replace('LOAD', 'ROUTE'), // Replace part
+            // OR: loadId: `${node.loadId}_${assignment.driverGroup.driver.id}`, // Add driver ID
+            childNodes: node.childNodes.map(transformNode)
+        });
+
+        const transformRoute = (route: RouteTree): RouteTree => ({
+            ...route,
+            rootNode: transformNode(route.rootNode),
+            routePath: route.routePath.map(transformNode),
+            leafNodes: route.leafNodes.map(transformNode),
+            segments: route.segments.map(segment => ({
+                ...segment,
+                fromNode: transformNode(segment.fromNode),
+                toNode: transformNode(segment.toNode)
+            }))
+        });
+
+        return {
+            ...assignment,
+            primaryRoute: transformRoute(assignment.primaryRoute),
+            alternativeRoutes: assignment.alternativeRoutes.map(transformRoute)
         };
     }
 
@@ -238,9 +274,9 @@ export class RoutePlanner {
     ): RouteTree[] {
         const allRouteTrees: RouteTree[] = [];
         
-        // Create home base dummy load
+        // Create home base dummy load - KEEP ORIGINAL ID
         const homeLoad = {
-            id: `home_${driverGroup.driver.id}`,
+            id: `home_${driverGroup.driver.id}`, // This stays as-is for internal processing
             origin: driverGroup.driver.home_base,
             destination: driverGroup.driver.home_base,
             origin_coordinates: driverGroup.driver.home_coordinates,
@@ -454,7 +490,7 @@ export class RoutePlanner {
                 node.nodeType === 'PICKUP'
             ).length;
             
-            // Create assignment
+            // Create assignment (with original load IDs intact)
             const assignment: TreeBasedAssignment = {
                 driverGroup,
                 primaryRoute,
@@ -467,15 +503,18 @@ export class RoutePlanner {
                 routeComparison
             };
 
+            // Don't transform load IDs - keep them as original database IDs
+            // assignment = this.transformLoadIdsForFinalAssignment(assignment);
+
             console.log('Assignment:', assignment);
             
             assignments.push(assignment);
             
-            // Remove assigned loads from available loads
+            // Remove assigned loads from available loads (using original load ID)
             primaryRoute.routePath
                 .filter(node => node.nodeType === 'PICKUP')
                 .forEach(pickupNode => {
-                    const index = availableLoads.findIndex(load => load.id === pickupNode.load.id);
+                    const index = availableLoads.findIndex(load => load.id === pickupNode.loadId);
                     if (index !== -1) {
                         availableLoads.splice(index, 1);
                     }
@@ -564,83 +603,3 @@ export class RoutePlanner {
         return feasibleLoads;
     }
 }
-
-
-//  function findStartPoints(driverGroup: DriverGroup, unassignedLoads: Load[], maxDistance: number) {
-//     const possibleStarts = []; 
-    
-//          for (let load of unassignedLoads) {
-//              if (load.origin === driverGroup.driver.home_base) {
-//                  possibleStarts.push( {load} as StartNode);
-//              }
-
-             
-
-//              let originCoordinates = load.origin_coordinates as Array<{lat: number, long: number}> | null;
-             
-//              let originLat = originCoordinates?.[0]?.lat;
-//              let originLong = originCoordinates?.[0]?.long;
-
-//              let driverGroupCoordinates = driverGroup.driver.home_coordinates as Array<{lat: number, long: number}> | null;
-//              let driverGroupLat = driverGroupCoordinates?.[0]?.lat;
-//              let driverGroupLong = driverGroupCoordinates?.[0]?.long;
-//              let distance = calculateDistance(driverGroupLat!, driverGroupLong!, originLat!, originLong!);
-            
-//              if (distance <= maxDistance) {
-//                  possibleStarts.push({load} as StartNode);
-                 
-//              }
-
-//          }
-
-//          return possibleStarts;
-//      }
-
-//  function findEndPoints(driverGroup: DriverGroup, unassignedLoads: Load[], maxDistance: number) {
-//     const possibleEnds = [];
-    
-//          for (let load of unassignedLoads) {
-//             if (load.destination === driverGroup.driver.home_base) {
-//                  possibleEnds.push({load} as EndNode);
-//              }
-
-//             let destinationCoordinates = load.destination_coordinates as Array<{lat: number, long: number}> | null;
-//             let destinationLat = destinationCoordinates?.[0]?.lat;
-//             let destinationLong = destinationCoordinates?.[0]?.long;
-
-//             let driverGroupCoordinates = driverGroup.driver.home_coordinates as Array<{lat: number, long: number}> | null;
-//             let driverGroupLat = driverGroupCoordinates?.[0]?.lat;
-//             let driverGroupLong = driverGroupCoordinates?.[0]?.long;
-//             let distance = calculateDistance(driverGroupLat!, driverGroupLong!, destinationLat!, destinationLong!);
-            
-//             if (distance <= maxDistance) {
-//                 possibleEnds.push({load} as EndNode);
-//             }
-//         }
-
-//         return possibleEnds;
-//     }
-
-// function canConnectLoads(startLoad: Load, endLoad: Load) {
-    
-//     return true; 
-// }
-
-//  function makeAssignmentTree(assignmentContext: AssignmentContext) {
-//     const assignmentTrees: AssignmentTree[] = [];
-
-//     for (const driverGroup of assignmentContext.driverGroups) {
-//         const possibleStarts = findStartPoints(driverGroup, assignmentContext.unassignedLoads, 50);
-//         const possibleEnds = findEndPoints(driverGroup, assignmentContext.unassignedLoads, 50);
-
-//         for(const start of possibleStarts) {
-//             for (const end of possibleEnds) {
-//                 assignmentTrees.push({load: [start, end], driverGroup});
-//             }
-//         }
-//     }
-//  }
-
-
- 
-

@@ -185,6 +185,11 @@ const makeSuggestionsParallel = async () => {
             fetchUnassignedLoads()
         ]);
 
+        console.log("Unassigned Drivers:", drivers);
+        console.log("Unassigned Trucks:", trucks);
+        console.log("Unassigned Trailers:", trailers);
+        console.log("Unassigned Loads:", loads);
+
         const assignmentData: RoutePlannerContext = {
             drivers: drivers,
             trucks: trucks,
@@ -193,49 +198,62 @@ const makeSuggestionsParallel = async () => {
         }
 
         const routePlanner = new RoutePlanner();
-        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 400, 6, 6, "HIGHEST_FEASIBILITY");
+        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 800, 6, 20, "HIGHEST_FEASIBILITY");
 
         console.log("Suggestions:", suggestions);
         
         // Create all API calls as promises
         const allApiCalls: Promise<Response>[] = [];
         
+        // Fixed version of your function
         suggestions.forEach((suggestion: TreeBasedAssignment) => {
             const driverId = suggestion.driverGroup.driver.id;
             const truckId = suggestion.driverGroup.truck.id;
             const trailerId = suggestion.driverGroup.trailer.id;
             
+            // DON'T process the root node - it's the driver's home base, not a load!
+            // Remove this entire root node section:
+            /*
             if (!suggestion?.primaryRoute?.rootNode?.load?.id) {
                 console.error("Suggestion does not have a root node :", suggestion);
                 return;
             }
-            // Add root node update to promises array
             const rootLoadId: string = suggestion.primaryRoute.rootNode.load.id.split("_")[1] || suggestion.primaryRoute.rootNode.load.id;
-                allApiCalls.push(
-                    fetch(`/api/dispatcher/${rootLoadId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            assigned_driver: driverId,
-                            assigned_truck: truckId,
-                            assigned_trailer: trailerId,
-                            status: "SUGGESTED"
-                        })
-                    })
-                );
-
+            // ... root node API call
+            */
+            
             // Add null check for routePath and filter out invalid nodes
             const routePath = suggestion.primaryRoute?.routePath || [];
-            routePath.forEach((node: RouteNode) => {
+            
+            // ONLY process PICKUP and DELIVERY nodes, skip START/END nodes
+            const loadNodes = routePath.filter(node => 
+                node.nodeType === 'PICKUP' || node.nodeType === 'DELIVERY'
+            );
+            
+            // Group nodes by load ID to avoid duplicate API calls
+            const processedLoads = new Set<string>();
+            
+            loadNodes.forEach((node: RouteNode) => {
                 // Check if node has the required load data
-                if (!node?.load?.id) {
+                if (!node?.loadId) {  // Use loadId instead of load.id
                     console.warn('Skipping node due to missing load data:', node);
                     return;
                 }
                 
-                const loadId: string = node.load.id.split("_")[1] || node.load.id;
+                // Use the preserved loadId (no need to split)
+                const loadId: string = node.loadId;
+                
+                // Avoid duplicate API calls for the same load
+                if (processedLoads.has(loadId)) {
+                    return;
+                }
+                processedLoads.add(loadId);
+                
+                // Skip home base loads (these are dummy loads for routing)
+                if (loadId.startsWith('home_')) {
+                    return;
+                }
+                
                 allApiCalls.push(
                     fetch(`/api/dispatcher/${loadId}`, {
                         method: 'PATCH',
@@ -250,7 +268,7 @@ const makeSuggestionsParallel = async () => {
                         })
                     })
                 );
-                console.log(`Updated load ${node.load.id} with driver ${driverId}, truck ${truckId}, and trailer ${trailerId}`);
+                console.log(`Updated load ${loadId} with driver ${driverId}, truck ${truckId}, and trailer ${trailerId}`);
             });
         });
 
