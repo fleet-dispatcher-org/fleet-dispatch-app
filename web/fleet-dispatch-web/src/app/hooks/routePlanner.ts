@@ -260,7 +260,7 @@ export class RoutePlanner {
             totalCost,
             totalDistance,
             totalDuration,
-            isValid: totalDuration <= 600 && loads.length > 0, // 10 hours max
+            isValid: loads.length > 0, // 10 hours max I had: totalDuration <= 600 I took this off for more testing
             routePath: optimizedPath,
             feasibilityScore
         };
@@ -285,16 +285,18 @@ export class RoutePlanner {
 
         // Generate different combinations of loads
         const loadCombinations = this.generateLoadCombinations(availableLoads, maxLoadsPerRoute);
+        console.log(`Generated ${loadCombinations.length} load combinations for driver ${driverGroup.driver.first_name}`);
         
         for (let i = 0; i < Math.min(loadCombinations.length, maxAlternatives); i++) {
             const loadCombo = loadCombinations[i];
             const routeTree = this.buildRouteTreeForLoads(driverGroup, homeLoad, loadCombo, i);
-            
+            // console.log(`Route Tree ${i} for driver ${driverGroup.driver.first_name}:`, routeTree);
             if (routeTree.isValid) {
+                console.log
                 allRouteTrees.push(routeTree);
             }
         }
-
+        console.log(`All Route Trees Generated: ${allRouteTrees.length} for driver ${driverGroup.driver.first_name}`);
         return allRouteTrees;
     }
 
@@ -399,6 +401,10 @@ export class RoutePlanner {
         if (endNode) {
             optimized.push(endNode);
         }
+
+        // console.log('Optimized Node Order:', optimized.map(n => n.nodeType + '_' + n.loadId));
+        // console.log('Total Nodes in Optimized Path:', optimized.length);
+        // console.log(`Optimized Path for Driver: ${optimized.map(n => n.loadId).join(' -> ')}`); 
         
         return optimized;
     }
@@ -705,7 +711,7 @@ export class RoutePlanner {
                 }
             }
         }
-        console.log(`Feasible Loads: ${feasibleLoads}`);
+        console.log(`Feasible Loads: ${feasibleLoads.length} for driver ${driverGroup.driver.first_name}`);
         return feasibleLoads;
     }
 }
