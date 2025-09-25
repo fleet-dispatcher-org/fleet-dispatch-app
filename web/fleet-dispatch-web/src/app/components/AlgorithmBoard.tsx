@@ -198,7 +198,7 @@ const makeSuggestionsParallel = async () => {
         }
 
         const routePlanner = new RoutePlanner();
-        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 800, 6, 20, "HIGHEST_FEASIBILITY");
+        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 800, 10, 20, "HIGHEST_FEASIBILITY");
 
         console.log("Suggestions:", suggestions);
         
@@ -250,7 +250,7 @@ const makeSuggestionsParallel = async () => {
                 processedLoads.add(loadId);
                 
                 // Skip home base loads (these are dummy loads for routing)
-                if (loadId.startsWith('home_')) {
+                if (node.id.startsWith('home_')) {
                     return;
                 }
                 

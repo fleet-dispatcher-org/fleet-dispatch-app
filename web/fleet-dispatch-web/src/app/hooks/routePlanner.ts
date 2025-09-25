@@ -302,10 +302,45 @@ export class RoutePlanner {
     private generateLoadCombinations(loads: Load[], maxPerRoute: number): Load[][] {
         const combinations: Load[][] = [];
         
-        // Generate combinations of different sizes (1 to maxPerRoute)
-        for (let size = 1; size <= Math.min(maxPerRoute, loads.length); size++) {
-            const combos = this.getCombinations(loads, size);
-            combinations.push(...combos);
+        // Always include individual loads
+        loads.forEach(load => combinations.push([load]));
+        
+        // Generate combinations based on proximity/compatibility
+        for (let size = 2; size <= Math.min(maxPerRoute, 4); size++) {
+            const smartCombos = this.generateSmartCombinations(loads, size);
+            combinations.push(...smartCombos.slice(0, 200)); // Limit per size
+        }
+        
+        return combinations;
+    }
+
+    private generateSmartCombinations(loads: Load[], size: number): Load[][] {
+        const combinations: Load[][] = [];
+        
+        // Sort loads by pickup location to group nearby loads
+        const sortedLoads = [...loads].sort((a, b) => {
+            // Sort by destination coordinates if available
+            const aCoords = a.destination_coordinates as Array<{lat: number, long: number}> | null;
+            const aLat = aCoords?.[0]?.lat;
+            const aLong = aCoords?.[0]?.long;
+            const bLat = b.origin_coordinates ? (b.origin_coordinates as Array<{lat: number, long: number}>)[0]?.lat : 0;
+            const bLong = b.origin_coordinates ? (b.origin_coordinates as Array<{lat: number, long: number}>)[0]?.long : 0;
+            return aLat! - bLat!;
+        });
+        
+        // Generate combinations from nearby loads
+        for (let i = 0; i < sortedLoads.length && combinations.length < 300; i++) {
+            const baseLoad = sortedLoads[i];
+            const combo = [baseLoad];
+            
+            // Add nearby loads to form a combination
+            for (let j = i + 1; j < Math.min(i + size * 2, sortedLoads.length) && combo.length < size; j++) {
+                combo.push(sortedLoads[j]);
+            }
+            
+            if (combo.length === size) {
+                combinations.push(combo);
+            }
         }
         
         return combinations;
@@ -462,7 +497,8 @@ export class RoutePlanner {
         
         const assignments: TreeBasedAssignment[] = [];
         const availableLoads = [...assignmentContext.unassignedLoads];
-        
+        console.log('Driver Groups Length: ', assignmentContext.driverGroups.length);
+        console.log("Driver Groups:", assignmentContext.driverGroups);
         for (const driverGroup of assignmentContext.driverGroups) {
             // Find loads this driver can handle
             const feasibleLoads = this.findFeasibleLoads(driverGroup, availableLoads, maxDistance);
@@ -560,20 +596,85 @@ export class RoutePlanner {
 
     private getAssignmentContext(drivers: Driver[], trucks: Truck[], trailers: Trailer[], Loads: Load[], maxDistance: number) {
         const driverGroups: DriverGroup[] = [];
+        const usedTrucks = new Set<string>(); // assuming truck has an id property
+        const usedTrailers = new Set<string>(); // assuming trailer has an id property
+
         for (const driver of drivers) {
+            let bestTruck: Truck | null = null;
+            let bestTruckDistance = Infinity;
+            
+            // Find the closest available truck
             for (const truck of trucks) {
+                if (usedTrucks.has(truck.id)) continue;
+                
                 if (this.assignTruckToDriver(driver, truck, maxDistance)) {
-                    for (const trailer of trailers) {
-                        if (this.assignTrailerToDriver(driver, trailer, maxDistance)) {
-                            driverGroups.push({driver, truck, trailer});
-                        }
+                    const distance = this.getDistanceToTruck(driver, truck);
+                    if (distance < bestTruckDistance) {
+                        bestTruckDistance = distance;
+                        bestTruck = truck;
                     }
                 }
             }
+            
+            if (bestTruck) {
+                let bestTrailer: Trailer | null = null;
+                let bestTrailerDistance = Infinity;
+                
+                // Find the closest available trailer
+                for (const trailer of trailers) {
+                    if (usedTrailers.has(trailer.id)) continue;
+                    
+                    if (this.assignTrailerToDriver(driver, trailer, maxDistance)) {
+                        const distance = this.getDistanceToTrailer(driver, trailer);
+                        if (distance < bestTrailerDistance) {
+                            bestTrailerDistance = distance;
+                            bestTrailer = trailer;
+                        }
+                    }
+                }
+                
+                if (bestTrailer) {
+                    driverGroups.push({driver, truck: bestTruck, trailer: bestTrailer});
+                    usedTrucks.add(bestTruck.id);
+                    usedTrailers.add(bestTrailer.id);
+                }
+            }
+        }
+        // console.log('Driver Groups:', driverGroups); should be 22 for all drivers 
+        // console.log('Unassigned Loads:', Loads); should be 80 for all loads
+        return { driverGroups, unassignedLoads: Loads } as AssignmentContext;
+    }
+
+    private getDistanceToTruck(driver: Driver, truck: Truck): number {
+        if (driver.home_base === truck.current_location) {
+            return 0; // Same location = 0 distance
         }
 
-        const loads = Loads.filter(load => load.assigned_driver === null && load.assigned_truck === null && load.assigned_trailer === null && load.status === "UNASSIGNED");
-        return { driverGroups, unassignedLoads: loads } as AssignmentContext;
+        const driverCoords = driver.home_coordinates as Array<{lat: number, long: number}> | null;
+        const driverLat = driverCoords?.[0]?.lat;
+        const driverLong = driverCoords?.[0]?.long;
+
+        const truckCoords = truck.current_coordinates as Array<{lat: number, long: number}> | null;
+        const truckLat = truckCoords?.[0]?.lat;
+        const truckLong = truckCoords?.[0]?.long;
+
+        return this.calculateDistance(driverLat!, driverLong!, truckLat!, truckLong!);
+    }
+
+    private getDistanceToTrailer(driver: Driver, trailer: Trailer): number {
+        if (driver.home_base === trailer.current_location) {
+            return 0; // Same location = 0 distance
+        }
+
+        const driverCoords = driver.home_coordinates as Array<{lat: number, long: number}> | null;
+        const driverLat = driverCoords?.[0]?.lat;
+        const driverLong = driverCoords?.[0]?.long;
+
+        const trailerCoords = trailer.current_coordinates as Array<{lat: number, long: number}> | null;
+        const trailerLat = trailerCoords?.[0]?.lat;
+        const trailerLong = trailerCoords?.[0]?.long;
+
+        return this.calculateDistance(driverLat!, driverLong!, trailerLat!, trailerLong!);
     }
 
     private findFeasibleLoads(
@@ -585,6 +686,8 @@ export class RoutePlanner {
         const driverCoords = driverGroup.driver.home_coordinates as Array<{lat: number, long: number}> | null;
         const driverLat = driverCoords?.[0]?.lat;
         const driverLong = driverCoords?.[0]?.long;
+
+        console.log('Finding feasible loads for driver:', driverGroup.driver.first_name);
         
         for (const load of unassignedLoads) {
             const originCoords = load.origin_coordinates as Array<{lat: number, long: number}> | null;
@@ -593,13 +696,16 @@ export class RoutePlanner {
             
             if (driverLat && driverLong && originLat && originLong) {
                 const distanceToPickup = this.calculateDistance(driverLat, driverLong, originLat, originLong);
+                // console.log(`Distance from ${driverGroup.driver.first_name} to load ${load.id}: ${distanceToPickup.toFixed(2)} km`);
                 
+                // Check if within max distance or if pickup is at home base
                 if (distanceToPickup <= maxDistance || load.origin === driverGroup.driver.home_base) {
+                    // console.log(`Load ${load.id} is feasible for driver ${driverGroup.driver.first_name}`);
                     feasibleLoads.push(load);
                 }
             }
         }
-        
+        console.log(`Feasible Loads: ${feasibleLoads}`);
         return feasibleLoads;
     }
 }

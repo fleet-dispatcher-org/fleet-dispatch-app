@@ -21,12 +21,16 @@ interface LoadViewProps {
     }>;
 }
 
-export default async function Page({ params }: any) {
+export default async function Page({ params }: LoadViewProps) {
     const session = await auth();
 
     if (session?.user === null) return <div>Error signing in. Please try again. </div>;
 
     else if (session?.user === undefined) return <div>Loading...</div>;
+
+    const { loadId } = await params;
+    console.log("Params: ", params);
+    console.log("Load ID:", loadId);
 
     async function assignDriver(loadId: string, driverId: string) {
         try {
@@ -124,7 +128,6 @@ export default async function Page({ params }: any) {
         }
     }
 
-    const { loadId } = await params;
     const [load] = await Promise.all([
         getLoad(loadId),
     ]);
