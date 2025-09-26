@@ -422,7 +422,7 @@ export class RoutePlanner {
 
     private selectBestRoute(
         routeTrees: RouteTree[], 
-        criteria: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY' = 'HIGHEST_FEASIBILITY'
+        criteria: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | 'LOWEST_COST' | "HIGHEST_LOAD_COUNT" | 'HIGHEST_FEASIBILITY' = 'HIGHEST_FEASIBILITY'
     ): { best: RouteTree; scores: { [routeId: string]: number } } {
         const scores: { [routeId: string]: number } = {};
         
@@ -436,6 +436,9 @@ export class RoutePlanner {
                     break;
                 case 'LOWEST_COST':
                     scores[tree.id] = -tree.totalCost;
+                    break;
+                case 'HIGHEST_LOAD_COUNT':
+                    scores[tree.id] = tree.routePath.filter(node => node.nodeType === 'PICKUP').length;
                     break;
                 case 'HIGHEST_FEASIBILITY':
                 default:

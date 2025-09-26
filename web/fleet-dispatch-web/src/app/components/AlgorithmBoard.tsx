@@ -198,7 +198,7 @@ const makeSuggestionsParallel = async () => {
         }
 
         const routePlanner = new RoutePlanner();
-        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 100, 20, 20, "LOWEST_COST");
+        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 100, 20, 20, "HIGHEST_FEASIBILITY");
 
         console.log("Suggestions:", suggestions);
         
