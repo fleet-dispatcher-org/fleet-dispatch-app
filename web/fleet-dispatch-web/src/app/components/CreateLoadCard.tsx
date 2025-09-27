@@ -20,11 +20,12 @@ export default function CreateLoadCard() {
         origin: '',
         destination: '',
         due_by: new Date(),
+        pick_up_by: new Date(),
         weight: 0,
         assigned_fleet: '',
     });
 
-    // DatePicker state
+    // Due DatePicker state
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -34,6 +35,12 @@ export default function CreateLoadCard() {
         'January', 'February', 'March', 'April', 'May', 'June',
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
+
+    // Pickup DatePicker state
+    const [isPickupDatePickerOpen, setIsPickupDatePickerOpen] = useState(false);
+    const [pickupCurrentMonth, setPickupCurrentMonth] = useState(new Date().getMonth());
+    const [pickupCurrentYear, setPickupCurrentYear] = useState(new Date().getFullYear());
+    const pickupDatePickerRef = useRef<HTMLDivElement>(null);
 
     // Set default fleet value when session loads
     useEffect(() => {
@@ -61,6 +68,7 @@ export default function CreateLoadCard() {
             origin: '',
             destination: '',
             due_by: new Date(),
+            pick_up_by: new Date(),
             weight: 0,
             assigned_fleet: session?.user?.assigned_fleet || '', // Reset to default
         });
@@ -80,13 +88,22 @@ export default function CreateLoadCard() {
     const daysInMonth = (month: number, year: number) => new Date(year, month + 1, 0).getDate();
     const firstDayOfMonth = (month: number, year: number) => new Date(year, month, 1).getDay();
 
-    const handleDateSelect = (day: number) => {
+    const handleDueDateSelect = (day: number) => {
         const date = new Date(currentYear, currentMonth, day);
         setFormData(prev => ({
             ...prev,
             due_by: date
         }));
         setIsDatePickerOpen(false);
+    };
+
+    const handlePickupDateSelect = (day: number) => {
+        const date = new Date(pickupCurrentYear, pickupCurrentMonth, day);
+        setFormData(prev => ({
+            ...prev,
+            pickup_date: date
+        }));
+        setIsPickupDatePickerOpen(false);
     };
 
     const navigateMonth = (direction: 'prev' | 'next') => {
@@ -107,7 +124,67 @@ export default function CreateLoadCard() {
         }
     };
 
-    const renderCalendarDays = () => {
+    const navigatePickupMonth = (direction: 'prev' | 'next') => {
+        if (direction === 'prev') {
+            if (pickupCurrentMonth === 0) {
+                setPickupCurrentMonth(11);
+                setPickupCurrentYear(pickupCurrentYear - 1);
+            } else {
+                setPickupCurrentMonth(pickupCurrentMonth - 1);
+            }
+        } else {
+            if (pickupCurrentMonth === 11) {
+                setPickupCurrentMonth(0);
+                setPickupCurrentYear(pickupCurrentYear + 1);
+            } else {
+                setPickupCurrentMonth(pickupCurrentMonth + 1);
+            }
+        }
+    };
+
+    const renderPickupCalendarDays = () => {
+        const days = [];
+        const daysCount = daysInMonth(pickupCurrentMonth, pickupCurrentYear);
+        const startingDay = firstDayOfMonth(pickupCurrentMonth, pickupCurrentYear);
+        const today = new Date();
+        const selectedDate = formData.pick_up_by;
+
+        // Empty cells for days before the first day of the month
+        for (let i = 0; i < startingDay; i++) {
+            days.push(<div key={`empty-${i}`} className="p-2"></div>);
+        }
+        // Days of the month
+        for (let day = 1; day <= daysCount; day++) {
+            const date = new Date(pickupCurrentYear, pickupCurrentMonth, day);
+            const isSelected = selectedDate && 
+                selectedDate.getDate() === day && 
+                selectedDate.getMonth() === pickupCurrentMonth &&
+                selectedDate.getFullYear() === pickupCurrentYear;
+            const isToday = today.getDate() === day && 
+                today.getMonth() === pickupCurrentMonth && 
+                today.getFullYear() === pickupCurrentYear;
+
+            days.push(
+                <button
+                    key={day}
+                    onClick={() => handlePickupDateSelect(day)}
+                    className={`p-2 text-sm rounded hover:bg-gray-600 transition-colors ${
+                        isSelected 
+                            ? 'bg-gray-600 text-white' 
+                            : isToday 
+                                ? 'bg-gray-700 text-gray-300' 
+                                : 'text-gray-300'
+                    }`}
+                >
+                    {day}
+                </button>
+            );
+        }
+
+        return days;
+    };
+
+    const renderDueCalendarDays = () => {
         const days = [];
         const daysCount = daysInMonth(currentMonth, currentYear);
         const startingDay = firstDayOfMonth(currentMonth, currentYear);
@@ -133,7 +210,7 @@ export default function CreateLoadCard() {
             days.push(
                 <button
                     key={day}
-                    onClick={() => handleDateSelect(day)}
+                    onClick={() => handleDueDateSelect(day)}
                     className={`p-2 text-sm rounded hover:bg-gray-600 transition-colors ${
                         isSelected 
                             ? 'bg-gray-600 text-white' 
@@ -345,6 +422,70 @@ export default function CreateLoadCard() {
                                     />
                                 </div>
 
+                                <div className="relative" ref={pickupDatePickerRef}>
+                                    <label htmlFor="pickup_by" className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                                        Pickup By *
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            id="pickup_by"
+                                            value={formData.pick_up_by ? formData.pick_up_by.toLocaleDateString() : ''}
+                                            onClick={() => setIsPickupDatePickerOpen(!isPickupDatePickerOpen)}
+                                            readOnly
+                                            placeholder="Select a date"
+                                            disabled={loading}
+                                            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 text-gray-300 rounded-lg focus:border-gray-500 focus:ring-2 focus:ring-gray-600 transition-all duration-200 disabled:bg-gray-700 disabled:cursor-not-allowed cursor-pointer"
+
+                                        />
+                                        <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                            <Calendar className="w-5 h-5 text-gray-400" />
+                                        </div>
+                                    </div>
+                                    {isPickupDatePickerOpen && (
+                                        <div className="absolute z-50 mt-2 w-full bg-gray-800 border border-gray-600 rounded-lg shadow-lg">
+                                            {/* Header */}
+                                            <div className="flex items-center justify-between p-4 border-b border-gray-600">
+                                                <button
+                                                    onClick={() => navigateMonth('prev')}
+                                                    className="p-1 hover:bg-gray-600 rounded"
+                                                    type="button"
+                                                >
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                                <span className="font-medium text-gray-300">
+                                                    {months[currentMonth]} {currentYear}
+                                                </span>
+                                                <button
+                                                    onClick={() => navigateMonth('next')}
+                                                    className="p-1 hover:bg-gray-600 rounded"
+                                                    type="button"
+                                                >
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+
+                                            {/* Days of week */}
+                                            <div className="grid grid-cols-7 border-b border-gray-600">
+                                                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                                                    <div key={day} className="p-2 text-center text-xs font-medium text-gray-400">
+                                                        {day}
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Calendar grid */}
+                                            <div className="grid grid-cols-7 p-2">
+                                                {renderDueCalendarDays()}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
                                 {/* Custom DatePicker Field */}
                                 <div className="relative" ref={datePickerRef}>
                                     <label htmlFor="due_by" className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
@@ -404,7 +545,7 @@ export default function CreateLoadCard() {
 
                                             {/* Calendar grid */}
                                             <div className="grid grid-cols-7 p-2">
-                                                {renderCalendarDays()}
+                                                {renderDueCalendarDays()}
                                             </div>
                                         </div>
                                     )}

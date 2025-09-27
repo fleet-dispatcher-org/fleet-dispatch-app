@@ -65,7 +65,7 @@ export type TreeBasedAssignment =  {
     primaryRoute: RouteTree; // Best route selected
     alternativeRoutes: RouteTree[]; // Other possible routes
     selectionCriteria: {
-        criteriaUsed: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY';
+        criteriaUsed: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY' | 'HIGHEST_LOAD_COUNT';
         scores: { [routeId: string]: number };
     };
     totalLoadsHandled: number;
@@ -292,11 +292,11 @@ export class RoutePlanner {
             const routeTree = this.buildRouteTreeForLoads(driverGroup, homeLoad, loadCombo, i);
             // console.log(`Route Tree ${i} for driver ${driverGroup.driver.first_name}:`, routeTree);
             if (routeTree.isValid) {
-                console.log
+                // console.log
                 allRouteTrees.push(routeTree);
             }
         }
-        console.log(`All Route Trees Generated: ${allRouteTrees.length} for driver ${driverGroup.driver.first_name}`);
+        // console.log(`All Route Trees Generated: ${allRouteTrees.length} for driver ${driverGroup.driver.first_name}`);
         return allRouteTrees;
     }
 
@@ -327,8 +327,9 @@ export class RoutePlanner {
             const aLong = aCoords?.[0]?.long;
             const bLat = b.origin_coordinates ? (b.origin_coordinates as Array<{lat: number, long: number}>)[0]?.lat : 0;
             const bLong = b.origin_coordinates ? (b.origin_coordinates as Array<{lat: number, long: number}>)[0]?.long : 0;
-            return aLat! - bLat!;
+            return this.calculateDistance(aLat!, aLong!, bLat!, bLong!);
         });
+        console.log('Sorted Loads for Smart Combinations:', sortedLoads.map(l => l.id));
         
         // Generate combinations from nearby loads
         for (let i = 0; i < sortedLoads.length && combinations.length < 300; i++) {
@@ -493,7 +494,7 @@ export class RoutePlanner {
         maxDistance: number = 400,
         maxLoadsPerRoute: number = 6,
         maxAlternatives: number = 6,
-        selectionCriteria: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY' = 'HIGHEST_FEASIBILITY'
+        selectionCriteria: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | "HIGHEST_LOAD_COUNT" | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY' = 'HIGHEST_FEASIBILITY'
     ): TreeBasedAssignment[] {
         // Get your assignment context
         const assignmentContext = this.getAssignmentContext(
@@ -506,8 +507,8 @@ export class RoutePlanner {
         
         const assignments: TreeBasedAssignment[] = [];
         const availableLoads = [...assignmentContext.unassignedLoads];
-        console.log('Driver Groups Length: ', assignmentContext.driverGroups.length);
-        console.log("Driver Groups:", assignmentContext.driverGroups);
+        // console.log('Driver Groups Length: ', assignmentContext.driverGroups.length);
+        // console.log("Driver Groups:", assignmentContext.driverGroups);
         for (const driverGroup of assignmentContext.driverGroups) {
             // Find loads this driver can handle
             const feasibleLoads = this.findFeasibleLoads(driverGroup, availableLoads, maxDistance);
@@ -551,7 +552,7 @@ export class RoutePlanner {
             // Don't transform load IDs - keep them as original database IDs
             // assignment = this.transformLoadIdsForFinalAssignment(assignment);
 
-            console.log('Assignment:', assignment);
+            // console.log('Assignment:', assignment);
             
             assignments.push(assignment);
             
@@ -696,7 +697,7 @@ export class RoutePlanner {
         const driverLat = driverCoords?.[0]?.lat;
         const driverLong = driverCoords?.[0]?.long;
 
-        console.log('Finding feasible loads for driver:', driverGroup.driver.first_name);
+        // console.log('Finding feasible loads for driver:', driverGroup.driver.first_name);
         
         for (const load of unassignedLoads) {
             const originCoords = load.origin_coordinates as Array<{lat: number, long: number}> | null;
@@ -714,7 +715,7 @@ export class RoutePlanner {
                 }
             }
         }
-        console.log(`Feasible Loads: ${feasibleLoads.length} for driver ${driverGroup.driver.first_name}`);
+        // console.log(`Feasible Loads: ${feasibleLoads.length} for driver ${driverGroup.driver.first_name}`);
         return feasibleLoads;
     }
 }
