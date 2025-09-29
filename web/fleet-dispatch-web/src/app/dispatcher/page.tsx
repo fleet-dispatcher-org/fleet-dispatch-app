@@ -18,7 +18,7 @@ export default function Dispatcher() {
     <main>
       <DispatchBoard />
       {/* <AIBoard/> */}
-      <AlgorithmBoard/>
+      <AIBoard/>
     <UnassignedBoardMini/>
     <CreateLoadCard/>
       <div className="flex flex-row">
