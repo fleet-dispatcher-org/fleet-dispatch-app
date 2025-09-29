@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Tool, ToolContext } from "../core/Tool";
+import { Tool, ToolContext, ToolArgs, ToolResult } from "../core/Tool";
 
 /**
  * Calculate the distance between two points on Earth using the Haversine formula
@@ -39,18 +39,30 @@ export class DistanceTool extends Tool {
         });
     }
 
-    async execute(args: {
-        lat1: number;
-        lon1: number;
-        lat2: number;
-        lon2: number;
-    }, context?: ToolContext): Promise<{ distance_miles: number }> {
+    async execute(args: ToolArgs, context?: ToolContext): Promise<ToolResult> {
         try {
-            const distance = calculateHaversineDistance(args.lat1, args.lon1, args.lat2, args.lon2);
-            return { distance_miles: Math.round(distance * 100) / 100 }; // Round to 2 decimal places
+            // Type assertion to get the expected arguments
+            const { lat1, lon1, lat2, lon2 } = args as {
+                lat1: number;
+                lon1: number;
+                lat2: number;
+                lon2: number;
+            };
+            
+            const distance = calculateHaversineDistance(lat1, lon1, lat2, lon2);
+            const distance_miles = Math.round(distance * 100) / 100; // Round to 2 decimal places
+            
+            return {
+                success: true,
+                data: { distance_miles },
+                message: `Distance calculated: ${distance_miles} miles`
+            };
         } catch (error) {
             console.error("Error calculating distance:", error);
-            throw new Error(`Failed to calculate distance: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            return {
+                success: false,
+                error: `Failed to calculate distance: ${error instanceof Error ? error.message : 'Unknown error'}`
+            };
         }
     }
 }

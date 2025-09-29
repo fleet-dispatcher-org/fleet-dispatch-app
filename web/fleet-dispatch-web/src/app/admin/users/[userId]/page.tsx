@@ -1,5 +1,4 @@
 import { auth } from "@/auth";
-import { notFound } from "next/navigation";
 import Logo from "@/src/app/components/Logo";
 import { NextResponse } from "next/server";
 import AdminUserProfileCard from "@/src/app/components/AdminUserProfileCard";
@@ -10,21 +9,6 @@ import Link from "next/link";
 import AdminUserApprovedLoads from "@/src/app/components/AdminUserApprovedLoads";
 import AdminDispatcherPendingLoads from "@/src/app/components/AdminDispatcherPendingLoads";
 import UnassignedBoardMini from "@/src/app/components/UnassignedBoardMini";
-
-interface User {
-    id: string;
-    name: string;
-    image: string;
-    email: string;
-    role: string;
-}
-
-interface Load {
-    id: string;
-    origin: string;
-    destination: string;
-    status: string;
-}
 
 interface UserViewProps {
     params: Promise<{

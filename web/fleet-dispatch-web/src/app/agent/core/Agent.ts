@@ -2,6 +2,23 @@ import { Agent as OpenAIAgent } from "@openai/agents";
 import { Tool } from "./Tool";
 
 /**
+ * Context type for agent execution
+ */
+export interface AgentContext {
+    [key: string]: unknown;
+}
+
+/**
+ * Result type for agent execution
+ */
+export interface AgentResult {
+    success: boolean;
+    data?: unknown;
+    error?: string;
+    message?: string;
+}
+
+/**
  * Base agent interface that defines the core structure for all agents
  */
 export interface IAgent {
@@ -9,7 +26,7 @@ export interface IAgent {
     model: string;
     instructions: string;
     tools: Tool[];
-    execute(input: string, context?: any): Promise<any>;
+    execute(input: string, context?: AgentContext): Promise<AgentResult>;
 }
 
 /**
@@ -45,7 +62,7 @@ export abstract class BaseAgent implements IAgent {
     /**
      * Execute the agent with given input and context
      */
-    abstract execute(input: string, context?: any): Promise<any>;
+    abstract execute(input: string, context?: AgentContext): Promise<AgentResult>;
 
     /**
      * Add a tool to the agent
