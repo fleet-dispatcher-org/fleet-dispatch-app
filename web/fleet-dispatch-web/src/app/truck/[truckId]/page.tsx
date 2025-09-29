@@ -1,9 +1,7 @@
 
 import { Truck } from "@prisma/client";
-import Link from "next/link";
 import { auth } from "@/auth";
 import Logo from "../../components/Logo";
-import { DayPicker, DateRange } from 'react-day-picker';
 import MaintenanceCalendar from "../../components/MaintenanceCalendar";
 
 export default async function TruckPage({ params }: { params: { truckId: string } }) {

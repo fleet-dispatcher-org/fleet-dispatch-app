@@ -8,12 +8,8 @@ import UserProfileCard from "../components/UserProfileCard";
 import MiniDashboard from "../components/MiniDashboard";
 import MiniLoadsBoard from "../components/MiniLoadsBoard";
 import MiniTrucksBoard from "../components/MiniTrucksBoard";
-import DriverLoads from "../components/DriverLoadsClient";
-import { User } from "@prisma/client";
 import DriverLoadsWrapper from "../components/DriverLoadsWrapper";
-import { Helmet } from "react-helmet";
 import { Metadata } from "next";
-import { run } from "@openai/agents";
 import CreateLoadCard from "../components/CreateLoadCard";
 
 
