@@ -1,16 +1,13 @@
 import { auth } from "@/auth";
 import { notFound } from "next/navigation";
 import Logo from "@/src/app/components/Logo";
-import LoadStatus from "../../components/LoadStatusClient";
 import prisma  from "@/prisma/prisma";
 import { Load } from "@prisma/client";
 import { Suspense } from "react";
 import LoadStatusWrapper from "../../components/LoadStatusWrapper";
-import { get } from "http";
 import HalfCircleProgress from "../../components/HalfCircleProgress";
 import Link from "next/link";
 import AcceptDenyLoad from "../../components/AcceptDenyLoad";
-import { button } from "@material-tailwind/react";
 import AssignDriverWrapper from "../../components/AssignDriverWrapper";
 import AssignTruckWrapper from "../../components/AssignTruckWrapper";
 import AssignTrailerWrapper from "../../components/AssignTrailerWrapper";
@@ -131,11 +128,11 @@ export default async function Page({ params }: LoadViewProps) {
     const [load] = await Promise.all([
         getLoad(loadId),
     ]);
-    const [assignedDriver, assigned_truck, assigned_trailer, assigned_by] = await Promise.all([
+    const [assignedDriver, assigned_truck, assigned_trailer] = await Promise.all([
         getAssignedDriver(load as Load),
         getAssignedTruck(load as Load),
         getAssignedTrailer(load as Load),
-        getAssignedBy(load as Load),
+        // getAssignedBy(load as Load),
     ])
     
     if (!load) {

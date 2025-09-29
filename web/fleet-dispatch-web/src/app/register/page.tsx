@@ -72,7 +72,7 @@ export default function Register() {
                         </div>
                         <div className="flex flex-col">
                         <input className="border border-white w-64" id="email" />
-                        <p className="text-sm text-gray-400 mt-1">We'll never share your email.</p>
+                        <p className="text-sm text-gray-400 mt-1">We&apos;ll never share your email.</p>
                         </div>
                     </li>
 

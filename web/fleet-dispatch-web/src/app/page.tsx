@@ -2,11 +2,8 @@
 
 import Image from "next/image";
 import Logo from "./components/Logo";
-import { Helmet } from "react-helmet";
 import { useEffect } from "react";
 import Button  from "./components/Button";
-import Link from "next/link";
-import SignIn from "./components/Sign-In";
 
 export default function Home() {
   useEffect(() => {

@@ -78,7 +78,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 }
 
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(request: NextRequest) {
     try {
         const session = await auth();
         console.log("Session:", session?.user?.role || "User not logged in");

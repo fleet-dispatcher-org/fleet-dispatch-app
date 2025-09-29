@@ -10,6 +10,7 @@ import AdminUserApprovedLoads from "@/src/app/components/AdminUserApprovedLoads"
 import AdminDispatcherPendingLoads from "@/src/app/components/AdminDispatcherPendingLoads";
 import UnassignedBoardMini from "@/src/app/components/UnassignedBoardMini";
 
+
 interface UserViewProps {
     params: Promise<{
         userId: string;
@@ -97,7 +98,7 @@ export default async function UserView({ params }: UserViewProps) {
     ]);
 
     console.log("Loads:", loads);
-    const fleetUsers = await getFleetUsers(user?.assigned_fleet || '');
+    // const fleetUsers = await getFleetUsers(user?.assigned_fleet || '');
 
     if (!user) {
         return <div>Error fetching user. Please try again.</div>;
