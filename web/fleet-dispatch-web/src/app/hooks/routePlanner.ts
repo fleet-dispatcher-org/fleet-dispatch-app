@@ -349,6 +349,7 @@ export class RoutePlanner {
         return combinations;
     }
 
+    // Push this for a commit
     // Simple node ordering (you can replace with more sophisticated algorithms)
     private optimizeNodeOrder(nodes: RouteNode[]): RouteNode[] {
         if (nodes.length <= 2) return nodes;
