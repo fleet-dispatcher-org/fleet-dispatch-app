@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Tool, ToolContext } from "../core/Tool";
+import { Tool, ToolContext, ToolArgs, ToolResult } from "../core/Tool";
 import { Driver, Load, Trailer, Truck } from "@prisma/client";
 
 /**
@@ -56,13 +56,16 @@ export class AssignmentTool extends Tool {
         });
     }
 
-    async execute(args: {
-        assignments: Assignment[];
-        summary: string;
-    }, context?: ToolContext): Promise<AssignmentResults> {
+    async execute(args: ToolArgs, context?: ToolContext): Promise<ToolResult> {
         try {
+            // Type assertion to get the expected arguments
+            const { assignments, summary } = args as {
+                assignments: Assignment[];
+                summary: string;
+            };
+            
             // Use stored context first, then fallback to parameter context
-            const assignmentContext = this.storedContext || (context as AssignmentContext);
+            const assignmentContext = this.storedContext || (context as unknown as AssignmentContext);
             
             if (!assignmentContext) {
                 const result = { 
@@ -70,7 +73,10 @@ export class AssignmentTool extends Tool {
                     summary: "Error: No assignment context available. Context must be set before tool execution." 
                 };
                 this.capturedResult = result;
-                return result;
+                return {
+                    success: false,
+                    error: result.summary
+                };
             }
 
             // Validate context structure
@@ -80,7 +86,10 @@ export class AssignmentTool extends Tool {
                     summary: "Error: Invalid context - unassignedLoads must be an array" 
                 };
                 this.capturedResult = result;
-                return result;
+                return {
+                    success: false,
+                    error: result.summary
+                };
             }
 
             if (!assignmentContext.unassignedDrivers || !Array.isArray(assignmentContext.unassignedDrivers)) {
@@ -89,7 +98,10 @@ export class AssignmentTool extends Tool {
                     summary: "Error: Invalid context - unassignedDrivers must be an array" 
                 };
                 this.capturedResult = result;
-                return result;
+                return {
+                    success: false,
+                    error: result.summary
+                };
             }
 
             if (!assignmentContext.unassignedTrucks || !Array.isArray(assignmentContext.unassignedTrucks)) {
@@ -98,7 +110,10 @@ export class AssignmentTool extends Tool {
                     summary: "Error: Invalid context - unassignedTrucks must be an array" 
                 };
                 this.capturedResult = result;
-                return result;
+                return {
+                    success: false,
+                    error: result.summary
+                };
             }
 
             if (!assignmentContext.unassignedTrailers || !Array.isArray(assignmentContext.unassignedTrailers)) {
@@ -107,14 +122,17 @@ export class AssignmentTool extends Tool {
                     summary: "Error: Invalid context - unassignedTrailers must be an array" 
                 };
                 this.capturedResult = result;
-                return result;
+                return {
+                    success: false,
+                    error: result.summary
+                };
             }
 
             const validatedAssignments: Assignment[] = [];
             const errors: string[] = [];
 
             // Validate each assignment
-            for (const assignment of args.assignments) {
+            for (const assignment of assignments) {
                 const load = assignmentContext.unassignedLoads.find(l => l.id === assignment.load_id);
                 const driver = assignmentContext.unassignedDrivers.find(d => d.id === assignment.driver_id);
                 const truck = assignmentContext.unassignedTrucks.find(t => t.id === assignment.truck_id);
@@ -143,11 +161,15 @@ export class AssignmentTool extends Tool {
 
             const result = {
                 assignments: validatedAssignments,
-                summary: errors.length > 0 ? `${args.summary} | Issues: ${errors.join('; ')}` : args.summary
+                summary: errors.length > 0 ? `${summary} | Issues: ${errors.join('; ')}` : summary
             };
             
             this.capturedResult = result;
-            return result;
+            return {
+                success: true,
+                data: result,
+                message: result.summary
+            };
 
         } catch (error) {
             console.error("Error creating assignments:", error);
@@ -166,7 +188,10 @@ export class AssignmentTool extends Tool {
                 summary: `Assignment failed: ${errorMessage}. Check context data and assignment parameters.`
             };
             this.capturedResult = errorResult;
-            return errorResult;
+            return {
+                success: false,
+                error: errorResult.summary
+            };
         }
     }
 

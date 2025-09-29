@@ -80,15 +80,6 @@ export default async function UserView({ params }: UserViewProps) {
         }
     }
 
-    async function getFleetUsers(fleetId: string) {
-        try {
-            const users = await prisma.user.findMany({ where: { assigned_fleet: fleetId } });
-            return users;
-        } catch (error) {
-            console.error('Error fetching user:', error);
-            return null;
-        }
-    }
 
     
     const { userId } = await params; 

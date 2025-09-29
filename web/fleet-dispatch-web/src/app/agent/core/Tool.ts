@@ -56,6 +56,7 @@ export abstract class Tool {
         return tool({
             name: this.name,
             description: this.description,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             parameters: this.parameters as any,
             strict: this.strict,
             execute: async (input: unknown) => {
