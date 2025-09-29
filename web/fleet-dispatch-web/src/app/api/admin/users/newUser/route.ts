@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/auth'
 import prisma from "@/prisma/prisma";
 
 export async function POST(request: Request) {

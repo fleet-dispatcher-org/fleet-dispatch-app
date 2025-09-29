@@ -57,7 +57,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 }
 
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(request: NextRequest) {
     try {
         const session = await auth()
         if (!session) {

@@ -51,7 +51,6 @@ export async function GET({ params }: RouteParams) {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
     try {
-        const session = await auth();
         const { userId } = await params;
         const body = await request.json();
         const updatedDriver = await prisma.driver.update({ where: { id: userId }, data: body });

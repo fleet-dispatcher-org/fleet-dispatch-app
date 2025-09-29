@@ -13,7 +13,6 @@ interface RouteParams {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
     try {
-        const session = await auth();
         const { loadId, trailerId } = await params;
         await prisma.load.update({
             where: { id: loadId },

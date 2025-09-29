@@ -2,7 +2,6 @@ import { run, setDefaultOpenAIKey } from "@openai/agents";
 import { BaseAgent } from "../core/Agent";
 import { DistanceTool } from "../tools/DistanceTool";
 import { AssignmentTool, AssignmentResults, AssignmentContext } from "../tools/AssignmentTool";
-import { Driver, Load, Trailer, Truck } from "@prisma/client";
 
 // Set the OpenAI API key
 setDefaultOpenAIKey(process.env.OPENAI_API_KEY!);
