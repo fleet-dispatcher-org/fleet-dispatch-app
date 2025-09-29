@@ -5,7 +5,22 @@ import { z } from "zod";
  * Interface for tool execution context
  */
 export interface ToolContext {
-    [key: string]: any;
+    [key: string]: unknown;
+}
+
+/**
+ * Generic tool arguments type
+ */
+export type ToolArgs = Record<string, unknown>;
+
+/**
+ * Generic tool result type
+ */
+export interface ToolResult {
+    success: boolean;
+    data?: unknown;
+    error?: string;
+    message?: string;
 }
 
 /**
@@ -14,13 +29,13 @@ export interface ToolContext {
 export abstract class Tool {
     public name: string;
     public description: string;
-    public parameters: z.ZodSchema<any>;
+    public parameters: z.ZodSchema<unknown>;
     public strict: boolean;
 
     constructor(config: {
         name: string;
         description: string;
-        parameters: z.ZodSchema<any>;
+        parameters: z.ZodSchema<unknown>;
         strict?: boolean;
     }) {
         this.name = config.name;
@@ -32,7 +47,7 @@ export abstract class Tool {
     /**
      * Execute the tool with given arguments and context
      */
-    abstract execute(args: any, context?: ToolContext): Promise<any>;
+    abstract execute(args: ToolArgs, context?: ToolContext): Promise<ToolResult>;
 
     /**
      * Get the OpenAI tool configuration
@@ -41,16 +56,18 @@ export abstract class Tool {
         return tool({
             name: this.name,
             description: this.description,
-            parameters: this.parameters as any, // Cast to any to avoid type issues
+            parameters: this.parameters as any,
             strict: this.strict,
-            execute: this.execute.bind(this)
+            execute: async (input: unknown) => {
+                return await this.execute(input as ToolArgs);
+            }
         });
     }
 
     /**
      * Validate tool arguments against the schema
      */
-    validateArgs(args: any): boolean {
+    validateArgs(args: ToolArgs): boolean {
         try {
             this.parameters.parse(args);
             return true;
