@@ -12,12 +12,13 @@ export default function UnassignedBoardMini({ limit }: Props) {
     const [loads, setLoads] = useState<Load[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
     const fetchUnassignedLoads = async () => {
         try {
             setLoading(true);
             
-            const response = await fetch('/api/dispatcher/loads', {
+            const response = await fetch(`${apiUrl}/api/dispatcher/loads`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

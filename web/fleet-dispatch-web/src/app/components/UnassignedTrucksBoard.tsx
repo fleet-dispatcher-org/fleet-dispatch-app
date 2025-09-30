@@ -9,6 +9,7 @@ export default function UnassignedTrucksBoard() {
     const [trucks, setTrucks] = useState<Truck[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
     useEffect(() => {
         fetchTrucks();
@@ -16,7 +17,7 @@ export default function UnassignedTrucksBoard() {
 
     async function fetchTrucks() {
         try {
-            const response = await fetch('/api/trucks', {
+            const response = await fetch(`${apiUrl}/api/trucks`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

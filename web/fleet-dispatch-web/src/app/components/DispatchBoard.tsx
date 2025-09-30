@@ -17,6 +17,7 @@ export default function DispatchBoard() {
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
     const [trucks, setTrucks] = useState<Record<string, string>>({});
     const [trailers, setTrailers] = useState<Record<string, string>>({});
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
     useEffect(() => {
         fetchLoads();
@@ -26,7 +27,7 @@ export default function DispatchBoard() {
     const fetchLoads = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/dispatcher/loads');
+            const response = await fetch(`${apiUrl}/api/dispatcher/loads`);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch loads');
@@ -67,7 +68,7 @@ export default function DispatchBoard() {
     const updateLoad = async (loadId: string, newStatus: string) => {
     setUpdatingLoadId(loadId);
     try {
-        const response = await fetch(`/api/dispatcher/${loadId}`, {
+        const response = await fetch(`${apiUrl}/api/dispatcher/${loadId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -102,7 +103,7 @@ export default function DispatchBoard() {
 
     const getDriverName = async (driverId: string) => {
         try {
-            const response = await fetch(`/api/admin/users/${driverId}`);
+            const response = await fetch(`${apiUrl}/api/admin/users/${driverId}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch driver name');
             }
@@ -124,7 +125,7 @@ export default function DispatchBoard() {
 
     const getTruckMakeModel = async (truckId: string) => {
         try {
-            const response = await fetch(`/api/trucks/${truckId}`);
+            const response = await fetch(`${apiUrl}/api/trucks/${truckId}`);
             
             // This is a checker. Most of the time the error you'll get is an unauthorized. 
             // Make sure you're authenticated and or have the correct role.
@@ -161,7 +162,7 @@ export default function DispatchBoard() {
     }
 
     try {
-        const response = await fetch(`/api/trailers/${trailerId}`);
+        const response = await fetch(`${apiUrl}/api/trailers/${trailerId}`);
         if (!response.ok) {
             throw new Error('Failed to fetch trailer name');
         }

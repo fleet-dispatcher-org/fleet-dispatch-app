@@ -17,6 +17,7 @@ export default function AIBoard() {
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
     const [unassignedLoads, setUnassignedLoads] = useState<Load[]>([]);
     const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
     useEffect(() => {
         // Only load existing suggestions on mount, don't automatically generate new ones
@@ -26,7 +27,7 @@ export default function AIBoard() {
     try {
         setLoading(true);
         
-        const response = await fetch('/api/dispatcher/drivers', {
+        const response = await fetch(`${apiUrl}/api/dispatcher/drivers`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -69,7 +70,7 @@ const fetchUnassignedTrucks = async (): Promise<Truck[]> => {
     try {
         setLoading(true);
         
-        const response = await fetch('/api/trucks', {
+        const response = await fetch(`${apiUrl}/api/trucks`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -103,7 +104,7 @@ const fetchUnassignedTrailers = async (): Promise<Trailer[]> => {
     try {
         setLoading(true);
         
-        const response = await fetch('/api/trailers', {
+        const response = await fetch(`${apiUrl}/api/trailers`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -137,7 +138,7 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
     try {
         setLoading(true);
         
-        const response = await fetch('/api/dispatcher/loads', {
+        const response = await fetch(`${apiUrl}/api/dispatcher/loads`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -187,7 +188,7 @@ const makeSuggestions = async () => {
 
         console.log(assignmentData);
 
-        const response_ai = await fetch('/api/agent/assign-loads', {
+        const response_ai = await fetch(`${apiUrl}/api/agent/assign-loads`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -205,7 +206,7 @@ const makeSuggestions = async () => {
         // Process assignments
         await Promise.all(results.assignments.map(async (assignment: Assignment) => {
             try {
-                const response = await fetch(`/api/dispatcher/${assignment.load_id}`, {
+                const response = await fetch(`${apiUrl}/api/dispatcher/${assignment.load_id}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
@@ -250,7 +251,7 @@ const handleGetSuggestions = async () => {
             setLoading(true);
             setError(null);
             
-            const response = await fetch('/api/dispatcher/suggested', {
+            const response = await fetch(`${apiUrl}/api/dispatcher/suggested`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -293,7 +294,7 @@ const handleGetSuggestions = async () => {
 
     const getTruckMakeModel = async (truckId: string) => {
         try {
-            const response = await fetch(`/api/trucks/${truckId}`);
+            const response = await fetch(`${apiUrl}/api/trucks/${truckId}`);
             
             // This is a checker. Most of the time the error you'll get is an unauthorized. 
             // Make sure you're authenticated and or have the correct role.
@@ -330,7 +331,7 @@ const handleGetSuggestions = async () => {
         }
 
         try {
-            const response = await fetch(`/api/trailers/${trailerId}`);
+            const response = await fetch(`${apiUrl}/api/trailers/${trailerId}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch trailer name');
             }
@@ -350,7 +351,7 @@ const handleGetSuggestions = async () => {
 
     const getDriverName = async (driverId: string) => {
         try {
-            const response = await fetch(`/api/admin/users/${driverId}`);
+            const response = await fetch(`${apiUrl}/api/admin/users/${driverId}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch driver name');
             }

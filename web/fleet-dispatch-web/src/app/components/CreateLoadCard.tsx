@@ -20,6 +20,8 @@ export default function CreateLoadCard() {
         assigned_fleet: '',
     });
 
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
     // Due DatePicker state
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
@@ -246,7 +248,7 @@ export default function CreateLoadCard() {
         try {
             setLoading(true);
             
-            const response = await fetch('/api/dispatcher/loads', {
+            const response = await fetch(`${apiUrl}/api/dispatcher/loads`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

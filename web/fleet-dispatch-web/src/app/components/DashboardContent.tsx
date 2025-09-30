@@ -21,7 +21,7 @@ export default function AdminDashboardContent() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
-
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL;
     useEffect(() => {
         fetchUsers();
     }, []);
@@ -29,7 +29,7 @@ export default function AdminDashboardContent() {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/admin/users');
+            const response = await fetch(`${apiUrl}/api/admin/users`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch users');
@@ -71,7 +71,7 @@ export default function AdminDashboardContent() {
     const updateUserRole = async (userId: string, newRole: Role) => {
         setUpdatingUserId(userId);
         try {
-            const response = await fetch(`/api/admin/users/${userId}/role`, {
+            const response = await fetch(`${apiUrl}/api/admin/users/${userId}/role`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

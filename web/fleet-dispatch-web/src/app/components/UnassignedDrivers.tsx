@@ -8,12 +8,13 @@ export default function UnassignedDrivers() {
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
     const fetchUnassignedDrivers = async () => {
         try {
             setLoading(true);
             
-            const response = await fetch('/api/dispatcher/drivers', {
+            const response = await fetch(`${apiUrl}/api/dispatcher/drivers`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

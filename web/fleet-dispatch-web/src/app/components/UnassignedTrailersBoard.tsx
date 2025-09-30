@@ -8,12 +8,13 @@ export default function UnassignedTrailersBoard() {
     const [trailers, setTrailers] = useState<Trailer[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const apiUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
     const fetchUnassignedTrailers = async () => {
         try {
             setLoading(true);
             
-            const response = await fetch('/api/trailers', {
+            const response = await fetch(`${apiUrl}/api/trailers`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
