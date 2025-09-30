@@ -1,6 +1,5 @@
 import { auth } from "@/auth";
 import Logo from "@/src/app/components/Logo";
-import { NextResponse } from "next/server";
 import AdminUserProfileCard from "@/src/app/components/AdminUserProfileCard";
 import AdminUserLoads from "@/src/app/components/AdminUserLoads";
 import prisma  from "@/prisma/prisma";
@@ -9,6 +8,7 @@ import Link from "next/link";
 import AdminUserApprovedLoads from "@/src/app/components/AdminUserApprovedLoads";
 import AdminDispatcherPendingLoads from "@/src/app/components/AdminDispatcherPendingLoads";
 import UnassignedBoardMini from "@/src/app/components/UnassignedBoardMini";
+import { redirect } from "next/dist/client/components/navigation";
 
 
 interface UserViewProps {
@@ -24,7 +24,7 @@ export default async function UserView({ params }: UserViewProps) {
     else if (session?.user === undefined) return <div>Loading...</div>;
 
     else if (session?.user.role != "ADMIN" && session?.user.role != "DISPATCHER") {
-        return NextResponse.redirect(new URL('/unauthorized'));
+        return redirect('/unauthorized');
     }
 
     async function getUser(userId: string) {
