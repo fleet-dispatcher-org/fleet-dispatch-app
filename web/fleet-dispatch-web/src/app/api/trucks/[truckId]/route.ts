@@ -60,7 +60,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 }
 
-export async function DELETE({params}: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
         const { truckId } = await params;
         await prisma.truck.delete({ where: { id: truckId } });
