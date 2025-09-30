@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/prisma/prisma'
 
-interface RouteParams {
+type RouteParams = {
     params: { truckId: string };
 }
 

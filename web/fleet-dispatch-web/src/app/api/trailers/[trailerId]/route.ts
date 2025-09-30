@@ -2,13 +2,13 @@ import { NextResponse, NextRequest } from "next/server";
 import { auth } from "@/auth";
 import prisma from "@/prisma/prisma";
 
-interface RouteParams {
-    params: {
+type RouteParams = {
+    params: Promise<{
         trailerId: string;
-    };
+    }>;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
     const session = await auth();
 
     if (!session) {

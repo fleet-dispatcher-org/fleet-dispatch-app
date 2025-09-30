@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/prisma/prisma'
 
-interface RouteParams {
-  params: {
+type RouteParams = {
+  params: Promise<{
     userId: string
-  }
+  }>
 }
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
     try {

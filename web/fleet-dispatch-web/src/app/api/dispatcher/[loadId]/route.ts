@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/prisma/prisma'
 
-interface RouteParams {
-    params: { 
+type RouteParams = {
+    params: Promise<{
         loadId: string,
-    };
+    }>;
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
@@ -42,7 +42,7 @@ export async function GET({ params }: RouteParams) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
         
-        const loadId = await params.loadId;
+        const { loadId }= await params;
         
         const load = await prisma.load.findUnique({
             where: { id: loadId },

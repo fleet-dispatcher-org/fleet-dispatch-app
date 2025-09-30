@@ -2,10 +2,10 @@ import { NextResponse, NextRequest } from "next/server";
 import { auth } from "@/auth";
 import prisma from "@/prisma/prisma";
 
-interface RouteParams {
-    params: {
+type RouteParams = {
+    params: Promise<{
         userId: string;
-    };
+    }>;
 }
 export async function GET({ params }: RouteParams) {
 
@@ -20,7 +20,7 @@ export async function GET({ params }: RouteParams) {
     }
 
     try {
-        const userId = params.userId;
+        const { userId } = await params;
         const loads = await prisma.load.findMany({
             select: {
                 id: true,
