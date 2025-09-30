@@ -1,5 +1,5 @@
 import { run, setDefaultOpenAIKey } from "@openai/agents";
-import { BaseAgent } from "../core/Agent";
+import { BaseAgent, AgentContext, AgentResult } from "../core/Agent";
 import { DistanceTool } from "../tools/DistanceTool";
 import { AssignmentTool, AssignmentResults, AssignmentContext } from "../tools/AssignmentTool";
 
@@ -59,17 +59,18 @@ export class LogisticsAgent extends BaseAgent {
     /**
      * Execute load assignment with the given assignment context
      */
-    async execute(input: string, context: AssignmentContext): Promise<AssignmentResults> {
+    async execute(input: string, context?: AgentContext): Promise<AgentResult> {
         try {
             // Clear any previous results and context
             this.assignmentTool.clearCapturedResult();
             this.assignmentTool.clearContext();
 
             // Store context in the assignment tool for access during execution
-            this.assignmentTool.setContext(context);
+            const assignmentContext = context as unknown as AssignmentContext;
+            this.assignmentTool.setContext(assignmentContext);
 
             // Transform data for AI processing
-            const loadsData = context.unassignedLoads.map(load => ({
+            const loadsData = assignmentContext.unassignedLoads.map(load => ({
                 id: load.id,
                 origin: load.origin,
                 destination: load.destination,
@@ -80,7 +81,7 @@ export class LogisticsAgent extends BaseAgent {
                 destination_coordinates: load.destination_coordinates
             }));
 
-            const driversData = context.unassignedDrivers.map(driver => ({
+            const driversData = assignmentContext.unassignedDrivers.map(driver => ({
                 id: driver.id,
                 name: `${driver.first_name || ''} ${driver.last_name || ''}`.trim() || 'Unknown',
                 location: driver.current_location,
@@ -89,7 +90,7 @@ export class LogisticsAgent extends BaseAgent {
                 home_coordinates: driver.home_coordinates
             }));
 
-            const trucksData = context.unassignedTrucks.map(truck => ({
+            const trucksData = assignmentContext.unassignedTrucks.map(truck => ({
                 id: truck.id,
                 model: truck.model || 'Unknown',
                 location: truck.current_location,
@@ -98,7 +99,7 @@ export class LogisticsAgent extends BaseAgent {
                 current_coordinates: truck.current_coordinates,
             }));
 
-            const trailersData = context.unassignedTrailers.map(trailer => ({
+            const trailersData = assignmentContext.unassignedTrailers.map(trailer => ({
                 id: trailer.id,
                 type: trailer.model || 'Standard',
                 location: trailer.current_location,
@@ -126,24 +127,33 @@ Use ONLY the IDs shown above. Match loads by urgency, consider proximity, and en
             // Return results with priority logic
             const capturedResult = this.assignmentTool.getCapturedResult();
             if (capturedResult) {
-                return capturedResult;
+                return {
+                    success: true,
+                    data: capturedResult,
+                    message: capturedResult.summary
+                };
             }
 
             if (result.finalOutput && typeof result.finalOutput === 'object' && 
                 'assignments' in result.finalOutput && 'summary' in result.finalOutput) {
-                return result.finalOutput as AssignmentResults;
+                const assignmentResults = result.finalOutput as AssignmentResults;
+                return {
+                    success: true,
+                    data: assignmentResults,
+                    message: assignmentResults.summary
+                };
             }
 
             return {
-                assignments: [],
-                summary: "Assignment failed: Agent did not use assignment tool properly"
+                success: false,
+                error: "Assignment failed: Agent did not use assignment tool properly"
             };
 
         } catch (error) {
             console.error("LogisticsAgent execution error:", error);
             return {
-                assignments: [],
-                summary: `Assignment failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+                success: false,
+                error: `Assignment failed: ${error instanceof Error ? error.message : 'Unknown error'}`
             };
         }
     }
@@ -152,7 +162,14 @@ Use ONLY the IDs shown above. Match loads by urgency, consider proximity, and en
      * Assign loads to resources - main public interface
      */
     async assignLoadsToResources(assignmentData: AssignmentContext): Promise<AssignmentResults> {
-        return this.execute("", assignmentData);
+        const result = await this.execute("", assignmentData as unknown as AgentContext);
+        if (result.success && result.data) {
+            return result.data as AssignmentResults;
+        }
+        return {
+            assignments: [],
+            summary: result.error || "Assignment failed"
+        };
     }
 }
 

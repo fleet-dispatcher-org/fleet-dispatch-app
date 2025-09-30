@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
 import prisma from '@/prisma/prisma'
 
 interface RouteParams {
@@ -13,7 +12,6 @@ interface RouteParams {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
     try {
-        const session = await auth();
         const { loadId, truckId } = await params;
         await prisma.load.update({
             where: { id: loadId },

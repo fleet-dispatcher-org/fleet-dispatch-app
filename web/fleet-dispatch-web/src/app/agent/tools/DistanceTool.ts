@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Tool, ToolContext, ToolArgs, ToolResult } from "../core/Tool";
+import { Tool, ToolArgs, ToolResult } from "../core/Tool";
 
 /**
  * Calculate the distance between two points on Earth using the Haversine formula
@@ -39,7 +39,7 @@ export class DistanceTool extends Tool {
         });
     }
 
-    async execute(args: ToolArgs, context?: ToolContext): Promise<ToolResult> {
+    async execute(args: ToolArgs): Promise<ToolResult> {
         try {
             // Type assertion to get the expected arguments
             const { lat1, lon1, lat2, lon2 } = args as {

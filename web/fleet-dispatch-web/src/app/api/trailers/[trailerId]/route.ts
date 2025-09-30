@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
     try {
-        const session = await auth();
         const { trailerId } = await params;
         await prisma.trailer.update({
             where: { id: trailerId },
