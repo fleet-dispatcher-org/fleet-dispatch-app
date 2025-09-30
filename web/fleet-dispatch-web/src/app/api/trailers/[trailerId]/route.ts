@@ -21,9 +21,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     try {
         // Extract trailerId from the URL
-        const url = new URL(request.url);
-        const pathSegments = url.pathname.split('/');
-        const trailerId = pathSegments[pathSegments.length - 1];
+        const { trailerId } = await params;
         
         console.log('API: Trailer ID from URL:', trailerId); // Debug log
         
