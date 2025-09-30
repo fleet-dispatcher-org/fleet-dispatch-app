@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/prisma/prisma'
 
-interface RouteParams {
-    params: {
+type RouteParams = {
+    params: Promise<{
         userId: string
-    }
-    userId: string
+    }>
 }
 // This is how we will be getting the data!!! Go to the route off of the api folder
 // Everything is going to be a route of some sorts so just follow the file paths.
