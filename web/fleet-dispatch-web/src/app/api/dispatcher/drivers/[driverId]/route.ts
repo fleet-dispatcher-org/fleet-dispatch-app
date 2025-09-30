@@ -60,7 +60,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 }
 
-export async function DELETE({params}: RouteParams) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
     try {
         const session = await auth();
         if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") {
