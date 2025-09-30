@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import RoleBadgeColor from './RoleBadgeColor';
-import Role from '@prisma/client';
 
 interface UserData {
   id: string

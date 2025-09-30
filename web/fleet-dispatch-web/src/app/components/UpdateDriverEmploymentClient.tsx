@@ -1,8 +1,6 @@
 "use client";
-import { Availability_Status, Driver, Employment_Status } from "@prisma/client";
-import { useEffect, useState } from "react";
+import { Driver, Employment_Status } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 interface Props {
     driver: Driver;
@@ -10,7 +8,7 @@ interface Props {
 
 export default function UpdateDriverEmploymentClient({ driver }: Props) {
     const router = useRouter();
-    const [employmentStatus, setEmploymentStatus] = useState<Employment_Status>(driver.employment_status);
+    // const [employmentStatus, setEmploymentStatus] = useState<Employment_Status>(driver.employment_status);
 
     const updateEmploymentStatus = async  (newStatus: Employment_Status ) => {
         try {

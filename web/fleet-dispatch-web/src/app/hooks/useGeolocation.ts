@@ -1,6 +1,6 @@
 "use client";
 import { useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { useState} from 'react';
 
 interface LocationData {
   latitude: number;
@@ -114,10 +114,12 @@ export const useGeolocation = () => {
       if (!updateLocation.ok) {
         throw new Error('Failed to update location');
       }
-    } catch (error: any) {
+    } catch (error: Error | any) {
       let errorMessage = 'Failed to get location';
-      
-      if (error.code === 1) {
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error.code === 1) {
         errorMessage = 'Location access denied by user';
       } else if (error.code === 2) {
         errorMessage = 'Location information is unavailable';

@@ -29,16 +29,16 @@ export default async function Page({ params }: LoadViewProps) {
     console.log("Params: ", params);
     console.log("Load ID:", loadId);
 
-    async function assignDriver(loadId: string, driverId: string) {
-        try {
-            await prisma.load.update({
-                where: { id: loadId },
-                data: { assigned_driver: driverId },
-            });
-        } catch (error) {
-            console.error('Error assigning driver to load:', error);
-        }
-    }
+    // async function assignDriver(loadId: string, driverId: string) {
+    //     try {
+    //         await prisma.load.update({
+    //             where: { id: loadId },
+    //             data: { assigned_driver: driverId },
+    //         });
+    //     } catch (error) {
+    //         console.error('Error assigning driver to load:', error);
+    //     }
+    // }
 
     async function getLoad(loadId: string) {
         try {
@@ -107,23 +107,23 @@ export default async function Page({ params }: LoadViewProps) {
         }
     }
 
-    async function getAssignedBy(load: Load) {
-        try {
-            if (!load.assigned_by) {
-                return null;
-            } else {
-                const user = await prisma.user?.findUnique({ where: { id: load.assigned_by } });
-                if (!user) {
-                    throw new Error('User not found');
-                }
-                return user;    
-            }
+    // async function getAssignedBy(load: Load) {
+    //     try {
+    //         if (!load.assigned_by) {
+    //             return null;
+    //         } else {
+    //             const user = await prisma.user?.findUnique({ where: { id: load.assigned_by } });
+    //             if (!user) {
+    //                 throw new Error('User not found');
+    //             }
+    //             return user;    
+    //         }
             
-        } catch (error) {
-            console.error('Error fetching driver:', error);
-            return null;
-        }
-    }
+    //     } catch (error) {
+    //         console.error('Error fetching driver:', error);
+    //         return null;
+    //     }
+    // }
 
     const [load] = await Promise.all([
         getLoad(loadId),

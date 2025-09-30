@@ -5,10 +5,8 @@ import { auth } from "../../../auth";
 import Logo from "../components/Logo";
 import Location from "../components/Location";
 import CalendarCombo from "../components/CalendarCombo";
-import Image from "next/image";
 import RoleGuard from "../components/RoleGuard";
 import UserProfileCard from "../components/UserProfileCard";
-import SignOut from "../components/Sign-Out";
 
 export default async function Driver() {
     // const [isVisible, setisVisible] = useState(false);
