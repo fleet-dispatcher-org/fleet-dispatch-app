@@ -1,9 +1,3 @@
-import { error } from "console";
-
-interface DashboardErrorProps {
-    error: string
-    onclick: Promise<void>
-}
 
 export default async function DashboardError(error: string, onclick: Promise<void>) {
     return (

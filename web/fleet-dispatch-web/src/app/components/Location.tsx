@@ -6,8 +6,6 @@ import Button from "./Button";
 import  LocationFinder from "../components/LocationFinder";
 import { useCityState } from "../hooks/useCityState";
 import { useSession } from "next-auth/react";
-import { get } from "http";
-import { useRouter } from "next/navigation";
 
 interface LocationProps {
     className?: string
@@ -20,7 +18,6 @@ export default function Location({className}: LocationProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const { data: session } = useSession();
     const { getCoordinates } = useCityState();
-    const router = useRouter();
 
     async function getLocationdb() {
         const location = await fetch(`/api/dispatcher/drivers/${session?.user?.id}`, {

@@ -1,10 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import type { Role, Status } from "@prisma/client";
-import Logo from './Logo';
-import Image from 'next/image'
-import Link from 'next/link';
+
 
 interface MiniLoad {
     id: string;

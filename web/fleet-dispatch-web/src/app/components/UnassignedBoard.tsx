@@ -3,7 +3,6 @@
 import { Load } from "@prisma/client";
 import { useEffect, useState } from "react";
 import Link from 'next/link';
-import Logo from './Logo';
 
 export default function UnassignedBoardMini() {
     const [loads, setLoads] = useState<Load[]>([]);

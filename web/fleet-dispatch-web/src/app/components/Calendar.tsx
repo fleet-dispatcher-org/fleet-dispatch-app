@@ -19,14 +19,7 @@ interface CalendarProps {
 }
 
 export default function Calendar({
-    height, 
-    width, 
-    className, 
-    x, 
-    y, 
-    children, 
     type, 
-    id, 
     isVisible=false,
     onRangeChange,
     onSingleChange

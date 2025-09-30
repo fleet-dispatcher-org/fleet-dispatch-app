@@ -1,18 +1,13 @@
 'use client'
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import type { Load } from "@prisma/client";
-import Link from 'next/link';
 import { createId } from '@paralleldrive/cuid2';
 import { X, Plus, Loader2, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
 import { useCityState } from '../hooks/useCityState';
-import { get } from 'http';
 
 export default function CreateLoadCard() {
-    const { data: session, status } = useSession()
-    const [loads, setLoads] = useState<Load[]>([]);
+    const { data: session } = useSession()
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState({type: '', message: ''});
     const { setNewCoordinates } = useCityState();
@@ -155,7 +150,7 @@ export default function CreateLoadCard() {
         }
         // Days of the month
         for (let day = 1; day <= daysCount; day++) {
-            const date = new Date(pickupCurrentYear, pickupCurrentMonth, day);
+            // const date = new Date(pickupCurrentYear, pickupCurrentMonth, day);
             const isSelected = selectedDate && 
                 selectedDate.getDate() === day && 
                 selectedDate.getMonth() === pickupCurrentMonth &&
@@ -198,7 +193,7 @@ export default function CreateLoadCard() {
 
         // Days of the month
         for (let day = 1; day <= daysCount; day++) {
-            const date = new Date(currentYear, currentMonth, day);
+            // const date = new Date(currentYear, currentMonth, day);
             const isSelected = selectedDate && 
                 selectedDate.getDate() === day && 
                 selectedDate.getMonth() === currentMonth && 
@@ -447,7 +442,7 @@ export default function CreateLoadCard() {
                                             {/* Header */}
                                             <div className="flex items-center justify-between p-4 border-b border-gray-600">
                                                 <button
-                                                    onClick={() => navigateMonth('prev')}
+                                                    onClick={() => navigatePickupMonth('prev')}
                                                     className="p-1 hover:bg-gray-600 rounded"
                                                     type="button"
                                                 >
@@ -459,7 +454,7 @@ export default function CreateLoadCard() {
                                                     {months[currentMonth]} {currentYear}
                                                 </span>
                                                 <button
-                                                    onClick={() => navigateMonth('next')}
+                                                    onClick={() => navigatePickupMonth('next')}
                                                     className="p-1 hover:bg-gray-600 rounded"
                                                     type="button"
                                                 >
@@ -480,7 +475,7 @@ export default function CreateLoadCard() {
 
                                             {/* Calendar grid */}
                                             <div className="grid grid-cols-7 p-2">
-                                                {renderDueCalendarDays()}
+                                                {renderPickupCalendarDays()}
                                             </div>
                                         </div>
                                     )}

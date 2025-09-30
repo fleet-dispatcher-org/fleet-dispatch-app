@@ -1,6 +1,5 @@
 "use client";
 
-import { signIn } from "next-auth/react"
 import Button from "./Button"
 import { login } from "../lib/actions/auth"
 
@@ -11,5 +10,5 @@ interface SignInProps {
 }
 
 export default function SignIn({children, className}: SignInProps) {
-  return <Button type="none" onClick={() => login()}> {children} </Button>
+  return <Button className={className} type="none" onClick={() => login()}> {children} </Button>
 }

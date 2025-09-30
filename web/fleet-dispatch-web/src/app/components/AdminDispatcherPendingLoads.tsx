@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import type { Load } from "@prisma/client";
 import Logo from './Logo';
-import Image from 'next/image'
-import Link from 'next/link';
 
 
 
@@ -44,6 +42,10 @@ export default function AdminDispatcherPendingLoads() {
                 <p>No pending loads found.</p>
             </div>
         );
+    }
+
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'DISPATCHER')) {
+        return <div className="text-red-600 text-center p-4">Access denied. You do not have permission to view this content.</div>;
     }
 
     return (

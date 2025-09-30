@@ -1,10 +1,7 @@
 'use client'
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect} from 'react';
 import { useSession } from 'next-auth/react';
-import type { Load } from "@prisma/client";
-import Link from 'next/link';
-import { createId } from '@paralleldrive/cuid2';
-import { X, Plus, Loader2, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
+import { X, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 
 interface DateProps {
@@ -12,11 +9,9 @@ interface DateProps {
 }
 
 export default function TimeOffModal({range}: DateProps) {
-    const { data: session, status } = useSession();
+    const { data: session } = useSession();
     const [open, setOpen] = useState(false);
-    const [selectedDates, setSelectedDates] = useState<Date[]>([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState({type: '', message: ''});
     const [formData, setFormData] = useState({
         timeOffStart: new Date(),
@@ -56,14 +51,6 @@ export default function TimeOffModal({range}: DateProps) {
         });
         setMessage({type: '', message: ''});
         setLoading(false);
-    }
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value // This was missing!
-        });
     }
 
     const handleAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

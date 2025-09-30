@@ -1,18 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { Role, Status, Trailer, Load, Driver, Truck } from "@prisma/client";
-import Logo from './Logo';
-import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
+import { Trailer, Load, Driver, Truck } from "@prisma/client";
 import Link from 'next/link';
-import { assignLoadsToResources, Assignment, AssignmentContext } from '../agent';
 import { RoutePlanner } from '../hooks/routePlanner';
 import { RoutePlannerContext, TreeBasedAssignment, RouteNode } from '../hooks/routePlanner';
-import { stat } from 'fs';
 
 
 export default function AIBoard() {
-    const { data: session } = useSession();
     const [suggestedLoads, setSuggestedLoads] = useState<Load[]>([]);
     const [trucks, setTrucks] = useState<Record<string, string>>({});
     const [unassignedTrucks, setUnassignedTrucks] = useState<Truck[]>([]);
@@ -20,7 +14,6 @@ export default function AIBoard() {
     const [unassignedDrivers, setUnassignedDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [updatingLoadId, setUpdatingLoadId] = useState<string | null>(null);
     const [trailers, setTrailers] = useState<Record<string, string>>({});
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
     const [unassignedLoads, setUnassignedLoads] = useState<Load[]>([]);
@@ -159,7 +152,7 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
         
         const data = await response.json();
         // let unassignedLoads = data.filter((load: Load) => !load.assigned_driver || !load.assigned_truck || !load.assigned_trailer);
-        let unassignedLoads = data.filter((load: Load) => load.status === 'UNASSIGNED');
+        const unassignedLoads = data.filter((load: Load) => load.status === 'UNASSIGNED');
         setUnassignedLoads(unassignedLoads);
         setError(null);
         return unassignedLoads; // Return the filtered unassigned loads
@@ -178,23 +171,19 @@ const makeSuggestionsParallel = async () => {
         setGeneratingSuggestions(true);
         setError(null);
         
-        const [drivers, trucks, trailers, loads] = await Promise.all([
+        await Promise.all([
             fetchUnassignedDrivers(), 
             fetchUnassignedTrucks(), 
             fetchUnassignedTrailers(),
             fetchUnassignedLoads()
         ]);
 
-        console.log("Unassigned Drivers:", drivers);
-        console.log("Unassigned Trucks:", trucks);
-        console.log("Unassigned Trailers:", trailers);
-        console.log("Unassigned Loads:", loads);
 
         const assignmentData: RoutePlannerContext = {
-            drivers: drivers,
-            trucks: trucks,
-            trailers: trailers,
-            loads: loads
+            drivers: unassignedDrivers,
+            trucks: unassignedTrucks,
+            trailers: unassignedTrailers,
+            loads: unassignedLoads
         }
 
         const routePlanner = new RoutePlanner();

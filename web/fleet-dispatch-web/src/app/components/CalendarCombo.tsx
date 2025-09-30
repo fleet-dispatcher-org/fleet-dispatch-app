@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Calendar from "./Calendar";
 import Button from "./Button";
-import { DayPicker, DateRange } from 'react-day-picker';
-import { time } from "console";
+import { DateRange } from 'react-day-picker';
 import TimeOffModal from "./TimeOffModal";
 
 interface CalendarProps {
@@ -19,10 +18,9 @@ interface CalendarProps {
     y?: number
 }
 
-export default function CalendarCombo({height, width, className, x, y, children, type, id, isVisible=false}: CalendarProps) {
+export default function CalendarCombo({className, type, isVisible=false}: CalendarProps) {
     const [singleVisible, setSingleVisible] = useState(false);
     const [rangeVisible, setRangeVisible] = useState(false);
-    const [selected, setSelected] = useState<Date | undefined>();
     const [range, setRange] = useState<DateRange | undefined>();
     const [mounted, setMounted] = useState(false);
 
@@ -60,6 +58,7 @@ export default function CalendarCombo({height, width, className, x, y, children,
                 <Calendar 
                     type="range" 
                     id="calendarTimeOff" 
+                    className={className}
                     isVisible={rangeVisible}
                     onRangeChange={handleDateRangeChange}
                 />
@@ -78,6 +77,7 @@ export default function CalendarCombo({height, width, className, x, y, children,
                 <Calendar 
                     type="range" 
                     id="calendarNextAvailable" 
+                    className={className}
                     isVisible={singleVisible}
                     onRangeChange={handleDateRangeChange}
                 />

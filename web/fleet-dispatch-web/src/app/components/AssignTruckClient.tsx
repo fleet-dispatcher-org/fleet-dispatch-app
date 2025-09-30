@@ -4,7 +4,6 @@ import { Truck } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { tr } from "react-day-picker/locale";
 
 interface AssignTruckClientProps {
     loadId: string;
@@ -61,7 +60,7 @@ export default function AssignTruckClient({loadId, assignedTruck}: AssignTruckCl
             }
 
             let availableTrucks = trucksArray.filter((truck: Truck) => truck.truck_status === "AVAILABLE");
-            availableTrucks = availableTrucks.map((truck: { capacity_tons: any; }) => {
+            availableTrucks = availableTrucks.map((truck: { capacity_tons: number; }) => {
                 return {
                     ...truck, 
                     capacity_tons: Number(truck.capacity_tons),

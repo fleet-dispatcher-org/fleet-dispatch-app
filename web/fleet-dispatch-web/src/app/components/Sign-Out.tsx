@@ -1,6 +1,5 @@
 "use client";
 
-import { signOut } from "next-auth/react"
 import Button from "./Button"
 import { logout } from "../lib/actions/auth"
 
@@ -11,5 +10,5 @@ interface SignOutProps {
 }
 
 export default function SignOut({children, className}: SignOutProps) {
-  return <Button type="none" onClick={() => logout()}> {children} </Button>
+  return <Button className={className} type="none" onClick={() => logout()}> {children} </Button>
 }

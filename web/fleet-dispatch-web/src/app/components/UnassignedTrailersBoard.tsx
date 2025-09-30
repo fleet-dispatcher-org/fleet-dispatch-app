@@ -1,6 +1,6 @@
 "use client";
 
-import { Driver, Load, Trailer } from "@prisma/client";
+import { Trailer } from "@prisma/client";
 import { useEffect, useState } from "react";
 import Link from 'next/link';
 

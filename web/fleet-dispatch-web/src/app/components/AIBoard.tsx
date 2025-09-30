@@ -1,15 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { Role, Status, Trailer, Load, Driver, Truck } from "@prisma/client";
-import Logo from './Logo';
-import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
+import { Trailer, Load, Driver, Truck } from "@prisma/client";
 import Link from 'next/link';
-import { assignLoadsToResources, Assignment, AssignmentContext } from '../agent';
+import { Assignment, AssignmentContext } from '../agent';
 
 
 export default function AIBoard() {
-    const { data: session } = useSession();
     const [suggestedLoads, setSuggestedLoads] = useState<Load[]>([]);
     const [trucks, setTrucks] = useState<Record<string, string>>({});
     const [unassignedTrucks, setUnassignedTrucks] = useState<Truck[]>([]);
@@ -17,7 +13,6 @@ export default function AIBoard() {
     const [unassignedDrivers, setUnassignedDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [updatingLoadId, setUpdatingLoadId] = useState<string | null>(null);
     const [trailers, setTrailers] = useState<Record<string, string>>({});
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
     const [unassignedLoads, setUnassignedLoads] = useState<Load[]>([]);
@@ -156,7 +151,7 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
         
         const data = await response.json();
         // let unassignedLoads = data.filter((load: Load) => !load.assigned_driver || !load.assigned_truck || !load.assigned_trailer);
-        let unassignedLoads = data.filter((load: Load) => load.status === 'UNASSIGNED');
+        const unassignedLoads = data.filter((load: Load) => load.status === 'UNASSIGNED');
         setUnassignedLoads(unassignedLoads);
         setError(null);
         return unassignedLoads; // Return the filtered unassigned loads
@@ -176,7 +171,7 @@ const makeSuggestions = async () => {
         setError(null);
         
         // Get the actual data from the fetch functions
-        const [drivers, trucks, trailers, loads] = await Promise.all([
+        await Promise.all([
             fetchUnassignedDrivers(), 
             fetchUnassignedTrucks(), 
             fetchUnassignedTrailers(),
@@ -184,10 +179,10 @@ const makeSuggestions = async () => {
         ]);
 
         const assignmentData: AssignmentContext = {
-            unassignedDrivers: drivers,     // Use returned data
-            unassignedTrucks: trucks,       // Use returned data
-            unassignedTrailers: trailers,   // Use returned data
-            unassignedLoads: loads
+            unassignedDrivers: unassignedDrivers,     // Use returned data
+            unassignedTrucks: unassignedTrucks,       // Use returned data
+            unassignedTrailers: unassignedTrailers,   // Use returned data
+            unassignedLoads: unassignedLoads
         }
 
         console.log(assignmentData);

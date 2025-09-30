@@ -1,5 +1,5 @@
 "use client";
-import { Availability_Status, Driver } from "@prisma/client";
+import {  Driver, Load } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -45,8 +45,8 @@ export default function AssignDriverClient({  loadId, assignedDriver }: AssignDr
                 throw new Error("Failed to assign driver to load");
             }
             const allLoads = await userLoadsResponse.json();
-            const filteredLoads = allLoads.filter((load: any) => load.assigned_driver == assignedDriver && load.status == "SUGGESTED");
-            filteredLoads.forEach((load: any) => {
+            const filteredLoads = allLoads.filter((load: Load) => load.assigned_driver == assignedDriver && load.status == "SUGGESTED");
+            filteredLoads.forEach((load: Load) => {
                 fetch(`/api/dispatcher/${load.id}` , {
                     method: "PATCH",
                     headers: {

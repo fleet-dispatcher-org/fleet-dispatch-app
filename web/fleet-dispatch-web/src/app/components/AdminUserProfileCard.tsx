@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useState } from 'react'
 import Image from 'next/image'
 import RoleBadgeColor from './RoleBadgeColor';
-import Role from '@prisma/client';
 
 interface User {
   id: string
@@ -15,7 +13,7 @@ interface User {
 }
 
 export default function AdminUserProfileCard(User: User) {
-    const [error, setError] = useState<string | null>(null)
+    const [error] = useState<string | null>(null)
     const user = User;
 
 

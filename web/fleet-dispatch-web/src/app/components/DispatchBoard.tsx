@@ -3,35 +3,10 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Role, Status } from "@prisma/client";
 import Logo from './Logo';
-import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
-import { tr } from 'react-day-picker/locale';
 import Link from 'next/link';
 import { Load } from "@prisma/client";
 
 
-// interface Load {
-//     id: string,
-//     origin: string,
-//     destination: string,
-//     due_by: Timestamp,
-//     weight: number,
-//     status: Status,
-//     started_at: Timestamp,
-//     assigned_driver: string,
-//     assigned_trailer: string,
-//     assigned_truck: string,
-//     percent_complete: number,
-//     is_active: boolean,
-//     due_date: Timestamp
-// }
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
-  createdAt: string;
-}
 
 export default function DispatchBoard() {
     const { data: session } = useSession();
@@ -47,23 +22,7 @@ export default function DispatchBoard() {
         fetchLoads();
     }, []);
 
-    const getUnassignedLoads = async () => {
-        try {
-            setLoading(true);
-            const response = await fetch('/api/dispatcher/loads/unassigned');
-            if (!response.ok) {
-                throw new Error('Failed to fetch unassigned loads');
-            }
-            const data = await response.json();
-            setLoads(data || []);
-            setError(null);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unknown error');
-        } finally {
-            setLoading(false);
-        }
-    }
-
+    
     const fetchLoads = async () => {
         try {
             setLoading(true);
@@ -220,37 +179,37 @@ export default function DispatchBoard() {
     }
 }
 
-    const terminateLoad = async (loadId: string) => {
-        setUpdatingLoadId(loadId);
-        try {
-        const response = await fetch(`/api/dispatcher/loads/${loadId}/terminate`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                status: 'TERMINATED',
-                is_active: false
-            })
-        })
-        if (!response.ok) {
-            throw new Error('Failed to update load');
-        }
-        setLoads(prevLoads =>
-            prevLoads.map(load =>
-                load.id === loadId ? { ...load, is_active: true } : load
-            )
-        )
-        alert("Load terminated successfully!");
+    // const terminateLoad = async (loadId: string) => {
+    //     setUpdatingLoadId(loadId);
+    //     try {
+    //     const response = await fetch(`/api/dispatcher/loads/${loadId}/terminate`, {
+    //         method: 'PATCH',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //         },
+    //         body: JSON.stringify({
+    //             status: 'TERMINATED',
+    //             is_active: false
+    //         })
+    //     })
+    //     if (!response.ok) {
+    //         throw new Error('Failed to update load');
+    //     }
+    //     setLoads(prevLoads =>
+    //         prevLoads.map(load =>
+    //             load.id === loadId ? { ...load, is_active: true } : load
+    //         )
+    //     )
+    //     alert("Load terminated successfully!");
 
-        } catch (err) {
-            console.error('Error updating load:', err);
-            alert('Failed to update load');
-        }
-        finally {
-            setUpdatingLoadId(null);
-        }
-    }
+    //     } catch (err) {
+    //         console.error('Error updating load:', err);
+    //         alert('Failed to update load');
+    //     }
+    //     finally {
+    //         setUpdatingLoadId(null);
+    //     }
+    // }
     
     if (loading) {
         return (

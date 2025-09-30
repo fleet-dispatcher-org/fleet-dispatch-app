@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Load, User } from "@prisma/client";
+import { Load } from "@prisma/client";
 
 interface Props {
     loads: Load[] | null;

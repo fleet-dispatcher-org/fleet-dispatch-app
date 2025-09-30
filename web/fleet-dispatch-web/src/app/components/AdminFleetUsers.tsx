@@ -1,10 +1,7 @@
 'use client'
-import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import type { Role, Status } from "@prisma/client";
-import Logo from './Logo';
-import Image from 'next/image'
-import Link from 'next/link';
+import type { Role } from "@prisma/client";
+
 
 interface MiniUser {
     id: string;
@@ -18,6 +15,10 @@ interface usersProps {
 }
 
 export default function AdminFleetUsers({fleetUsers}: usersProps) {
+    const { data: session } = useSession();
+    if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'DISPATCHER')) {
+        return <div className="text-red-600 text-center p-4">Access denied. You do not have permission to view this content.</div>;
+    }
     return (
         <div className='overflow-x-auto'>
             <table className="w-full">

@@ -1,9 +1,8 @@
 "use client";
 
 import { Load } from "@prisma/client";
-import { JSX, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from 'next/link';
-import Logo from './Logo';
 
 interface Props {
     limit?: number;

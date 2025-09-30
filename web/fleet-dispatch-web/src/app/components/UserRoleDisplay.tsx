@@ -1,12 +1,10 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import type { Role } from "@prisma/client";
 
 export default function UserRoleDisplay() {
     const { data: session } = useSession();
-    // const router = useRouter();
 
     if (!session) return null;
 

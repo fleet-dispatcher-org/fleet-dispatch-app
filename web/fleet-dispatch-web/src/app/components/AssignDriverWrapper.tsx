@@ -1,6 +1,5 @@
 import { Driver } from "@prisma/client";
 import AssignDriverClient from "./AssignDriverClient";
-import Link from "next/link";
 
 interface AssignDriverWrapperProps {
     loadId: string;

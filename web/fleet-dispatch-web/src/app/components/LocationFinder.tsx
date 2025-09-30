@@ -4,7 +4,7 @@ import { useGeolocation } from "../hooks/useGeolocation";
 import Button from "./Button";
 
 const LocationFinder: React.FC = () => {
-    const { location, loading, error, getLocation } = useGeolocation();
+    const { loading, error, getLocation } = useGeolocation();
 
     return (<div>
         <Button type="hollow" onClick={getLocation} disabled={loading} className="border border-gray-300 rounded-md p-3 hover:cursor-pointer">

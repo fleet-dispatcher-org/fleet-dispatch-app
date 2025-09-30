@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button } from "./Button";
-import { title } from "process";
+import Button from "./Button";
 
 interface ModalProps {
     open: boolean;
@@ -13,7 +12,7 @@ interface ModalProps {
     children: React.ReactNode;
 }
 
-export default function Modal({open, className, onClose, title, submit, children}: ModalProps) {
+export default function Modal({ className, onClose, title, children}: ModalProps) {
     return <div className= {className}>
         <h1>{title}</h1>
 

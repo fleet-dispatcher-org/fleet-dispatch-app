@@ -1,9 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
 import type { Role } from "@prisma/client";
-import Logo from './Logo';
-import Image from 'next/image'
 import Link from 'next/link';
 
 interface User {
@@ -16,11 +13,9 @@ interface User {
 }
 
 export default function MiniDashboard() {
-  const { data: session } = useSession();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -45,47 +40,47 @@ export default function MiniDashboard() {
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: Role) => {
-        setUpdatingUserId(userId);
-        try {
-            const response = await fetch(`/api/admin/users/${userId}/role`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ role: newRole }),
-            });
+//   const updateUserRole = async (userId: string, newRole: Role) => {
+//         setUpdatingUserId(userId);
+//         try {
+//             const response = await fetch(`/api/admin/users/${userId}/role`, {
+//                 method: 'PATCH',
+//                 headers: {
+//                     'Content-Type': 'application/json',
+//                 },
+//                 body: JSON.stringify({ role: newRole }),
+//             });
 
-            if (!response.ok) {
-                throw new Error('Failed to update user role');
-            }
+//             if (!response.ok) {
+//                 throw new Error('Failed to update user role');
+//             }
 
-            const data = await response.json();
+//             const data = await response.json();
             
-            // Update the local state
-            setUsers(prevUsers => 
-                prevUsers.map(user => 
-                    user.id === userId ? { ...user, role: data.user.role } : user
-                )
-            );
+//             // Update the local state
+//             setUsers(prevUsers => 
+//                 prevUsers.map(user => 
+//                     user.id === userId ? { ...user, role: data.user.role } : user
+//                 )
+//             );
             
-            alert('User role updated successfully!');
-        } catch (err) {
-            console.error('Error updating user role:', err);
-            alert('Failed to update user role');
-        } finally {
-            setUpdatingUserId(null);
-        }
-    };
+//             alert('User role updated successfully!');
+//         } catch (err) {
+//             console.error('Error updating user role:', err);
+//             alert('Failed to update user role');
+//         } finally {
+//             setUpdatingUserId(null);
+//         }
+//     };
 
-  const getRoleBadgeColor = (role: Role): string => {
-        switch (role) {
-            case 'ADMIN': return 'bg-red-100 text-red-800 border-red-200';
-            case 'DISPATCHER': return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'DRIVER': return 'bg-green-100 text-green-800 border-green-200';
-            default: return 'bg-gray-100 text-gray-800 border-gray-200';
-        }
-    };
+//   const getRoleBadgeColor = (role: Role): string => {
+//         switch (role) {
+//             case 'ADMIN': return 'bg-red-100 text-red-800 border-red-200';
+//             case 'DISPATCHER': return 'bg-blue-100 text-blue-800 border-blue-200';
+//             case 'DRIVER': return 'bg-green-100 text-green-800 border-green-200';
+//             default: return 'bg-gray-100 text-gray-800 border-gray-200';
+//         }
+//     };
 
      if (loading) {
         return (

@@ -34,7 +34,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
     try {
-        const session = await auth();
         const { truckId } = await params;
         await prisma.truck.update({
             where: { id: truckId },
@@ -49,7 +48,6 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
     try {
-        const session = await auth();
         const { truckId } = await params;
         await prisma.truck.update({
             where: { id: truckId },
@@ -64,7 +62,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE({params}: RouteParams) {
     try {
-        const session = await auth();
         const { truckId } = await params;
         await prisma.truck.delete({ where: { id: truckId } });
         return NextResponse.json({ message: "Truck deleted successfully" }, { status: 200 });

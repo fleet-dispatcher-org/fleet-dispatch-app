@@ -1,6 +1,5 @@
 import {Truck} from "@prisma/client";
 import AssignTruckClient from "./AssignTruckClient";
-import Link from "next/link";
 
 interface AssignTruckWrapperProps {
     loadId: string;
