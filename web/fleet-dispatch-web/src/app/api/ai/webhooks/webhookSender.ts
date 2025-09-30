@@ -1,15 +1,16 @@
 import crypto from 'crypto';
 import generateSecret from './generateSecret';
+import { NextResponse } from 'next/server';
 
 interface WebhookPayload {
     event: string;
-    data: any;
+    data: object;
     timestamp?: string;
 }
 
 interface WebhookResponse {
     success: boolean;
-    response?: any;
+    response?: NextResponse;
     error?: string;
 }
 
@@ -46,7 +47,7 @@ class WebhookSender {
      */
     async sendWebhook(
         event: string, 
-        data: any, 
+        data: object, 
         retryCount: number = 3, 
         timeout: number = 10000
     ): Promise<WebhookResponse> {
@@ -84,13 +85,13 @@ class WebhookSender {
                     console.error(`Failed to send webhook. Status: ${response.status}`);
                     return { success: false, error: `HTTP ${response.status}` };
                 }
-            } catch (error: any) {
+            } catch (error: Error | unknown) {
                 if (attempt < retryCount - 1) {
-                    console.warn(`Failed to send webhook. Retrying in 5 seconds. Error: ${error.message}`);
+                    console.warn(`Failed to send webhook. Retrying in 5 seconds. Error: ${error instanceof Error ? error.message : String(error)}`);
                     await new Promise(resolve => setTimeout(resolve, 5000));
                 } else {
-                    console.error(`Failed to send webhook after ${retryCount} attempts. Error: ${error.message}`);
-                    return { success: false, error: error.message };
+                    console.error(`Failed to send webhook after ${retryCount} attempts. Error: ${error instanceof Error ? error.message : String(error)}`);
+                    return { success: false, error: error instanceof Error ? error.message : String(error) };
                 }
             }
         }
@@ -102,10 +103,9 @@ class WebhookSender {
      * Query webhook (expects response)
      */
     async queryWebhook(
-        data: any, 
-        retryCount: number = 3, 
+        data: object, 
         timeout: number = 10000
-    ): Promise<any> {
+    ) {
         const url = process.env.FASTAPI_BASE_URL || 'http://localhost:8000/api/ai/receive-webhook';
         
         // Simplified headers - no signature needed since FastAPI doesn't validate
@@ -138,8 +138,8 @@ class WebhookSender {
             } else {
                 throw new Error(`Failed to query webhook. Status: ${response.status}; Response: ${await response.text()}`);
             }
-        } catch (error: any) {
-            throw new Error(`Failed to query webhook. Error: ${error.message}`);
+        } catch (error: Error | unknown) {
+            throw new Error(`Failed to query webhook. Error: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }

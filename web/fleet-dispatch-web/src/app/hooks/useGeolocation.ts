@@ -114,17 +114,25 @@ export const useGeolocation = () => {
       if (!updateLocation.ok) {
         throw new Error('Failed to update location');
       }
-    } catch (error: Error | any) {
+    } catch (error: Error | unknown) {
       let errorMessage = 'Failed to get location';
 
       if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (error.code === 1) {
-        errorMessage = 'Location access denied by user';
-      } else if (error.code === 2) {
-        errorMessage = 'Location information is unavailable';
-      } else if (error.code === 3) {
-        errorMessage = 'Location request timed out';
+      } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        typeof (error as { code: unknown }).code === 'number'
+      ) {
+        const code = (error as { code: number }).code;
+        if (code === 1) {
+          errorMessage = 'Location access denied by user';
+        } else if (code === 2) {
+          errorMessage = 'Location information is unavailable';
+        } else if (code === 3) {
+          errorMessage = 'Location request timed out';
+        }
       }
 
       setState(prev => ({
