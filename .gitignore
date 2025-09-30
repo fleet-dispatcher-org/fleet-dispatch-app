@@ -23,6 +23,10 @@ yarn-error.log*
 .env
 .env.*
 
+.env.development
+.env.production
+.env.test
+
 
 # --- api (Flask) ---
 /api/__pycache__/
