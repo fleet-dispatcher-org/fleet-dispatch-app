@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import prisma from '@/prisma/prisma'
 
 type RouteParams = {
-    params: { truckId: string };
+    params: Promise<{ truckId: string }>;
 }
 
 // This is how we will be getting the data!!! Go to the route off of the api folder
