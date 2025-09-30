@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import Logo from "../../components/Logo";
 import MaintenanceCalendar from "../../components/MaintenanceCalendar";
 
-export default async function TruckPage({ params }: { params: { truckId: string } }) {
+export default async function TruckPage({ params }: { params: Promise<{ truckId: string }> }) {
 
     const session = await auth();
 
