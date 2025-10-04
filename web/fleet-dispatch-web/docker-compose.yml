@@ -1,0 +1,20 @@
+version: '3'
+services:
+  osrm:
+    image: osrm/osrm-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./osrm-data:/data
+    command: osrm-routed --algorithm mld /data/us-latest.osrm
+    restart: unless-stopped
+
+  vroom:
+    image: vroomvrp/vroom-docker:latest
+    ports:
+      - "4000:3000"
+    environment:
+      - VROOM_ROUTER=osrm
+    depends_on:
+      - osrm
+    restart: unless-stopped

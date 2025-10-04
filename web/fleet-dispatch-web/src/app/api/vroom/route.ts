@@ -1,19 +1,38 @@
-import type { NextApiHandler, NextApiResponse } from "next";
+import { Ship } from "lucide-react";
+import { NextResponse } from "next/server";
 
-const handler: NextApiHandler = async (req, res) => {
+export async function POST(req: Request) {
   try {
-    const response = await fetch('http://localhost:3000', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body),
+    const body = await req.json();
+    console.log("Incoming request body:", body);
+    const payload = {
+      vehicles: body.vehicles,
+      shipments: body.shipments,
+      options: {
+        router: "osrm",
+        host: "router.project-osrm.org",
+        port: 80
+      }
+    };
+    console.log("VROOM payload:", payload);
+    const response = await fetch("http://localhost:4000/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
-    res.status(200).json(data);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "VROOM request failed" });
-  }
-};
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("VROOM error response:", text);
+      return NextResponse.json({ error: "VROOM request failed", details: text }, { status: response.status });
+    }
 
-export default handler;
+    const data = await response.json();
+    console.log("VROOM response:", data);
+
+    return NextResponse.json(data);
+  } catch (err: any) {
+    console.error("VROOM proxy error:", err);
+    return NextResponse.json({ error: "Unexpected server error", details: err.message }, { status: 500 });
+  }
+}

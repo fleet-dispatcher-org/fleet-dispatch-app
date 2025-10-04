@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 4000 --turbopack",
+    "dev": "next dev --turbopack",
     "build": "NODE_ENV=production next build",
     "build:dev": "NODE_ENV=development next build --turbo",
     "start": "next start",

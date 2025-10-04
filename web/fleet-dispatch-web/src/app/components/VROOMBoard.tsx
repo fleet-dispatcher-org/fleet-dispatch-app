@@ -4,19 +4,20 @@ import { Trailer, Load, Driver, Truck } from "@prisma/client";
 import Link from 'next/link';
 
 interface ShipmentStep {
+    id: number;
     location: [number, number];
     service?: number; // in seconds
 }
 
 interface Shipment {
-    id: string;
-    amount: number;
+    id: number;
+    amount: [number];
     pickup: ShipmentStep; 
     delivery: ShipmentStep;
 };
 
 interface Vehicle {
-    id: string;
+    id: number;
     start: [number, number];
     end: [number, number];
     capacity: number[];
@@ -25,9 +26,6 @@ interface Vehicle {
 export default function AIBoard() {
     const [suggestedLoads, setSuggestedLoads] = useState<Load[]>([]);
     const [trucks, setTrucks] = useState<Record<string, string>>({});
-    const [unassignedTrucks, setUnassignedTrucks] = useState<Truck[]>([]);
-    const [unassignedTrailers, setUnassignedTrailers] = useState<Trailer[]>([]);
-    const [unassignedDrivers, setUnassignedDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [trailers, setTrailers] = useState<Record<string, string>>({});
@@ -40,6 +38,44 @@ export default function AIBoard() {
         // Only load existing suggestions on mount, don't automatically generate new ones
         getSuggestions();   
     }, []);
+
+    const parseCoords = (coords: Array<{ lat: string | number; long: string | number }>): [number, number] | null => {
+        if (!coords) return null;
+
+        // Helper to safely convert to number
+        const toNumber = (val: any): number | null => {
+            if (typeof val === 'number') return val;
+            if (typeof val === 'string') {
+                const num = parseFloat(val);
+                return isNaN(num) ? null : num;
+            }
+            return null;
+        };
+
+        console.log('Parsing coordinates:', coords);
+
+        if(Array.isArray(coords)) {
+            let coordsObject = coords[0];
+            let lat = toNumber(coordsObject.lat);
+            let long = toNumber(coordsObject.long);
+            console.log('Parsed from array:', lat, long);
+            if (lat !== null && long !== null) {
+                return [lat, long];
+            }
+        }
+        
+        return null;
+    };
+
+    const isValidCoordinateArray = (coords: any): coords is Array<{ lat: string | number; long: string | number }> => {
+    return Array.isArray(coords) && 
+           coords.length > 0 && 
+           coords[0] !== null &&
+           typeof coords[0] === 'object' &&
+           'lat' in coords[0] && 
+           'long' in coords[0];
+};
+    
     const fetchUnassignedDrivers = async (): Promise<Driver[]> => {
     try {
         setLoading(true);
@@ -70,13 +106,11 @@ export default function AIBoard() {
         }
         
         const availableDrivers = driversArray.filter((driver: Driver) => driver.driver_status === 'AVAILABLE');
-        setUnassignedDrivers(availableDrivers);
         setError(null);
         return availableDrivers; // Return the data
     } catch (error) {
         console.error('Error fetching unassigned drivers:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedDrivers([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
@@ -104,13 +138,10 @@ const fetchUnassignedTrucks = async (): Promise<Truck[]> => {
         const availableTrucks = data.filter((truck: Truck) => 
             truck.truck_status === 'AVAILABLE' // && !truck.assigned_driver
         );
-        setUnassignedTrucks(availableTrucks);
-        setError(null);
         return availableTrucks; // Return the filtered available trucks
     } catch (error) {
         console.error('Error fetching unassigned trucks:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedTrucks([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
@@ -138,13 +169,11 @@ const fetchUnassignedTrailers = async (): Promise<Trailer[]> => {
         const availableTrailers = data.filter((trailer: Trailer) => 
             trailer.trailer_status === 'AVAILABLE'
         );
-        setUnassignedTrailers(availableTrailers);
         setError(null);
         return availableTrailers; // Return the filtered available trailers
     } catch (error) {
         console.error('Error fetching unassigned trailers:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedTrailers([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
@@ -188,83 +217,123 @@ const makeSuggestions = async () => {
         setGeneratingSuggestions(true);
         setError(null);
         
-        // Get the actual data from the fetch functions
-        await Promise.all([
+        const [unassignedDrivers, unassignedTrucks, unassignedTrailers, unassignedLoads] = await Promise.all([
             fetchUnassignedDrivers(), 
             fetchUnassignedTrucks(), 
             fetchUnassignedTrailers(),
             fetchUnassignedLoads()
         ]);
 
-        const vroomApiUrl = process.env.NEXT_PUBLIC_VROOM_API_URL || 'http://localhost:3000';
-        if (!vroomApiUrl) {
-            throw new Error('VROOM API URL is not defined in environment variables');
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        if (!baseUrl) {
+            throw new Error('Base URL is not defined in environment variables');
         }
 
         let shipments: Shipment[] = [];
         let vehicles: Vehicle[] = [];
-        unassignedLoads.forEach((load) => {
-            if (load.origin_coordinates && load.destination_coordinates) {
-                if (Array.isArray(load.origin_coordinates) && load.origin_coordinates.length >= 2) {
-                    const origin_coords = Array.isArray(load.origin_coordinates) && load.origin_coordinates.length === 2
-                        && typeof load.origin_coordinates[0] === 'number'
-                        && typeof load.origin_coordinates[1] === 'number'
-                        ? load.origin_coordinates as [number, number]
-                        : null;
-                    const dest_coords = Array.isArray(load.destination_coordinates) && load.destination_coordinates.length === 2
-                        && typeof load.destination_coordinates[0] === 'number'
-                        && typeof load.destination_coordinates[1] === 'number'
-                        ? load.destination_coordinates as [number, number]
-                        : null;
-                    if (origin_coords && dest_coords) {
-                        const [lat, long] = origin_coords;
-                        shipments.push({
-                            id: load.id,
-                            pickup: {
-                                location: [long, lat], // VROOM expects [lng, lat]
-                                service: 300 // 5 minutes in seconds
-                            },
-                            delivery: {
-                                location: [dest_coords[1], dest_coords[0]], // VROOM expects [lng, lat]
-                                service: 300 // 5 minutes in seconds
-                            },
-                            amount: 1 // Each load counts as 1 unit
-                        });
-                    }
-                }
-            }
-        });
+        let loadIdMap = new Map<number, string>();
+        let driverIdMap = new Map<number, string>();
 
-        unassignedDrivers.forEach((driver, index) => {
-            if(Array.isArray(driver.home_coordinates) && driver.home_coordinates.length === 2
-                && typeof driver.home_coordinates[0] === 'number'
-                && typeof driver.home_coordinates[1] === 'number') {
-            vehicles.push({
-                id: driver.id,
-                start: [driver.home_coordinates[1], driver.home_coordinates[0]], // VROOM expects [lng, lat]
-                end: [driver.home_coordinates[1], driver.home_coordinates[0]], // VROOM expects [lng, lat]
-                capacity: [5] // Each driver can handle up to 5 loads
-            });
-            } else {
-                // If no valid home coordinates, assign a default location (e.g., 0,0)
-                vehicles.push({
-                    id: driver.id,
-                    start: [0, 0],
-                    end: [0, 0],
-                    capacity: [5]
+        console.log('Unassigned Loads:', unassignedLoads);
+
+        // Helper function to validate coordinates
+        const isValidCoordinate = (coords: number[] | null): coords is [number, number] => {
+            return coords !== null && 
+                   coords.length === 2 && 
+                   typeof coords[0] === 'number' && 
+                   typeof coords[1] === 'number' &&
+                   !isNaN(coords[0]) && 
+                   !isNaN(coords[1]) &&
+                   coords[0] >= -180 && coords[0] <= 180 && // longitude
+                   coords[1] >= -90 && coords[1] <= 90;     // latitude
+        };
+
+        unassignedLoads.forEach((load, index) => {
+            const origin_coords = isValidCoordinateArray(load.origin_coordinates) 
+            ? parseCoords(load.origin_coordinates) 
+            : null;
+        const dest_coords = isValidCoordinateArray(load.destination_coordinates) 
+            ? parseCoords(load.destination_coordinates) 
+            : null;
+            console.log(`Load ${load.id} - Origin:`, origin_coords, 'Destination:', dest_coords);
+            // Validate both coordinate pairs
+                shipments.push({
+                    id: index,
+                    pickup: {
+                        id: index * 2, // Unique ID for pickup
+                        location: [origin_coords![1], origin_coords![0]], // [lng, lat]
+                        service: 300
+                    },
+                    delivery: {
+                        id: index * 2 + 1, // Unique ID for delivery
+                        location: [dest_coords![1], dest_coords![0]], // [lng, lat]
+                        service: 300
+                    },
+                    amount: [1]
                 });
-            }
+                loadIdMap.set(index, load.id);
         });
 
-        const payload = { vehicles, shipments};
+        console.log('Shipments for VROOM:', JSON.stringify(shipments, null, 2));
 
-        const response = await fetch(`${vroomApiUrl}/api/vroom/route`, {
+        // Prepare vehicles from unassigned drivers
+        unassignedDrivers.forEach((driver, index) => {
+            let startLocation: [number, number];
+            let endLocation: [number, number];
+            if (driver.current_location && isValidCoordinateArray(driver.current_location)) {
+                const parsed = parseCoords(driver.current_location);
+                startLocation = [parsed![1], parsed![0]];
+                endLocation = [parsed![1], parsed![0]];
+            } else if (driver.home_base && isValidCoordinateArray(driver.home_base)) {
+                const parsed = parseCoords(driver.home_base);
+                startLocation = [parsed![1], parsed![0]];
+                endLocation = [parsed![1], parsed![0]];
+            } else {
+                console.warn(`Driver ${driver.id} has invalid current and home base locations, using default location`);
+                startLocation = [-122.4194, 37.7749]; // Example: San Francisco
+                endLocation = [-122.4194, 37.7749];
+            }
+
+            vehicles.push({
+                id: index,
+                start: startLocation,
+                end: endLocation,
+                capacity: [5]
+            });
+
+            driverIdMap.set(index, driver.id);
+        });
+
+        console.log('Vehicles for VROOM:', JSON.stringify(vehicles, null, 2));
+
+        // Don't send empty arrays to VROOM
+        if (shipments.length === 0) {
+            throw new Error('No valid shipments to optimize');
+        }
+        if (vehicles.length === 0) {
+            throw new Error('No valid vehicles available');
+        }
+
+        const payload = { vehicles, shipments };
+        console.log('VROOM payload:', JSON.stringify(payload, null, 2));
+
+        const response = await fetch(`${baseUrl}/api/vroom`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload)
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`VROOM API error: ${JSON.stringify(errorData)}`);
+        }
+
+        const result = await response.json();
+        console.log('VROOM result:', result);
+        
+        // Process the result here...
 
     } catch (error) {
         console.error('Error generating suggestions:', error);
