@@ -50,6 +50,8 @@ api/.env
 /web/yarn.lock
 /web/dist
 
+# -- BACKEND (Node.js / Express) ---
+/backend/node_modules/
 
 # --- MOBILE (React Native / Expo) ---
 /mobile/node_modules/

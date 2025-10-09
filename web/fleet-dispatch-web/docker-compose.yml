@@ -1,20 +1,24 @@
-version: '3'
+version: "3.8"
+
 services:
   osrm:
     image: osrm/osrm-backend
+    container_name: osrm
+    command: osrm-routed --algorithm mld /data/north-america-latest.osrm
     ports:
-      - "5000:5000"
+      - "5000:4000"
     volumes:
-      - ./osrm-data:/data
-    command: osrm-routed --algorithm mld /data/us-latest.osrm
+      - ./data:/data   # Make sure your .osm.pbf + .osrm files are here
     restart: unless-stopped
 
   vroom:
-    image: vroomvrp/vroom-docker:latest
+    image: ghcr.io/vroom-project/vroom-docker:latest
+    container_name: vroom
+    command: vroom -c /config/vroom-conf.json
     ports:
       - "4000:3000"
-    environment:
-      - VROOM_ROUTER=osrm
+    volumes:
+      - ./config:/config
     depends_on:
       - osrm
     restart: unless-stopped

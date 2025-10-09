@@ -1,4 +1,3 @@
-import { Ship } from "lucide-react";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -10,8 +9,8 @@ export async function POST(req: Request) {
       shipments: body.shipments,
       options: {
         router: "osrm",
-        host: "router.project-osrm.org",
-        port: 80
+        host: "localhost",
+        port: 5000,
       }
     };
     console.log("VROOM payload:", payload);
