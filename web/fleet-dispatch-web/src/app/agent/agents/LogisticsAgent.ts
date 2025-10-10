@@ -34,7 +34,14 @@ const LOGISTICS_AGENT_INSTRUCTIONS = `You are a logistics assignment agent that 
 - Load weight must not exceed both truck AND trailer capacity
 - Assign multiple loads and prioritize bringing the driver back to their home location on the last load
 - Always use calculate_distance tool for proximity decisions
-- Call create_assignments tool with ALL assignments at once`;
+- Call create_assignments tool with ALL assignments at once
+- Use real-world road distances from calculate_distance tool
+- PRIORITIZE assigning multiple loads per driver, truck, and trailer.
+- Make sure to bring the driver back to their home location on the last load
+- Make sure that each load assignment is close to the previous load's destination to minimize deadhead miles
+- PRIORITIZE assigning every single load if possible. There should be no more than 1 unassigned load remaining if there are enough drivers, trucks, and trailers.  
+
+`;
 
 /**
  * Specialized agent for logistics and load assignment operations

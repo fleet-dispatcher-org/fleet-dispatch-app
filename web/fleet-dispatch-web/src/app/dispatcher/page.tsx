@@ -6,7 +6,8 @@ import UnassignedDrivers from "../components/UnassignedDrivers";
 import UnassignedTrucksBoard from "../components/UnassignedTrucksBoard";
 import UnassignedTrailersBoard from "../components/UnassignedTrailersBoard";
 import CreateLoadCard from "../components/CreateLoadCard";
-import VROOMBoard from "../components/VROOMBoard";
+// import VROOMBoard from "../components/VROOMBoard";
+import AIBoard from "../components/AIBoard";
 // import AlgorithmBoard from "../components/AlgorithmBoard";
 
 export const metadata: Metadata = {
@@ -19,7 +20,7 @@ export default function Dispatcher() {
     <main>
       <DispatchBoard />
       {/* <AIBoard/> */}
-      <VROOMBoard/>
+      <AIBoard/>
     <UnassignedBoardMini/>
     <CreateLoadCard/>
       <div className="flex flex-row">
