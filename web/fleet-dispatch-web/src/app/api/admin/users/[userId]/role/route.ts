@@ -28,9 +28,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
                 id: true,
                 name: true,
                 email: true,
-                role: true
+                role: true,
       }
-    })
+    });
     return NextResponse.json(updatedUser);
     } catch (error) {
         console.error(error);
