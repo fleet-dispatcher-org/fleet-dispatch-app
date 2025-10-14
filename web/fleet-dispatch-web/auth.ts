@@ -1,7 +1,7 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
-import prisma from "./prisma/prisma";
+import prisma from "./prisma/prisma"
 
 const adapter = PrismaAdapter(prisma);
 
@@ -59,6 +59,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       
       return true;
     },
+    
     async session({ session, user }) {
       console.log("Session callback - user:", user?.email || session?.user?.email);
       
@@ -71,15 +72,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             select: { role: true, id: true, name: true, email: true, assigned_fleet: true }
           });
           
-          console.log("DB User found:", dbUser); // Add this log to debug
+          console.log("DB User found:", dbUser);
           
           session.user.role = dbUser?.role || 'USER';
           session.user.id = user.id;
           
-          console.log("Session user role set to:", session.user.role); // Add this log
+          console.log("Session user role set to:", session.user.role);
         } catch (error) {
           console.error("Error fetching user role:", error);
-          session.user.role = 'USER'; // fallback
+          session.user.role = 'USER';
           session.user.id = user.id;
         }
       }
@@ -87,7 +88,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
 
-    // With PrismaAdapter, JWT callback might not be necessary, but keeping it for safety
     async jwt({ token, user }) {
       if (user) {
         try {
@@ -99,12 +99,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (user.id) {
             token.id = user.id;
           }
-          console.log("JWT token role set to:", token.role); // Add this log
+          console.log("JWT token role set to:", token.role);
         } catch (error) {
           console.error("Error in JWT callback:", error);
           token.role = 'USER';
           if (user.id) {
-          token.id = user.id;
+            token.id = user.id;
           }
         }
       }
@@ -122,7 +122,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     async signOut(params) {
-      // Type guard approach
       if ('session' in params && params.session) {
         console.log("SignOut event (database session):", { 
           sessionId: params.session.sessionToken,
@@ -141,6 +140,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async createUser({ user }) {
       console.log("User created:", user.email);
     },
+    
     async linkAccount({ user, account, profile }) {
       console.log("Account linked:", { 
         user: user.email, 
