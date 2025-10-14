@@ -16,6 +16,5 @@ applications:
       cache:
         paths:
           - node_modules/**/*
-    appRoot: web/fleet-dispatch-web
     environment:
       NEXT_PUBLIC_AMPLIFY: true
