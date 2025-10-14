@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import { WebhookSender } from './webhookSender';
 import { Status } from "@prisma/client";
 
+export const dynamic = 'force-dynamic'
+
 // Import webhook sender
 const webhookSender = new WebhookSender();
 

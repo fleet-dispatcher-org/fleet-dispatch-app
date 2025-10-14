@@ -2,6 +2,8 @@ import crypto from 'crypto';
 import generateSecret from './generateSecret';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic'
+
 interface WebhookPayload {
     event: string;
     data: object;

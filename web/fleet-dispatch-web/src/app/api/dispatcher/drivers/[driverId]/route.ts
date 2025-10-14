@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/prisma/prisma'
 
+export const dynamic = 'force-dynamic'
+
 type RouteParams = {
     params: Promise<{
         driverId: string,

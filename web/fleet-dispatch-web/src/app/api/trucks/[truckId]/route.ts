@@ -6,6 +6,7 @@ type RouteParams = {
     params: Promise<{ truckId: string }>;
 }
 
+export const dynamic = 'force-dynamic'
 // This is how we will be getting the data!!! Go to the route off of the api folder
 // Everything is going to be a route of some sorts so just follow the file paths. 
 export async function GET(request: NextRequest, { params }: RouteParams) {

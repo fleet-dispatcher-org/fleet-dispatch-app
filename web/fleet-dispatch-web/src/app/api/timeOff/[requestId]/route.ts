@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/prisma/prisma'
 
+
 type RouteParams = {
     params: Promise<{
         requestId: string,
     }>;
 }
 
+export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest, { params }: RouteParams) {
     try {
         const session = await auth()
