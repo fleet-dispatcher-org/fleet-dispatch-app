@@ -29,9 +29,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
                 name: true,
                 email: true,
                 role: true,
-      }
-    });
-    return NextResponse.json(updatedUser);
+            }
+        });
+        return NextResponse.json(updatedUser);
     } catch (error) {
         console.error(error);
         return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
