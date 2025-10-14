@@ -17,5 +17,6 @@ applications:
       cache:
         paths:
           - node_modules/**/*
+          - .next/cache/**/*
     environment:
       NEXT_PUBLIC_AMPLIFY: true
