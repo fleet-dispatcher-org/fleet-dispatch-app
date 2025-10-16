@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "build:static": "next build && next export",
     "build:dev": "next build --turbo",
     "start": "next start",
