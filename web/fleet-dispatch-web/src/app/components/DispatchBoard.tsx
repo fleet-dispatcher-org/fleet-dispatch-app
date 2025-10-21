@@ -329,7 +329,7 @@ export default function DispatchBoard() {
                                         </Link>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                        { trailers[load.assigned_trailer || ""] ?? "No Trailer Assigned"}
+                                        {trailers[load.assigned_trailer || ""] ?? "No Trailer Assigned"}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         {(() => {

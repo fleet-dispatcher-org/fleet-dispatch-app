@@ -319,34 +319,76 @@ export class RoutePlanner {
     private generateSmartCombinations(loads: Load[], size: number): Load[][] {
         const combinations: Load[][] = [];
         
-        // Sort loads by pickup location to group nearby loads
-        const sortedLoads = [...loads].sort((a, b) => {
-            // Sort by destination coordinates if available
-            const aCoords = a.destination_coordinates as Array<{lat: number, long: number}> | null;
-            const aLat = aCoords?.[0]?.lat;
-            const aLong = aCoords?.[0]?.long;
-            const bLat = b.origin_coordinates ? (b.origin_coordinates as Array<{lat: number, long: number}>)[0]?.lat : 0;
-            const bLong = b.origin_coordinates ? (b.origin_coordinates as Array<{lat: number, long: number}>)[0]?.long : 0;
-            return this.calculateDistance(aLat!, aLong!, bLat!, bLong!);
-        });
-        console.log('Sorted Loads for Smart Combinations:', sortedLoads.map(l => l.id));
-        
-        // Generate combinations from nearby loads
-        for (let i = 0; i < sortedLoads.length && combinations.length < 300; i++) {
-            const baseLoad = sortedLoads[i];
-            const combo = [baseLoad];
+        // For each load as a starting point, try to build a chain
+        for (let i = 0; i < loads.length && combinations.length < 300; i++) {
+            const chain = this.buildLoadChain(loads, loads[i], size);
             
-            // Add nearby loads to form a combination
-            for (let j = i + 1; j < Math.min(i + size * 2, sortedLoads.length) && combo.length < size; j++) {
-                combo.push(sortedLoads[j]);
-            }
-            
-            if (combo.length === size) {
-                combinations.push(combo);
+            if (chain.length > 0) {
+                combinations.push(chain);
             }
         }
         
+        // Also add individual loads
+        loads.forEach(load => {
+            if (combinations.length < 300) {
+                combinations.push([load]);
+            }
+        });
+        
         return combinations;
+    }
+
+    // NEW: Build a chain of loads where each delivery is near the next pickup
+    private buildLoadChain(
+        availableLoads: Load[], 
+        startLoad: Load, 
+        maxSize: number,
+        proximityThreshold: number = 200 // km - adjust this as needed
+    ): Load[] {
+        const chain: Load[] = [startLoad];
+        const remaining: Load[] = availableLoads.filter(l => l.id !== startLoad.id);
+        
+        let currentDeliveryLocation = startLoad.destination_coordinates as Array<{lat: number, long: number}> | null;
+        
+        // Keep adding loads whose pickup is near the current delivery location
+        while (chain.length < maxSize && remaining.length > 0) {
+            let bestDistance = Infinity;
+            let bestLoadIndex = -1;
+            
+            // Find the load whose pickup is closest to current delivery
+            for (let index = 0; index < remaining.length; index++) {
+                const load = remaining[index];
+                const pickupLocation = load.origin_coordinates as Array<{lat: number, long: number}> | null;
+                
+                if (currentDeliveryLocation && pickupLocation) {
+                    const distance = this.calculateDistance(
+                        currentDeliveryLocation[0].lat,
+                        currentDeliveryLocation[0].long,
+                        pickupLocation[0].lat,
+                        pickupLocation[0].long
+                    );
+                    
+                    // Only consider loads within proximity threshold
+                    if (distance < bestDistance && distance <= proximityThreshold) {
+                        bestDistance = distance;
+                        bestLoadIndex = index;
+                    }
+                }
+            }
+            
+            // If we found a nearby load, add it to the chain
+            if (bestLoadIndex !== -1) {
+                const bestNextLoad: Load = remaining[bestLoadIndex];
+                chain.push(bestNextLoad);
+                currentDeliveryLocation = bestNextLoad.destination_coordinates as Array<{lat: number, long: number}> | null;
+                remaining.splice(bestLoadIndex, 1);
+            } else {
+                // No more nearby loads, stop building this chain
+                break;
+            }
+        }
+        
+        return chain;
     }
 
     // Push this for a commit
@@ -355,62 +397,100 @@ export class RoutePlanner {
         if (nodes.length <= 2) return nodes;
         
         const optimized: RouteNode[] = [];
-        const remaining = [...nodes];
         
-        // Start with START node
-        const startNode = remaining.find(n => n.nodeType === 'START');
-        if (startNode) {
-            optimized.push(startNode);
-            remaining.splice(remaining.indexOf(startNode), 1);
-        }
+        // Separate nodes by type - with explicit type assertions
+        const startNode = nodes.find(n => n.nodeType === 'START');
+        const endNode = nodes.find(n => n.nodeType === 'END');
+        const pickupNodes: RouteNode[] = nodes.filter(n => n.nodeType === 'PICKUP') as RouteNode[];
+        const deliveryNodes: RouteNode[] = nodes.filter(n => n.nodeType === 'DELIVERY') as RouteNode[];
         
-        // Use nearest neighbor for middle nodes
-        let currentNode = startNode;
+        if (!startNode || !endNode) return nodes;
         
-        while (remaining.length > 1) { // Keep END node for last
-            let nearestNode: RouteNode | null = null;
-            let nearestDistance = Infinity;
+        optimized.push(startNode);
+        
+        // Create a map of delivery location to next best pickup
+        const deliveryToPickupMap = new Map<string, RouteNode>();
+        
+        for (let i = 0; i < pickupNodes.length; i++) {
+            const pickup = pickupNodes[i];
+            let closestDeliveryIndex = -1;
+            let closestDistance = Infinity;
             
-            for (const node of remaining) {
-                if (node.nodeType === 'END') continue;
+            // Find which delivery location is closest to this pickup
+            for (let j = 0; j < deliveryNodes.length; j++) {
+                const delivery = deliveryNodes[j];
+                const distance = this.calculateDistance(
+                    delivery.location.coordinates.lat,
+                    delivery.location.coordinates.long,
+                    pickup.location.coordinates.lat,
+                    pickup.location.coordinates.long
+                );
                 
-                if (currentNode) {
-                    const distance = this.calculateDistance(
-                        currentNode.location.coordinates.lat,
-                        currentNode.location.coordinates.long,
-                        node.location.coordinates.lat,
-                        node.location.coordinates.long
-                    );
-                    
-                    if (distance < nearestDistance) {
-                        nearestDistance = distance;
-                        nearestNode = node;
-                    }
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestDeliveryIndex = j;
                 }
             }
             
-            if (nearestNode) {
-                optimized.push(nearestNode);
-                currentNode = nearestNode;
-                remaining.splice(remaining.indexOf(nearestNode), 1);
-            } else {
-                break;
+            if (closestDeliveryIndex !== -1) {
+                const closestDelivery = deliveryNodes[closestDeliveryIndex];
+                deliveryToPickupMap.set(closestDelivery.loadId, pickup);
+            }
+        }
+        
+        // Build the route by chaining: pickup → delivery → (next pickup near delivery) → delivery...
+        const processedLoads = new Set<string>();
+        let currentLocation = startNode.location.coordinates;
+        
+        while (processedLoads.size < pickupNodes.length) {
+            // Find nearest unprocessed pickup
+            let nextPickupIndex = -1;
+            let nearestDistance = Infinity;
+            
+            for (let i = 0; i < pickupNodes.length; i++) {
+                const pickup = pickupNodes[i];
+                if (processedLoads.has(pickup.loadId)) continue;
+                
+                const distance = this.calculateDistance(
+                    currentLocation.lat,
+                    currentLocation.long,
+                    pickup.location.coordinates.lat,
+                    pickup.location.coordinates.long
+                );
+                
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nextPickupIndex = i;
+                }
+            }
+            
+            if (nextPickupIndex === -1) break;
+            
+            const nextPickup = pickupNodes[nextPickupIndex];
+            
+            // Add pickup
+            optimized.push(nextPickup);
+            processedLoads.add(nextPickup.loadId);
+            
+            // Immediately add its delivery
+            const deliveryIndex = deliveryNodes.findIndex(d => d.loadId === nextPickup.loadId);
+            if (deliveryIndex !== -1) {
+                const delivery = deliveryNodes[deliveryIndex];
+                optimized.push(delivery);
+                currentLocation = delivery.location.coordinates;
             }
         }
         
         // Add END node
-        const endNode = remaining.find(n => n.nodeType === 'END');
-        if (endNode) {
-            optimized.push(endNode);
-        }
-
-        // console.log('Optimized Node Order:', optimized.map(n => n.nodeType + '_' + n.loadId));
-        // console.log('Total Nodes in Optimized Path:', optimized.length);
-        // console.log(`Optimized Path for Driver: ${optimized.map(n => n.loadId).join(' -> ')}`); 
+        optimized.push(endNode);
+        
+        // Set sequences
+        optimized.forEach((node, index) => {
+            node.sequence = index;
+        });
         
         return optimized;
     }
-
     // Calculate how feasible/good a route is
     private calculateFeasibilityScore(distance: number, duration: number, loadCount: number): number {
         // Higher score is better

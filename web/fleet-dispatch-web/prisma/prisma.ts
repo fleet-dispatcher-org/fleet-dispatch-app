@@ -3,7 +3,10 @@ import { PrismaClient } from "@prisma/client";
 let prisma: ReturnType<typeof prismaClientSingleton>;
 
 const prismaClientSingleton = () => {
-  const client = new PrismaClient().$extends({
+  // Create base client first
+  const baseClient = new PrismaClient();
+  
+  const client = baseClient.$extends({
     query: {
       user: {
         create: async ({ args, query }) => {
@@ -11,36 +14,26 @@ const prismaClientSingleton = () => {
           const result = await query(args);
           
           try {
-            // Create driver after user is created
-            await client.driver.create({
+            // Use baseClient instead of client to avoid circular reference
+            await baseClient.driver.create({
               data: {
                 user: {
                   connect: {
                     id: result.id,
-                    
-                    
                   }
                 },
-                // Add required and default driver fields here
                 driver_status: 'AVAILABLE',
-                emergency_contact: '', // or null if nullable
-                emergency_contact_phone: '', // or null if nullable
-                // Add other required fields as needed based on your schema
+                emergency_contact: '',
+                emergency_contact_phone: '',
                 first_name: result.name?.split(' ')[0] || '',
-                last_name: result.name?.split(' ')[1] || '',
-                
-                // phone_number: null,
-                // license_number: null,
-                // hire_date: new Date(),
-                // Add any other required fields from your Driver model
+                last_name: result.name?.split(' ').slice(1).join(' ') || '',
               }
             });
             
             console.log(`Driver automatically created for user: ${result.id}`);
           } catch (error: unknown) {
             console.error('Failed to create driver for user:', result.id, error);
-            // Decide if you want to throw here or just log the error
-            // throw error; // Uncomment if you want to fail the user creation
+            // Consider if you want this to fail silently or throw
           }
           
           return result;
@@ -48,11 +41,7 @@ const prismaClientSingleton = () => {
         
         createMany: async ({ args, query }) => {
           const result = await query(args);
-          
-          // Note: createMany doesn't return the created records by default
-          // You might need to handle this differently if you use createMany
-          console.log('Bulk user creation - drivers may need to be created manually');
-          
+          console.log('Bulk user creation - drivers need manual creation or iterate individually');
           return result;
         }
       }
@@ -68,7 +57,7 @@ declare const globalThis: {
 
 prisma = globalThis.prismaGlobal ?? prismaClientSingleton();
 
-// Only cache in development to avoid memory leaks in production
+// Cache in development only
 if (process.env.NODE_ENV !== 'production') {
   globalThis.prismaGlobal = prisma;
 }

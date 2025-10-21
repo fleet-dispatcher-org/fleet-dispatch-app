@@ -171,7 +171,7 @@ const makeSuggestionsParallel = async () => {
         setGeneratingSuggestions(true);
         setError(null);
         
-        await Promise.all([
+        const [unassignedDrivers, unassignedTrucks, unassignedTrailers, unassignedLoads] = await Promise.all([
             fetchUnassignedDrivers(), 
             fetchUnassignedTrucks(), 
             fetchUnassignedTrailers(),
@@ -187,7 +187,7 @@ const makeSuggestionsParallel = async () => {
         }
 
         const routePlanner = new RoutePlanner();
-        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 100, 20, 20, "HIGHEST_LOAD_COUNT");
+        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 100, 20, 20, "HIGHEST_FEASIBILITY");
 
         console.log("Suggestions:", suggestions);
         
