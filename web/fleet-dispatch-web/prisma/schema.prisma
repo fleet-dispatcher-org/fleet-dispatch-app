@@ -13,7 +13,7 @@ model Driver {
   last_name               String?           @db.VarChar(20)
   license_number          String?           @db.VarChar(20)
   license_expiration      String?           @db.VarChar(20)   
-  license_class           String?           @db.VarChar(1)
+  license_class           String?           @db.VarChar(10)
   current_location        String?           @db.VarChar(40)
   expected_locations      Json?
   in_range                Boolean?          @default(false)
