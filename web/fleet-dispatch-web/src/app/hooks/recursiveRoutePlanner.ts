@@ -155,130 +155,120 @@ export class RoutePlanner {
         };
     }
 
-    // NEW: Build load chains iteratively (no recursion - no stack overflow!)
+    // NEW: Build load chains by connecting destination to next origin
     private buildLoadChains(
         startingLoad: Load,
         availableLoads: Load[],
         maxChainDistance: number,
-        maxChainLength: number = 6
+        maxChainLength: number = 6,
+        currentChain: Load[] = [],
+        usedLoadIds: Set<string> = new Set()
     ): LoadChain[] {
-        const allChains: LoadChain[] = [];
-        
-        // Queue of chains to explore: [chain, usedLoadIds]
-        interface ChainState {
-            chain: Load[];
-            usedIds: Set<string>;
+        // Prevent infinite recursion - hard limit on depth
+        if (currentChain.length >= maxChainLength) {
+            return [];
         }
         
-        const queue: ChainState[] = [{
-            chain: [startingLoad],
-            usedIds: new Set([startingLoad.id])
-        }];
+        // Check if this load is already used
+        if (usedLoadIds.has(startingLoad.id)) {
+            return [];
+        }
         
-        let iterations = 0;
-        const maxIterations = 10000; // Safety limit
+        const chains: LoadChain[] = [];
         
-        while (queue.length > 0 && iterations < maxIterations) {
-            iterations++;
+        // Add current load to chain
+        const newChain = [...currentChain, startingLoad];
+        const newUsedIds = new Set([...Array.from(usedLoadIds), startingLoad.id]);
+        
+        // Calculate total distance for this chain
+        let totalDistance = 0;
+        for (let i = 0; i < newChain.length - 1; i++) {
+            const destCoords = newChain[i].destination_coordinates as Array<{lat: number, long: number}> | null;
+            const originCoords = newChain[i + 1].origin_coordinates as Array<{lat: number, long: number}> | null;
             
-            const state = queue.shift()!;
-            const { chain, usedIds } = state;
-            
-            // Calculate total distance for this chain
-            let totalDistance = 0;
-            for (let i = 0; i < chain.length - 1; i++) {
-                const destCoords = chain[i].destination_coordinates as Array<{lat: number, long: number}> | null;
-                const originCoords = chain[i + 1].origin_coordinates as Array<{lat: number, long: number}> | null;
-                
-                if (destCoords && originCoords) {
-                    totalDistance += this.calculateDistance(
-                        destCoords[0].lat,
-                        destCoords[0].long,
-                        originCoords[0].lat,
-                        originCoords[0].long
-                    );
-                }
+            if (destCoords && originCoords) {
+                totalDistance += this.calculateDistance(
+                    destCoords[0].lat,
+                    destCoords[0].long,
+                    originCoords[0].lat,
+                    originCoords[0].long
+                );
             }
+        }
+        
+        // This chain is valid, add it
+        chains.push({
+            loads: [...newChain],
+            totalDistance,
+            isValid: true
+        });
+        
+        // If we haven't reached max length, try to extend the chain
+        if (newChain.length < maxChainLength) {
+            const lastLoad = newChain[newChain.length - 1];
+            const destCoords = lastLoad.destination_coordinates as Array<{lat: number, long: number}> | null;
             
-            // Save this chain as a valid option
-            allChains.push({
-                loads: [...chain],
-                totalDistance,
-                isValid: true
-            });
-            
-            // Try to extend the chain if not at max length
-            if (chain.length < maxChainLength) {
-                const lastLoad = chain[chain.length - 1];
-                const destCoords = lastLoad.destination_coordinates as Array<{lat: number, long: number}> | null;
+            if (destCoords) {
+                // Find loads whose pickup is near this delivery (limit candidates to prevent explosion)
+                const candidates: Array<{load: Load, distance: number}> = [];
                 
-                if (destCoords) {
-                    // Find candidate loads to chain
-                    const candidates: Array<{load: Load, distance: number}> = [];
+                for (const nextLoad of availableLoads) {
+                    if (newUsedIds.has(nextLoad.id)) continue;
                     
-                    for (const nextLoad of availableLoads) {
-                        if (usedIds.has(nextLoad.id)) continue;
+                    const nextOriginCoords = nextLoad.origin_coordinates as Array<{lat: number, long: number}> | null;
+                    
+                    if (nextOriginCoords) {
+                        const distanceToNext = this.calculateDistance(
+                            destCoords[0].lat,
+                            destCoords[0].long,
+                            nextOriginCoords[0].lat,
+                            nextOriginCoords[0].long
+                        );
                         
-                        const nextOriginCoords = nextLoad.origin_coordinates as Array<{lat: number, long: number}> | null;
-                        
-                        if (nextOriginCoords) {
-                            const distanceToNext = this.calculateDistance(
-                                destCoords[0].lat,
-                                destCoords[0].long,
-                                nextOriginCoords[0].lat,
-                                nextOriginCoords[0].long
-                            );
-                            
-                            if (distanceToNext <= maxChainDistance) {
-                                candidates.push({ load: nextLoad, distance: distanceToNext });
-                            }
+                        // If next load's pickup is close to current delivery, add as candidate
+                        if (distanceToNext <= maxChainDistance) {
+                            candidates.push({ load: nextLoad, distance: distanceToNext });
                         }
                     }
-                    
-                    // Sort by distance and take top 2 to limit branching
-                    candidates.sort((a, b) => a.distance - b.distance);
-                    const topCandidates = candidates.slice(0, 2);
-                    
-                    // Add extended chains to queue
-                    for (const candidate of topCandidates) {
-                        const newChain = [...chain, candidate.load];
-                        const newUsedIds = new Set([...usedIds, candidate.load.id]);
-                        
-                        queue.push({
-                            chain: newChain,
-                            usedIds: newUsedIds
-                        });
-                    }
+                }
+                
+                // Sort by distance and only explore top 3 closest candidates to prevent explosion
+                candidates.sort((a, b) => a.distance - b.distance);
+                const topCandidates = candidates.slice(0, 3);
+                
+                for (const candidate of topCandidates) {
+                    const extendedChains = this.buildLoadChains(
+                        candidate.load,
+                        availableLoads,
+                        maxChainDistance,
+                        maxChainLength,
+                        newChain,
+                        newUsedIds
+                    );
+                    chains.push(...extendedChains);
                 }
             }
         }
         
-        if (iterations >= maxIterations) {
-            console.warn(`Chain building hit iteration limit for load ${startingLoad.id}`);
-        }
-        
-        return allChains;
+        return chains;
     }
 
-    // NEW: Generate chains starting from driver's home base (with batching)
+    // NEW: Generate chains starting from driver's home base
     private generateChainsFromHomeBase(
         driverGroup: DriverGroup,
         availableLoads: Load[],
         maxDistance: number,
-        maxChainLength: number = 6,
-        maxStartingLoads: number = 10 // Limit starting points
+        maxChainLength: number = 6
     ): LoadChain[] {
         const allChains: LoadChain[] = [];
         const driverCoords = driverGroup.driver.home_coordinates as Array<{lat: number, long: number}> | null;
         
         if (!driverCoords) return allChains;
         
-        // Find loads that start near driver's home with distances
-        const startingLoadCandidates: Array<{load: Load, distance: number}> = [];
-        
-        for (const load of availableLoads) {
+        // Find loads that start near driver's home
+        const startingLoads = availableLoads.filter(load => {
             const originCoords = load.origin_coordinates as Array<{lat: number, long: number}> | null;
-            if (!originCoords) continue;
+            if (!originCoords) return false;
             
             const distance = this.calculateDistance(
                 driverCoords[0].lat,
@@ -287,18 +277,10 @@ export class RoutePlanner {
                 originCoords[0].long
             );
             
-            if (distance <= maxDistance) {
-                startingLoadCandidates.push({ load, distance });
-            }
-        }
+            return distance <= maxDistance;
+        });
         
-        // Sort by distance and take closest ones
-        startingLoadCandidates.sort((a, b) => a.distance - b.distance);
-        const startingLoads = startingLoadCandidates
-            .slice(0, maxStartingLoads)
-            .map(c => c.load);
-        
-        console.log(`Found ${startingLoadCandidates.length} starting loads, using top ${startingLoads.length} for ${driverGroup.driver.first_name}`);
+        console.log(`Found ${startingLoads.length} starting loads for ${driverGroup.driver.first_name}`);
         
         // Build chains from each starting load
         for (const startLoad of startingLoads) {
@@ -309,12 +291,6 @@ export class RoutePlanner {
                 maxChainLength
             );
             allChains.push(...chains);
-            
-            // Limit total chains to prevent memory issues
-            if (allChains.length > 1000) {
-                console.log(`Chain limit reached for ${driverGroup.driver.first_name}, stopping early`);
-                break;
-            }
         }
         
         return allChains;
