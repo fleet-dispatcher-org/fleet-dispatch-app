@@ -9,14 +9,10 @@ import { RoutePlannerContext, TreeBasedAssignment, RouteNode } from '../hooks/ro
 export default function AIBoard() {
     const [suggestedLoads, setSuggestedLoads] = useState<Load[]>([]);
     const [trucks, setTrucks] = useState<Record<string, string>>({});
-    const [unassignedTrucks, setUnassignedTrucks] = useState<Truck[]>([]);
-    const [unassignedTrailers, setUnassignedTrailers] = useState<Trailer[]>([]);
-    const [unassignedDrivers, setUnassignedDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [trailers, setTrailers] = useState<Record<string, string>>({});
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
-    const [unassignedLoads, setUnassignedLoads] = useState<Load[]>([]);
     const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
 
     useEffect(() => {
@@ -53,13 +49,11 @@ export default function AIBoard() {
         }
         
         const availableDrivers = driversArray.filter((driver: Driver) => driver.driver_status === 'AVAILABLE');
-        setUnassignedDrivers(availableDrivers);
         setError(null);
         return availableDrivers; // Return the data
     } catch (error) {
         console.error('Error fetching unassigned drivers:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedDrivers([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
@@ -87,13 +81,11 @@ const fetchUnassignedTrucks = async (): Promise<Truck[]> => {
         const availableTrucks = data.filter((truck: Truck) => 
             truck.truck_status === 'AVAILABLE' // && !truck.assigned_driver
         );
-        setUnassignedTrucks(availableTrucks);
         setError(null);
         return availableTrucks; // Return the filtered available trucks
     } catch (error) {
         console.error('Error fetching unassigned trucks:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedTrucks([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
@@ -121,13 +113,11 @@ const fetchUnassignedTrailers = async (): Promise<Trailer[]> => {
         const availableTrailers = data.filter((trailer: Trailer) => 
             trailer.trailer_status === 'AVAILABLE'
         );
-        setUnassignedTrailers(availableTrailers);
         setError(null);
         return availableTrailers; // Return the filtered available trailers
     } catch (error) {
         console.error('Error fetching unassigned trailers:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedTrailers([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
@@ -153,13 +143,11 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
         const data = await response.json();
         // let unassignedLoads = data.filter((load: Load) => !load.assigned_driver || !load.assigned_truck || !load.assigned_trailer);
         const unassignedLoads = data.filter((load: Load) => load.status === 'UNASSIGNED');
-        setUnassignedLoads(unassignedLoads);
         setError(null);
         return unassignedLoads; // Return the filtered unassigned loads
     } catch (error) {
         console.error('Error fetching unassigned loads:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedLoads([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
