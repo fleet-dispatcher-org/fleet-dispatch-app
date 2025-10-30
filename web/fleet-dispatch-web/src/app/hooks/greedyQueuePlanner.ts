@@ -1,23 +1,13 @@
 import {Driver, Truck, Trailer, Load} from "@prisma/client";
 import { time } from "console";
 
-// Tree-based route structure with alternatives. Accounts for Dates and sorts chronologically
+// Queue-based route planner. Doesn't account for dates. Works entirely spatially and prioritizes distance.
 
 export type RoutePlannerContext = {
     drivers: Driver[];
     trucks: Truck[];
     trailers: Trailer[];
     loads: Load[];
-}
-
-// NEW: Track driver's current location as they get assigned loads
-interface DriverState {
-    driverGroup: DriverGroup;
-    currentLocation: {
-        coordinates: { lat: number; long: number };
-        address: string;
-    };
-    assignedLoads: Load[];
 }
 
 interface DriverGroup {
@@ -109,47 +99,6 @@ export class RoutePlanner {
             Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
-    }
-
-    // NEW: Group loads by date for chronological processing
-    // Works by sorting dates into buckets. 
-    // NEW: Group loads by date for chronological processing
-    private groupLoadsByDate(loads: Load[], dateField: keyof Load = 'pick_up_by'): Map<string, Load[]> {
-        const dateGroups = new Map<string, Load[]>();
-        
-        for (const load of loads) {
-            const dateValue = load[dateField];
-            
-            if (!dateValue) {
-                console.warn(`Skipping load ${load.id}: no date value`);
-                continue;
-            }
-            
-            // Handle string datetime (ISO 8601 format like "2024-10-23T00:43:36.800Z")
-            let dateKey: string;
-            if (typeof dateValue === 'string') {
-                // Just take the date part before 'T'
-                dateKey = dateValue.split('T')[0];
-            } else if (dateValue instanceof Date) {
-                dateKey = dateValue.toISOString().split('T')[0];
-            } else {
-                console.warn(`Skipping load ${load.id}: unexpected date format`, dateValue);
-                continue;
-            }
-            
-            if (!dateGroups.has(dateKey)) {
-                dateGroups.set(dateKey, []);
-            }
-            dateGroups.get(dateKey)!.push(load);
-        }
-        
-        return dateGroups;
-    }
-
-    // NEW: Get sorted date keys
-    // Returns an array of sorted date keys. 
-    private getSortedDateKeys(dateGroups: Map<string, Load[]>): string[] {
-        return Array.from(dateGroups.keys()).sort();
     }
 
     private createRouteNode(
@@ -315,27 +264,22 @@ export class RoutePlanner {
     }
 
     // NEW: Generate chains starting from driver's home base (with batching)
-    // MODIFIED: Generate chains starting from driver's home base (with batching)
     private generateChainsFromHomeBase(
         driverGroup: DriverGroup,
         availableLoads: Load[],
         maxDistance: number,
         maxChainLength: number = 6,
-        maxStartingLoads: number = 10,
-        restrictStartingLoads?: Load[] // NEW: Optional restriction to specific starting loads
+        maxStartingLoads: number = 10 // Limit starting points
     ): LoadChain[] {
         const allChains: LoadChain[] = [];
         const driverCoords = driverGroup.driver.home_coordinates as Array<{lat: number, long: number}> | null;
         
         if (!driverCoords) return allChains;
         
-        // Determine which loads to consider as starting points
-        const loadsToConsider = restrictStartingLoads || availableLoads;
-        
         // Find loads that start near driver's home with distances
         const startingLoadCandidates: Array<{load: Load, distance: number}> = [];
         
-        for (const load of loadsToConsider) {
+        for (const load of availableLoads) {
             const originCoords = load.origin_coordinates as Array<{lat: number, long: number}> | null;
             if (!originCoords) continue;
             
@@ -363,7 +307,7 @@ export class RoutePlanner {
         for (const startLoad of startingLoads) {
             const chains = this.buildLoadChains(
                 startLoad,
-                availableLoads, // Chain with all available loads
+                availableLoads,
                 maxDistance,
                 maxChainLength
             );
@@ -377,7 +321,8 @@ export class RoutePlanner {
         }
         
         return allChains;
-}
+    }
+
     // MODIFIED: Build route tree from a load chain
     private buildRouteTreeFromChain(
         driverGroup: DriverGroup,
@@ -459,46 +404,10 @@ export class RoutePlanner {
         return optimized;
     }
 
-    // NEW: Calculate date score for a chain (earlier is better)
-    private calculateChainDateScore(chain: LoadChain, dateField: keyof Load = 'pick_up_by'): number {
-        if (chain.loads.length === 0) return 0;
-        
-        // Find the earliest date in the chain
-        const dates: Date[] = [];
-        
-        for (const load of chain.loads) {
-            const dateValue = load[dateField];
-            if (!dateValue) continue;
-            
-            if (typeof dateValue === 'string') {
-                const parsedDate = new Date(dateValue);
-                if (!isNaN(parsedDate.getTime())) {
-                    dates.push(parsedDate);
-                }
-            } else if (dateValue instanceof Date) {
-                dates.push(dateValue);
-            }
-        }
-        
-        if (dates.length === 0) return 0;
-        
-        const earliestDate = new Date(Math.min(...dates.map(d => d.getTime())));
-        const now = new Date();
-        
-        // Calculate days until pickup (negative if in the past)
-        const daysUntil = (earliestDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-        
-        // Score: Sooner is better. Give higher scores to loads happening soon
-        return Math.max(0, 1000 - (daysUntil * 10));
-    }
-
     // MODIFIED: Generate alternative routes using chains
-    // NEW: Generate routes starting with a specific date's loads
-   // MODIFIED: Generate routes starting with a specific date's loads - with stricter distance filtering
-    private generateAlternativeRoutesForDate(
+    private generateAlternativeRoutes(
         driverGroup: DriverGroup,
-        startingDateLoads: Load[], // Loads that MUST start the chain (from target date)
-        allAvailableLoads: Load[], // All loads available for chaining
+        availableLoads: Load[],
         maxDistance: number = 400,
         maxChainLength: number = 6,
         maxAlternatives: number = 10
@@ -513,47 +422,17 @@ export class RoutePlanner {
             destination_coordinates: driverGroup.driver.home_coordinates
         } as Load;
         
-        const driverCoords = driverGroup.driver.home_coordinates as Array<{lat: number, long: number}> | null;
-        if (!driverCoords) return allRouteTrees;
-        
-        // NEW: Only consider loads that are actually FEASIBLE from driver's location
-        // Filter starting loads to only those within reasonable distance
-        const feasibleStartingLoads = startingDateLoads.filter(load => {
-            const originCoords = load.origin_coordinates as Array<{lat: number, long: number}> | null;
-            if (!originCoords) return false;
-            
-            const distance = this.calculateDistance(
-                driverCoords[0].lat,
-                driverCoords[0].long,
-                originCoords[0].lat,
-                originCoords[0].long
-            );
-            
-            // Only include loads that are actually reachable
-            return distance <= maxDistance;
-        });
-        
-        console.log(`  Driver ${driverGroup.driver.first_name} in ${driverGroup.driver.home_base}: ${feasibleStartingLoads.length}/${startingDateLoads.length} loads are within ${maxDistance}km`);
-        
-        // If no feasible loads for this date, return empty
-        if (feasibleStartingLoads.length === 0) {
-            console.log(`  No feasible loads for this driver on this date, skipping...`);
-            return allRouteTrees;
-        }
-        
-        // Reuse generateChainsFromHomeBase with only FEASIBLE starting loads
+        // Generate chains from home base
         const chains = this.generateChainsFromHomeBase(
             driverGroup,
-            allAvailableLoads,           // Can chain with any available load
+            availableLoads,
             maxDistance,
-            maxChainLength,
-            10,                          // maxStartingLoads
-            feasibleStartingLoads        // Only start with feasible loads from this date
+            maxChainLength
         );
         
-        console.log(`  Generated ${chains.length} chains for this driver on this date`);
+        console.log(`Generated ${chains.length} chains for driver ${driverGroup.driver.first_name}`);
         
-        // Sort chains by spatial efficiency
+        // Sort chains by feasibility (more loads and shorter distance is better)
         chains.sort((a, b) => {
             const scoreA = a.loads.length * 1000 - a.totalDistance;
             const scoreB = b.loads.length * 1000 - b.totalDistance;
@@ -568,8 +447,11 @@ export class RoutePlanner {
             }
         }
         
+        console.log(`Generated ${allRouteTrees.length} valid route trees for driver ${driverGroup.driver.first_name}`);
+        
         return allRouteTrees;
     }
+
     private calculateFeasibilityScore(distance: number, duration: number, loadCount: number): number {
         const loadScore = loadCount * 100;
         const distanceScore = Math.max(0, 1000 - distance);
@@ -639,81 +521,12 @@ export class RoutePlanner {
         return { bestDistance, bestTime, bestCost, mostLoads };
     }
 
-    // NEW: Generate routes from driver's CURRENT location (not home base)
-    private generateAlternativeRoutesFromCurrentLocation(
-        driverState: DriverState,
-        startingDateLoads: Load[],
-        allAvailableLoads: Load[],
-        maxDistance: number = 400,
-        maxChainLength: number = 6,
-        maxAlternatives: number = 10
-    ): RouteTree[] {
-        const allRouteTrees: RouteTree[] = [];
-        
-        // Use current location as "home" for this route
-        const currentLocationLoad = {
-            id: `current_${driverState.driverGroup.driver.id}_${Date.now()}`,
-            origin: driverState.currentLocation.address,
-            destination: driverState.currentLocation.address,
-            origin_coordinates: [driverState.currentLocation.coordinates],
-            destination_coordinates: [driverState.currentLocation.coordinates]
-        } as unknown as Load;
-        
-        // Build chains starting from current location
-        const allChains: LoadChain[] = [];
-        
-        // Sort starting loads by distance from current location
-        const candidates = startingDateLoads.map(load => {
-            const originCoords = load.origin_coordinates as Array<{lat: number, long: number}> | null;
-            const distance = originCoords ? this.calculateDistance(
-                driverState.currentLocation.coordinates.lat,
-                driverState.currentLocation.coordinates.long,
-                originCoords[0].lat,
-                originCoords[0].long
-            ) : Infinity;
-            return { load, distance };
-        }).sort((a, b) => a.distance - b.distance);
-        
-        const startingLoads = candidates.slice(0, 10).map(c => c.load);
-        
-        for (const startLoad of startingLoads) {
-            const chains = this.buildLoadChains(
-                startLoad,
-                allAvailableLoads,
-                maxDistance,
-                maxChainLength
-            );
-            allChains.push(...chains);
-            
-            if (allChains.length > 1000) break;
-        }
-        
-        // Sort by efficiency
-        allChains.sort((a, b) => {
-            const scoreA = a.loads.length * 1000 - a.totalDistance;
-            const scoreB = b.loads.length * 1000 - b.totalDistance;
-            return scoreB - scoreA;
-        });
-        
-        // Build route trees
-        for (let i = 0; i < Math.min(allChains.length, maxAlternatives); i++) {
-            const routeTree = this.buildRouteTreeFromChain(driverState.driverGroup, currentLocationLoad, allChains[i], i);
-            if (routeTree.isValid) {
-                allRouteTrees.push(routeTree);
-            }
-        }
-        
-        return allRouteTrees;
-    }
-
-    // IMPROVED: Make assignments in strict chronological order with location tracking
-    public makeChronologicalTreeBasedAssignments(
+    public makeTreeBasedAssignments(
         context: RoutePlannerContext,
         maxDistance: number = 400,
         maxChainLength: number = 6,
         maxAlternatives: number = 10,
-        selectionCriteria: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | "HIGHEST_LOAD_COUNT" | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY' = 'HIGHEST_FEASIBILITY',
-        dateField: keyof Load = 'pick_up_by'
+        selectionCriteria: 'SHORTEST_DISTANCE' | 'SHORTEST_TIME' | "HIGHEST_LOAD_COUNT" | 'LOWEST_COST' | 'HIGHEST_FEASIBILITY' = 'HIGHEST_FEASIBILITY'
     ): TreeBasedAssignment[] {
         const assignmentContext = this.getAssignmentContext(
             context.drivers,
@@ -724,145 +537,59 @@ export class RoutePlanner {
         );
         
         const assignments: TreeBasedAssignment[] = [];
-        const availableLoads = [...assignmentContext.unassignedLoads];
+        const datesWithLoads = assignmentContext.unassignedLoads.map(load => load.pick_up_by);
+        let availableLoads = [...assignmentContext.unassignedLoads];
+        const earliestDate = availableLoads.reduce((earliest, load) => 
+            !earliest || (load.pick_up_by && load.pick_up_by < earliest) 
+            ? load.pick_up_by 
+            : earliest
+            , null as Date | null);
         
-        // NEW: Track each driver's current location
-        const driverStates: DriverState[] = assignmentContext.driverGroups.map(dg => {
-            const homeCoords = dg.driver.home_coordinates as Array<{lat: number, long: number}> | null;
-            return {
-                driverGroup: dg,
-                currentLocation: {
-                    coordinates: {
-                        lat: homeCoords?.[0]?.lat || 0,
-                        long: homeCoords?.[0]?.long || 0
-                    },
-                    address: dg.driver.home_base || ''
+        const timeRelevantLoads = availableLoads.filter(load => 
+            load.pick_up_by && load.pick_up_by >= earliestDate!
+        );
+        
+        for (const driverGroup of assignmentContext.driverGroups) {
+            const alternativeRoutes = this.generateAlternativeRoutes(
+                driverGroup,
+                timeRelevantLoads,
+                maxDistance,
+                maxChainLength,
+                maxAlternatives
+            );
+            
+            if (alternativeRoutes.length === 0) continue;
+            
+            const { best: primaryRoute, scores } = this.selectBestRoute(alternativeRoutes, selectionCriteria);
+            const routeComparison = this.createRouteComparison(alternativeRoutes);
+            
+            const totalLoadsHandled = primaryRoute.routePath.filter(node => 
+                node.nodeType === 'PICKUP'
+            ).length;
+            
+            const assignment: TreeBasedAssignment = {
+                driverGroup,
+                primaryRoute,
+                alternativeRoutes: alternativeRoutes.filter(route => route.id !== primaryRoute.id),
+                selectionCriteria: {
+                    criteriaUsed: selectionCriteria,
+                    scores
                 },
-                assignedLoads: []
+                totalLoadsHandled,
+                routeComparison
             };
-        });
-        
-        // Group loads by date
-        const dateGroups = this.groupLoadsByDate(availableLoads, dateField);
-        const sortedDates = this.getSortedDateKeys(dateGroups);
-        
-        console.log(`Processing loads across ${sortedDates.length} dates in chronological order`);
-        
-        // Process each date in order
-        for (const dateKey of sortedDates) {
-            const loadsForDate = dateGroups.get(dateKey)!;
-            console.log(`\n=== Processing date: ${dateKey} (${loadsForDate.length} loads) ===`);
             
-            // Filter available loads to only include this date and later
-            const currentAndFutureLoads = availableLoads.filter(load => {
-                const dateValue = load[dateField];
-                if (!dateValue) return false;
-                
-                let loadDateKey: string;
-                if (typeof dateValue === 'string') {
-                    loadDateKey = dateValue.split('T')[0];
-                } else if (dateValue instanceof Date) {
-                    loadDateKey = dateValue.toISOString().split('T')[0];
-                } else {
-                    return false;
-                }
-                
-                return loadDateKey >= dateKey;
-            });
+            assignments.push(assignment);
             
-            // Assign drivers to loads for this date
-            for (const driverState of driverStates) {
-                // Find loads from this date that are near the driver's CURRENT location
-                const feasibleLoads = loadsForDate.filter(load => {
-                    const originCoords = load.origin_coordinates as Array<{lat: number, long: number}> | null;
-                    if (!originCoords) return false;
-                    
-                    const distance = this.calculateDistance(
-                        driverState.currentLocation.coordinates.lat,
-                        driverState.currentLocation.coordinates.long,
-                        originCoords[0].lat,
-                        originCoords[0].long
-                    );
-                    
-                    return distance <= maxDistance;
-                });
-                
-                if (feasibleLoads.length === 0) {
-                    console.log(`  No feasible loads for ${driverState.driverGroup.driver.first_name} from ${driverState.currentLocation.address}`);
-                    continue;
-                }
-                
-                console.log(`  ${driverState.driverGroup.driver.first_name} at ${driverState.currentLocation.address}: ${feasibleLoads.length} feasible loads`);
-                
-                // Generate routes using CURRENT location
-                const alternativeRoutes = this.generateAlternativeRoutesFromCurrentLocation(
-                    driverState,
-                    feasibleLoads,
-                    currentAndFutureLoads,
-                    maxDistance,
-                    maxChainLength,
-                    maxAlternatives
-                );
-                
-                if (alternativeRoutes.length === 0) continue;
-                
-                const { best: primaryRoute, scores } = this.selectBestRoute(alternativeRoutes, selectionCriteria);
-                const routeComparison = this.createRouteComparison(alternativeRoutes);
-                
-                const totalLoadsHandled = primaryRoute.routePath.filter(node => 
-                    node.nodeType === 'PICKUP'
-                ).length;
-                
-                const assignment: TreeBasedAssignment = {
-                    driverGroup: driverState.driverGroup,
-                    primaryRoute,
-                    alternativeRoutes: alternativeRoutes.filter(route => route.id !== primaryRoute.id),
-                    selectionCriteria: {
-                        criteriaUsed: selectionCriteria,
-                        scores
-                    },
-                    totalLoadsHandled,
-                    routeComparison
-                };
-                
-                assignments.push(assignment);
-                
-                // Remove assigned loads and UPDATE DRIVER'S LOCATION
-                const assignedLoadNodes = primaryRoute.routePath.filter(node => node.nodeType === 'PICKUP');
-                
-                assignedLoadNodes.forEach(pickupNode => {
+            // Remove assigned loads
+            primaryRoute.routePath
+                .filter(node => node.nodeType === 'PICKUP')
+                .forEach(pickupNode => {
                     const index = availableLoads.findIndex(load => load.id === pickupNode.loadId);
                     if (index !== -1) {
-                        const assignedLoad = availableLoads[index];
-                        driverState.assignedLoads.push(assignedLoad);
                         availableLoads.splice(index, 1);
-                        console.log(`  Assigned load ${pickupNode.loadId} to ${driverState.driverGroup.driver.first_name}`);
                     }
                 });
-                
-                // Update driver's location to last delivery location
-                const lastDeliveryNode = primaryRoute.routePath
-                    .filter(node => node.nodeType === 'DELIVERY')
-                    .pop();
-                
-                if (lastDeliveryNode) {
-                    driverState.currentLocation = {
-                        coordinates: lastDeliveryNode.location.coordinates,
-                        address: lastDeliveryNode.location.address
-                    };
-                    console.log(`  ${driverState.driverGroup.driver.first_name} now at ${driverState.currentLocation.address}`);
-                }
-                
-                // If all loads for this date are assigned, move to next date
-                const remainingLoadsForDate = loadsForDate.filter(load => 
-                    availableLoads.some(available => available.id === load.id)
-                );
-                
-                if (remainingLoadsForDate.length === 0) {
-                    console.log(`All loads for ${dateKey} assigned, moving to next date`);
-                    break;
-                }
-            }
         }
         
         return assignments;

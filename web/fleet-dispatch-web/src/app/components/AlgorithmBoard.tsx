@@ -4,6 +4,7 @@ import { Trailer, Load, Driver, Truck } from "@prisma/client";
 import Link from 'next/link';
 import { RoutePlanner } from '../hooks/routePlanner';
 import { RoutePlannerContext, TreeBasedAssignment, RouteNode } from '../hooks/routePlanner';
+import { clear } from 'console';
 
 
 export default function AIBoard() {
@@ -14,6 +15,7 @@ export default function AIBoard() {
     const [trailers, setTrailers] = useState<Record<string, string>>({});
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
     const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
+    const [clearingSuggestions, setClearingSuggestions] = useState(false);
 
     useEffect(() => {
         // Only load existing suggestions on mount, don't automatically generate new ones
@@ -57,6 +59,33 @@ export default function AIBoard() {
         return []; // Return empty array on error
     } finally {
         setLoading(false);
+    }
+};
+
+const clearSuggestions = async () => {
+    try {
+        setLoading(true);
+        setClearingSuggestions(true);
+        await fetch('/api/dispatcher/loads/clear-suggestions', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                assigned_driver: null,
+                assigned_by: null,
+                assigned_truck: null,
+                assigned_trailer: null,
+                status: 'UNASSIGNED'
+            }),
+        });
+        setError(null);
+    } catch (error) {
+        console.error('Error clearing suggestions:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error occurred');
+    } finally {
+        setLoading(false);
+        setClearingSuggestions(false);
     }
 };
 
@@ -175,7 +204,8 @@ const makeSuggestionsParallel = async () => {
         }
 
         const routePlanner = new RoutePlanner();
-        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 500, 20, 20, "HIGHEST_FEASIBILITY");
+        let assignmentLength = unassignedLoads.length / unassignedDrivers.length;
+        const suggestions = routePlanner.makeChronologicalTreeBasedAssignments(assignmentData, 600, 10, 10, "HIGHEST_FEASIBILITY", "pick_up_by");
 
         console.log("Suggestions:", suggestions);
         
@@ -506,6 +536,15 @@ const handleGetSuggestions = async () => {
                     <p className="text-gray-500 mt-2">No suggested loads found.</p>
                 </div>
             )}
+
+            <div className="mt-6 flex justify-start">
+                <button
+                    onClick={clearSuggestions}
+                    disabled={loading || clearingSuggestions}
+                    className='bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed'>
+                    {clearingSuggestions ? 'Clearing Suggestions...' : 'Clear Suggestions'}
+                </button>
+            </div>
             
             {/* Refresh Button */}
             <div className="mt-6 flex justify-end">
