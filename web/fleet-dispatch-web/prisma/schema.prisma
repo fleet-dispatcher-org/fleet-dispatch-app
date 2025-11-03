@@ -122,6 +122,7 @@ model Load {
 
 model Route {
   id               String @id @default(cuid())
+  name             String 
   loads            String[]
   length           Int?
   Load             Load[]

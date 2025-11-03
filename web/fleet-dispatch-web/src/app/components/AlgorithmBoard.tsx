@@ -204,7 +204,6 @@ const makeSuggestionsParallel = async () => {
         }
 
         const routePlanner = new RoutePlanner();
-        let assignmentLength = unassignedLoads.length / unassignedDrivers.length;
         const suggestions = routePlanner.makeChronologicalTreeBasedAssignments(assignmentData, 600, 10, 10, "HIGHEST_FEASIBILITY", "pick_up_by");
 
         console.log("Suggestions:", suggestions);
