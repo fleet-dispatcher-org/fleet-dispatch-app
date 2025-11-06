@@ -14,6 +14,7 @@ class Driver {
   // name: string;
   // age: number;
   id: string;
+  //total70: {1: number, 2: number, 3: number, 4: number, 5: number, 6: number, 7: number, 8: number};
   total_70_hour: number;
   total_14_hour: number;
   total_11_hour: number;
@@ -43,6 +44,14 @@ class Driver {
 
 }
 
+function getDrivingTimeFromApi(): number {
+  return 37;
+ }
+
+function getStartingHoursFromApi(): number {
+  // What hour is it according to military time?
+  return 15;
+ }
 
 // Calculate ETA
 function calcEta(driver: Driver, estimate: number): number {
@@ -73,3 +82,17 @@ function main() {
 
 // Call Main
 main()
+
+/*
+
+number: Represents both integer and floating-point values (e.g., 10, 3.14).
+string: Represents textual data (e.g., "hello", 'TypeScript').
+boolean: Represents a logical value, either true or false.
+bigint: Represents whole numbers larger than $2^{53} - 1$ (the maximum safe integer in JavaScript's number type).
+symbol: Represents a unique and immutable value, often used as object property keys.
+null: Represents the intentional absence of any object value. It is the sole value of the null type.
+undefined: Represents a variable that has been declared but has not yet been assigned a value. It is the sole value of the undefined type.
+
+
+
+*/
