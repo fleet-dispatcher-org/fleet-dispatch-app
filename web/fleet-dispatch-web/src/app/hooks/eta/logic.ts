@@ -14,7 +14,8 @@ class Driver {
   // name: string;
   // age: number;
   id: string;
-  //total70: {1: number, 2: number, 3: number, 4: number, 5: number, 6: number, 7: number, 8: number};
+  //need to figure out how to add these together to get 70 hour total
+  //eight_day_total: {1: number, 2: number, 3: number, 4: number, 5: number, 6: number, 7: number, 8: number};
   total_70_hour: number;
   total_14_hour: number;
   total_11_hour: number;
@@ -61,26 +62,40 @@ function calcEta(driver: Driver, estimate: number, start_time: number): number {
   //I think we need to use the time the driver will start rather than time right now
   // let current_time = Date.now.toString();
 
-  //if hours off duty is 34, reset values
-  if (driver.off_duty >= 34)
+  //start while loop that will iterate until there is no time left to drive
+
+  while (remaining_time > 0)
   {
-    driver.total_70_hour = 0;
-    driver.total_14_hour = 14;
-    driver.total_11_hour = 11;
-    driver.total_8_hour = 8;
-    driver.on_duty = 0;
+    //if hours off duty is 34, reset values
+    if (driver.off_duty >= 34)
+    {
+      driver.total_70_hour = 0;
+      driver.total_14_hour = 14;
+      driver.total_11_hour = 11;
+      driver.total_8_hour = 8;
+      driver.on_duty = 0;
+    }
+  
+    //if hours off duty is 10, some values reset
+    if (driver.off_duty >= 10)
+    {
+      driver.total_14_hour = 14;
+      driver.total_11_hour = 11;
+      driver.total_8_hour = 8;
+      driver.on_duty = 0;
+    }
+
+    //check if driver has time available on clocks; otherwise, add break time
+
+    //if total is over 70, they have to stop
+    if(driver.total_70_hour >= 70)
+    {
+      //wait until midnight to check to see whether they have time then
+      let wait_hours = 24 - start_time;
+      end_estimate += wait_hours;
+      driver.off_duty = wait_hours;
+    }
   }
-
-  //if hours off duty is 10, some values reset
-  if (driver.off_duty >= 10)
-  {
-    driver.total_14_hour = 14;
-    driver.total_11_hour = 11;
-    driver.total_8_hour = 8;
-    driver.on_duty = 0;
-  }
-
-
 
   return end_estimate;
 }
@@ -109,7 +124,5 @@ bigint: Represents whole numbers larger than $2^{53} - 1$ (the maximum safe inte
 symbol: Represents a unique and immutable value, often used as object property keys.
 null: Represents the intentional absence of any object value. It is the sole value of the null type.
 undefined: Represents a variable that has been declared but has not yet been assigned a value. It is the sole value of the undefined type.
-
-
 
 */
