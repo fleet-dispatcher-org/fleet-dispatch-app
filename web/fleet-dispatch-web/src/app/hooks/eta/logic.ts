@@ -22,6 +22,7 @@ class Driver {
   on_duty: number;
   off_duty: number;
   current_time: Date = new Date()
+  
 
   // Constructor
   constructor(id: string, total_70_hour: number, total_14_hour: number, total_11_hour: number, total_8_hour: number, on_duty: number, off_duty: number) {
@@ -54,10 +55,11 @@ function getStartingHoursFromApi(): number {
  }
 
 // Calculate ETA
-function calcEta(driver: Driver, estimate: number): number {
+function calcEta(driver: Driver, estimate: number, start_time: number): number {
   let end_estimate = estimate;
   let remaining_time = estimate;
-  let current_time = Date.now.toString();
+  //I think we need to use the time the driver will start rather than time right now
+  // let current_time = Date.now.toString();
 
   //if hours off duty is 34, reset values
   if (driver.off_duty >= 34)
@@ -65,8 +67,21 @@ function calcEta(driver: Driver, estimate: number): number {
     driver.total_70_hour = 0;
     driver.total_14_hour = 14;
     driver.total_11_hour = 11;
+    driver.total_8_hour = 8;
     driver.on_duty = 0;
   }
+
+  //if hours off duty is 10, some values reset
+  if (driver.off_duty >= 10)
+  {
+    driver.total_14_hour = 14;
+    driver.total_11_hour = 11;
+    driver.total_8_hour = 8;
+    driver.on_duty = 0;
+  }
+
+
+
   return end_estimate;
 }
 
@@ -75,8 +90,10 @@ function calcEta(driver: Driver, estimate: number): number {
 function main() {
   const newDriver: Driver = new Driver("12345", 45, 10, 11, 0, 11, 0);
   let fake_estimate = 10;
+  let start_time = 15.5; //in military, float hours for now
   //eventually take in variable from api on how long the original estimate 
-    let eta: number = calcEta(newDriver, fake_estimate);
+  //also pass in time that they will start their drive
+    let eta: number = calcEta(newDriver, fake_estimate, start_time);
     console.log(`Your ETA is ${eta} minutes.`)
 }
 
