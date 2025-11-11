@@ -89,6 +89,7 @@ model Trailer {
   load                      Load[]
   truck_id                  Truck?    @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   fleet                     Fleet?      @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction) 
+
 }
 
 model Load {
@@ -117,15 +118,17 @@ model Load {
   trailer          Trailer?  @relation(fields: [assigned_trailer], references: [id], onDelete: NoAction, onUpdate: NoAction)
   fleet            Fleet?     @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction, onUpdate: NoAction)
   dispatcher       User?      @relation(fields: [assigned_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  route            Route?     @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  routes           Route[]
 }
 
 model Route {
-  id               String @id @default(cuid())
-  name             String 
-  loads            String[]
-  length           Int?
-  Load             Load[]
+  id            String @id @default(cuid())
+  loads         Load[]
+  totalCost     Float?
+  totalDistance Float? 
+  totalDuration Float?
+  isValid       Boolean?
+  feasibilityScore  Float? 
 }
 
 model CustomerRequest {
@@ -175,6 +178,8 @@ model Truck {
   attributes       Json?
   assigned_fleet_id String?
   fleet   Fleet? @relation(fields: [assigned_fleet_id], references: [id], onDelete: NoAction)
+
+
 }
 
 model Account {
@@ -265,6 +270,13 @@ enum Status {
   REQUESTED
   UNASSIGNED
   DELIVERED
+}
+
+enum NodeType {
+  START
+  PICKUP 
+  DELIVERY 
+  END
 }
 
 enum Employment_Status {
