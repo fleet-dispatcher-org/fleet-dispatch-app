@@ -82,6 +82,10 @@ const clearSuggestions = async () => {
         });
 
         await fetch(`${url}/api/dispatcher/routes/clear-suggestions`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
             
         })
         setError(null);
