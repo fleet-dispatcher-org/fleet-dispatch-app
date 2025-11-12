@@ -8,7 +8,7 @@ export async function GET() {
         const session = await auth();
         if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-        const routes = await prisma.route.findMany({ orderBy: { name: 'desc' } });
+        const routes = await prisma.route.findMany({ orderBy: { feasibilityScore: 'desc' } });
         return NextResponse.json(routes);
     } catch (error) {
         console.error(error);
@@ -22,7 +22,16 @@ export async function POST(request: Request) {
         if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         const body = await request.json();
-        const newRoute = await prisma.route.create({ data: body });
+        const newRoute = await prisma.route.create({ 
+            data: { 
+                assigned_driver: body.assigned_driver,
+                assigned_truck: body.assigned_truck,
+                assigned_trailer: body.assigned_trailer,
+                loads: { 
+                    connect: body.loads.map((load: { id: any; }) => ({ id: load.id || load }))
+                }
+            }  
+        });
         return NextResponse.json(newRoute);
     } catch (error) {
         console.error(error);

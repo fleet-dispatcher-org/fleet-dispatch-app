@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { Trailer, Load, Driver, Truck } from "@prisma/client";
+import { Trailer, Load, Driver, Truck, Route } from "@prisma/client";
 import Link from 'next/link';
 import { RoutePlanner } from '../hooks/routePlanner';
 import { RoutePlannerContext, TreeBasedAssignment, RouteNode } from '../hooks/routePlanner';
@@ -8,7 +8,7 @@ import { clear } from 'console';
 
 
 export default function AIBoard() {
-    const [suggestedLoads, setSuggestedLoads] = useState<Load[]>([]);
+    const [suggestedRoutes, setSuggestedRoutes] = useState<Load[]>([]);
     const [trucks, setTrucks] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -80,6 +80,10 @@ const clearSuggestions = async () => {
                 status: 'UNASSIGNED'
             }),
         });
+
+        await fetch(`${url}/api/dispatcher/routes/clear-suggestions`, {
+            
+        })
         setError(null);
     } catch (error) {
         console.error('Error clearing suggestions:', error);
@@ -214,13 +218,58 @@ const makeSuggestionsParallel = async () => {
         
         // Fixed version of your function
         suggestions.forEach((suggestion: TreeBasedAssignment) => {
-            
+            const assigned_driver = suggestion.driverGroup.driver.id;
+            const assigned_truck = suggestion.driverGroup.truck.id;
+            const assigned_trailer = suggestion.driverGroup.trailer.id;
+
+            const assigned_loads = suggestion.primaryRoute.routePath.map((node: RouteNode) => node.load);
+
+            const validLoads = assigned_loads.filter((load: Load) => !load.id.includes('current_'));
+
+            // Deduplicate by ID
+            const uniqueLoads = validLoads.filter((load, index, self) => 
+                index === self.findIndex((l) => l.id === load.id)
+            );
+            console.log("Total assigned loads:", assigned_loads.length);
+            console.log("Valid loads after filter:", validLoads.length);
+            console.log("Valid load IDs:", validLoads.map(load => load.id));
+            console.log("Unique loads:", uniqueLoads.length);
+            console.log("Unique load IDs:", uniqueLoads.map(load => load.id));
+
+            uniqueLoads.forEach((load: Load) => {
+                allApiCalls.push(fetch(`${url}/api/dispatcher/${load.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        assigned_driver,
+                        assigned_truck,
+                        assigned_trailer,
+                    }),
+                }));
+            });
+
+            allApiCalls.push((fetch(`${url}/api/dispatcher/routes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    assigned_driver: assigned_driver,
+                    assigned_truck: assigned_truck,
+                    assigned_trailer: assigned_trailer,
+                    loads: uniqueLoads.map(load => ({ id: load.id })),
+                })
+            })))
             
 
         });
 
         // Execute all API calls in parallel
         await Promise.all(allApiCalls);
+
+        console.log("Suggestions made successfully");
         await getSuggestions();
         
     } catch (error) {
@@ -239,7 +288,7 @@ const handleGetSuggestions = async () => {
             setLoading(true);
             setError(null);
             
-            const response = await fetch('/api/dispatcher/suggested', {
+            const response = await fetch('/api/dispatcher/routes', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -252,29 +301,29 @@ const handleGetSuggestions = async () => {
 
             const data = await response.json();
 
-            const driverIds = new Set<string>((data || []).map((load: Load) => load.assigned_driver));
+            const driverIds = new Set<string>((data || []).map((route: Route) => route.assigned_driver));
                         
             driverIds.forEach((id: string) => {if(id) {
                 getDriverName(id)
             }});
             
-            const truckIds = new Set<string>((data || []).map((load: Load) => load.assigned_truck));
+            const truckIds = new Set<string>((data || []).map((route: Route) => route.assigned_truck));
             
             truckIds.forEach((id: string) => {if(id) {
                 getTruckMakeModel(id)
             }});
 
-            const trailerIds = new Set<string>((data || []).map((load: Load) => load.assigned_trailer));
+            const trailerIds = new Set<string>((data || []).map((route: Route) => route.assigned_trailer));
             
             trailerIds.forEach((id: string) => {if(id) {
                 getTrailerMakeModel(id)
             }});
                         
-            setSuggestedLoads(data || []);
+            setSuggestedRoutes(data || []);
         } catch (err) {
             console.error('Error fetching suggestions:', err);
             setError(err instanceof Error ? err.message : 'Failed to fetch loads');
-            setSuggestedLoads([]);
+            setSuggestedRoutes([]);
         } finally {
             setLoading(false);
         }
@@ -359,7 +408,7 @@ const handleGetSuggestions = async () => {
         }
     }
     
-    if (loading && suggestedLoads.length === 0) {
+    if (loading && suggestedRoutes.length === 0) {
         return (
             <div className="max-w-7xl mx-auto p-6 mt-4">
                 <div className="bg-gray-900 shadow rounded-lg overflow-hidden">
@@ -404,7 +453,7 @@ const handleGetSuggestions = async () => {
                     <thead className="bg-gray-800">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Load ID
+                                Route ID
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Suggested Driver
@@ -416,49 +465,38 @@ const handleGetSuggestions = async () => {
                                 Suggested Trailer
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Due Date
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 View Actions
                             </th>
                         </tr>
                     </thead>
                     <tbody className="bg-gray-900 divide-y divide-gray-400">
-                        {suggestedLoads.map((load) => (
-                            <tr key={load.id}>
+                        {suggestedRoutes.map((route) => (
+                            <tr key={route.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-400">{load.id}</div>
+                                    <div className="text-sm text-gray-400">{route.id}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm text-gray-400 hover:underline hover:cursor-pointer">
                                         <Link 
-                                            href={`/admin/users/${load.assigned_driver}`}
+                                            href={`/admin/users/${route.assigned_driver}`}
                                             className="group"
                                         >
                                             <span className='text-sm font-medium text-gray-300 hover:underline hover:cursor-pointer'>
-                                                {load.assigned_driver ? (driverNames[load.assigned_driver] || 'Assigning Driver...') : 'No Driver Assigned'}
+                                                {route.assigned_driver ? (driverNames[route.assigned_driver] || 'Assigning Driver...') : 'No Driver Assigned'}
                                             </span>
                                         </Link>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-400">{load.assigned_truck ? (trucks[load.assigned_truck] || 'Assigning Truck...'): 'No Truck Assigned'}</div>
+                                    <div className="text-sm text-gray-400">{route.assigned_truck ? (trucks[route.assigned_truck] || 'Assigning Truck...'): 'No Truck Assigned'}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-400">{load.assigned_trailer ? (trailers[load.assigned_trailer] || 'Assigning Trailer...'): 'No Trailer Assigned'}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-400">{(() => {
-                                            if (!load.due_by) return 'No due date';
-                                            const date = new Date(load.due_by);
-                                            if (isNaN(date.getTime())) return 'Invalid date';
-                                            return `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
-                                        })()}</div>
+                                    <div className="text-sm text-gray-400">{route.assigned_trailer ? (trailers[route.assigned_trailer] || 'Assigning Trailer...'): 'No Trailer Assigned'}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex flex-col space-y-2">
                                         <Link 
-                                            href={`/load/${load.id}`}
+                                            href={`/dispatcher/routes/${route.id}`}
                                             className="text-sm font-medium text-gray-300 hover:underline hover:cursor-pointer"
                                         >
                                             View
@@ -471,7 +509,7 @@ const handleGetSuggestions = async () => {
                 </table>
             </div>
             
-            {suggestedLoads.length === 0 && !loading && (
+            {suggestedRoutes.length === 0 && !loading && (
                 <div className='text-center py-8'>
                     <p className="text-gray-500 mt-2">No suggested loads found.</p>
                 </div>

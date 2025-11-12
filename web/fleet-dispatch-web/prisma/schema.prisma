@@ -36,6 +36,8 @@ model Driver {
   loads                   Load[]
   user                    User              @relation(fields: [id], references: [id], onUpdate: NoAction)
   trucks                  Truck?            @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
+
+  routes Route[]
 }
 
 model Week {
@@ -90,6 +92,8 @@ model Trailer {
   truck_id                  Truck?    @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   fleet                     Fleet?      @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction) 
 
+
+  routes Route[]
 }
 
 model Load {
@@ -129,6 +133,17 @@ model Route {
   totalDuration Float?
   isValid       Boolean?
   feasibilityScore  Float? 
+
+  assigned_driver   String?
+  assigned_truck    String?
+  assigned_trailer  String?
+  assigned_fleet    String?
+
+
+  truck            Truck?    @relation(fields: [assigned_truck], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  driver           Driver?   @relation(fields: [assigned_driver], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  trailer          Trailer?  @relation(fields: [assigned_trailer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fleet            Fleet?     @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model CustomerRequest {
@@ -148,6 +163,8 @@ model Fleet {
   Load Load[]
 
   Trailer Trailer[]
+
+  routes Route[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -180,6 +197,8 @@ model Truck {
   fleet   Fleet? @relation(fields: [assigned_fleet_id], references: [id], onDelete: NoAction)
 
 
+
+  routes Route[]
 }
 
 model Account {
