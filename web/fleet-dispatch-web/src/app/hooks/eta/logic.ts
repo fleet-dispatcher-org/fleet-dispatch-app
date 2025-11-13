@@ -15,7 +15,8 @@ class Driver {
   // age: number;
   id: string;
   //need to figure out how to add these together to get 70 hour total
-  //eight_day_total: {1: number, 2: number, 3: number, 4: number, 5: number, 6: number, 7: number, 8: number};
+  //frontmost number represents oldest day, so new days get appended to the end
+  eight_day_total: [number, number, number, number, number, number, number, number];
   total_70_hour: number;
   total_14_hour: number;
   total_11_hour: number;
@@ -26,11 +27,12 @@ class Driver {
   
 
   // Constructor
-  constructor(id: string, total_70_hour: number, total_14_hour: number, total_11_hour: number, total_8_hour: number, on_duty: number, off_duty: number) {
+  constructor(id: string, eight_day_total: [number, number, number, number, number, number, number, number], total_14_hour: number, total_11_hour: number, total_8_hour: number, on_duty: number, off_duty: number) {
     // this.name = name;
     // this.age = age;
     this.id = id;
-    this.total_70_hour = total_70_hour;
+    this.eight_day_total = eight_day_total;
+    this.total_70_hour = eight_day_total.reduce((sum, hrs) => sum + hrs, 0);;
     this.total_14_hour = total_14_hour;
     this.total_11_hour = total_11_hour;
     this.total_8_hour = total_8_hour;
@@ -50,6 +52,7 @@ function getDrivingTimeFromApi(): number {
   return 37;
  }
 
+ // potentially just get from like a datetime.now type thing
 function getStartingHoursFromApi(): number {
   // What hour is it according to military time?
   return 15;
@@ -85,7 +88,7 @@ function calcEta(driver: Driver, estimate: number, start_time: number): number {
       driver.on_duty = 0;
     }
 
-    //check if driver has time available on clocks; otherwise, add break time
+    // check if driver has time available on clocks; otherwise, add break time
 
     //if total is over 70, they have to stop
     if(driver.total_70_hour >= 70)
@@ -94,16 +97,46 @@ function calcEta(driver: Driver, estimate: number, start_time: number): number {
       let wait_hours = 24 - start_time;
       end_estimate += wait_hours;
       driver.off_duty = wait_hours;
+      //oldest day rolls off, hours get subtracted from total_70_hour
+      continue;
     }
+
+    if(driver.total_14_hour <= 0)
+    {
+      end_estimate += 10;
+      driver.off_duty = 10;
+      continue;
+    }
+
+    if(driver.total_8_hour <= 0)
+    {
+      end_estimate += .5;
+      driver.total_8_hour = 8;
+      driver.total_11_hour -= .5;
+      driver.total_14_hour -= .5;
+
+    }
+
+    //drive function?
+    //drive()
+
+
+    //only if there is no extenuating issues, then drive as long as you can before stopping
+    
+    
   }
 
   return end_estimate;
 }
 
+function drive() {
+
+}
+
 
 // Main
 function main() {
-  const newDriver: Driver = new Driver("12345", 45, 10, 11, 0, 11, 0);
+  const newDriver: Driver = new Driver("12345", [1,2,3,4,5,6,7,8], 10, 11, 0, 11, 0);
   let fake_estimate = 10;
   let start_time = 15.5; //in military, float hours for now
   //eventually take in variable from api on how long the original estimate 
