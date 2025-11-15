@@ -7,10 +7,13 @@ import { Suspense } from "react";
 import LoadStatusWrapper from "../../components/LoadStatusWrapper";
 import Link from "next/link";
 import AcceptDenyLoad from "../../components/AcceptDenyLoad";
-import AssignTruckWrapper from "../../components/AssignTruckWrapper";
 import AssignTrailerWrapper from "../../components/AssignTrailerWrapper";
 import RoutePath from "../../components/RoutePath";
 import AssignDriverRouteWrapper from "../../components/AssignDriverRouteWrapper";
+import AssignTruckRouteWrapper from "../../components/AssignTruckRouteWrapper";
+import AssignTrailerRouteWrapper from "../../components/AssignTrailerRouteWrapper";
+import RouteStatusWrapper from "../../components/RouteStatusWrapper";
+import AcceptDenyRoute from "../../components/AcceptDenyRoute";
 
 
 interface RouteViewProps {
@@ -207,7 +210,7 @@ export default async function Page({ params }: RouteViewProps) {
                             </div>
                             <h3 className="text-lg font-semibold text-gray-400">Truck</h3>
                         </div>
-                        <AssignTruckWrapper loadId={load.id} assignedTruck={assigned_truck}></AssignTruckWrapper>
+                        <AssignTruckRouteWrapper routeId={route.id} assignedTruck={assigned_truck} />
                     </div>
 
                     {/* Trailer Card */}
@@ -220,7 +223,7 @@ export default async function Page({ params }: RouteViewProps) {
                             </div>
                             <h3 className="text-lg font-semibold text-gray-400">Trailer</h3>
                         </div>
-                        <AssignTrailerWrapper loadId={load.id} assignedTrailer={assigned_trailer}></AssignTrailerWrapper>
+                        <AssignTrailerRouteWrapper routeId={route.id} assignedTrailer={assigned_trailer} />
                     </div>
                 </div>
 
@@ -228,72 +231,28 @@ export default async function Page({ params }: RouteViewProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     {/* Weight/Capacity Card */}
                     <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
-                        <h3 className="text-lg font-semibold text-gray-400 mb-4">Load Capacity</h3>
+                        <h3 className="text-lg font-semibold text-gray-400 mb-4">Route Criteria</h3>
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">Current Weight:</span>
-                                <span className="text-lg font-bold text-gray-400">{serializedLoad.weight.toLocaleString()} lbs</span>
+                                <span className="text-gray-600">Feasibility Score:</span>
+                                <span className="text-lg font-bold text-gray-400">{route.feasibilityScore} lbs</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">Max Capacity:</span>
+                                <span className="text-gray-600">Total Cost:</span>
                                 <span className="text-lg font-bold text-gray-400">
-                                    {assigned_trailer?.max_cargo_capacity?.toLocaleString() || "N/A"} lbs
+                                    {route.totalCost || "N/A"}
                                 </span>
                             </div>
-                            {assigned_trailer?.max_cargo_capacity && (
-                                <div className="mt-4">
-                                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                        <span>Capacity Usage</span>
-                                        <span>{Math.round((serializedLoad.weight / serializedTrailer.max_cargo_capacity) * 100)}%</span>
-                                    </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                        <div 
-                                            className="h-2 rounded-full transition-all duration-300"
-                                            style={{ 
-                                                width: `${Math.min((serializedLoad.weight / serializedTrailer.max_cargo_capacity) * 100, 100)}%`,
-                                                backgroundColor: (() => {
-                                                    const percentage = (serializedLoad.weight / serializedTrailer.max_cargo_capacity) * 100;
-                                                    if (percentage >= 90) return '#dc2626'; // Red (near overweight)
-                                                    if (percentage >= 80) return '#ea580c'; // Orange-red
-                                                    if (percentage >= 70) return '#f59e0b'; // Orange
-                                                    if (percentage >= 50) return '#eab308'; // Yellow
-                                                    if (percentage >= 30) return '#84cc16'; // Light green
-                                                    return '#22c55e'; // Green (light load)
-                                                })()
-                                            }}
-                                        ></div>
-                                    </div>
-                                </div>
-                            )}
+                            
                         </div>
                     </div>
 
                     {/* Timeline Card */}
                     <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
-                        <h3 className="text-lg font-semibold text-gray-400 mb-4">Schedule</h3>
+                        <h3 className="text-lg font-semibold text-gray-400 mb-4">Route Status</h3>
                         <div className="space-y-3">
                             <div className="flex items-center space-x-3">
-                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-400">Pickup Complete</p>
-                                    <p className="text-xs text-gray-500">From {load.origin}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center space-x-3">
-                                <div className={`w-3 h-3 rounded-full ${load.percent_complete >= 50 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-400">In Transit</p>
-                                    <p className="text-xs text-gray-500">En route to destination</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center space-x-3">
-                                <div className={`w-3 h-3 rounded-full ${load.percent_complete === 100 ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-400">Delivery</p>
-                                    <p className="text-xs text-gray-500">
-                                        Due: {`${load.due_by.getUTCMonth() + 1}/${load.due_by.getUTCDate()}/${load.due_by.getUTCFullYear()}`}
-                                    </p>
-                                </div>
+                                <RouteStatusWrapper routeId={route.id} />
                             </div>
                         </div>
                     </div>
@@ -306,20 +265,10 @@ export default async function Page({ params }: RouteViewProps) {
 
                 </div>
 
-                {/* Load Status Section */}
-                <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
-                    <h3 className="text-lg font-semibold text-gray-400 mb-4">Load Status Updates</h3>
-                    <Suspense fallback={
-                        <div className="flex items-center justify-center py-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                        </div>
-                    }>
-                        <LoadStatusWrapper loadId={load.id} />
-                    </Suspense>
-                </div>
-                {/* Accept/Deny Load Section */}
-                { load.status === "SUGGESTED" &&
-                    <AcceptDenyLoad loadId={load.id} driverId={load.assigned_driver!} trailerId={load.assigned_trailer!} truckId={load.assigned_truck!}></AcceptDenyLoad>
+               
+                { route.status === "SUGGESTED" &&
+                    <AcceptDenyRoute routeId={route.id} driverId={route.assigned_driver!} 
+                    trailerId={route.assigned_trailer!} truckId={route.assigned_truck!} />
                 }
                 <Link 
                     href={`/dispatcher`}

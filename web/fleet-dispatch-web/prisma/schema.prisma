@@ -109,7 +109,6 @@ model Load {
   assigned_trailer String?
   assigned_truck   String?
   assigned_by      String?
-  route_id         String?
   percent_complete Int       @default(0)
   is_active        Boolean   @default(true)
   assigned_fleet   String?
@@ -122,12 +121,25 @@ model Load {
   trailer          Trailer?  @relation(fields: [assigned_trailer], references: [id], onDelete: NoAction, onUpdate: NoAction)
   fleet            Fleet?     @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction, onUpdate: NoAction)
   dispatcher       User?      @relation(fields: [assigned_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  routes           Route[]
+  routes           RouteLoad[]
+}
+
+model RouteLoad {
+  id        String   @id @default(cuid())
+  routeId   String
+  loadId    String
+  order     Int?     // Optional: if you want to track order of loads in route
+  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  load      Load     @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  
+  @@unique([routeId, loadId])
+  @@index([routeId])
+  @@index([loadId])
 }
 
 model Route {
   id            String @id @default(cuid())
-  loads         Load[]
+  loads         RouteLoad[]
   totalCost     Float?
   totalDistance Float? 
   totalDuration Float?

@@ -500,7 +500,7 @@ const handleGetSuggestions = async () => {
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex flex-col space-y-2">
                                         <Link 
-                                            href={`/dispatcher/routes/${route.id}`}
+                                            href={`/routes/${route.id}`}
                                             className="text-sm font-medium text-gray-300 hover:underline hover:cursor-pointer"
                                         >
                                             View
