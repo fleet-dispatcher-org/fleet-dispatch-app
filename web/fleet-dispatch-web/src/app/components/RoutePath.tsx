@@ -4,6 +4,7 @@ import { Reorder } from "motion/react";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Route, Truck, Driver, Trailer, Load } from "@prisma/client";
+import Link from "next/link";
 
 export default function RoutePath({ routeId }: { routeId: string }) {
     const { data: session } = useSession();
@@ -73,29 +74,34 @@ export default function RoutePath({ routeId }: { routeId: string }) {
 
     return (
         <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
-            <div className="flex flex-row items-center justify-center space-x-4">
-                <Reorder.Group axis="x" values={loads} onReorder={setLoads}>
-                    {loads.map((load: Load, index: number) => (
-                        <Reorder.Item value={load} key={load.id}>
+            <div className="flex flex-col justify-center space-x-4">
+                <p className="text-gray-400 text-2xl p-2 align-middle">Route Management:</p>
+                <Reorder.Group values={loads} onReorder={setLoads} className="flex flex-row flex-wrap justify-center">
+                    {/* For some reason, you have to use load.load to actually get into the load object. Not sure why but it works */}
+                    {loads.map((load: any, index: number) => (
+                        <Reorder.Item draggable drag={true} value={load} key={load.id} className="mx-2 p-4 border
+                         border-gray-600 rounded-2xl mb-2">
                             <div className="flex flex-col items-center justify-center space-y-2">
                                 <div className="flex flex-row items-center justify-center">
-                                    <div className="text-lg font-bold">
+                                    <Link href={`/load/${load.load.id}`}>
+                                    <div className="text-sm font-bold">
                                         <p>Load {index + 1}</p>
                                     </div>
-                                    <div className="text-lg font-bold">
+                                    </Link>
+                                    <div className="text-sm font-bold">
                                         <button>X</button>
                                     </div>
                                 </div>
                                 <br />
                                 <div className="flex flex-row items-center justify-center">
-                                    <p>{load.origin}</p>
+                                    <p>{load.load.origin}</p>
                                     <p className="mx-2">to</p>
-                                    <p>{load.destination}</p>
+                                    <p>{load.load.destination}</p>
                                 </div>
                                 <div className="flex flex-row items-center justify-center">
-                                    <p>{new Date(load.pick_up_by).toLocaleDateString()}</p>
+                                    <p>{new Date(load.load.pick_up_by).toLocaleDateString()}</p>
                                     <p className="mx-2">&rarr;</p>
-                                    <p>{new Date(load.due_by).toLocaleDateString()}</p>
+                                    <p>{new Date(load.load.due_by).toLocaleDateString()}</p>
                                 </div>
                                 <div className="flex flex-col">
                                     <p>{load.status}</p>

@@ -16,7 +16,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         const { routeId } = await params;
-        const route = await prisma.route.findUnique({ where: { id: routeId } });
+        const route = await prisma.route.findUnique({ 
+            where: { 
+                id: routeId },
+            include: {
+                loads: {
+                    include: {
+                        load: true
+                    },
+                    orderBy: {
+                        order: 'asc'
+                    }
+                },
+            } });
         return NextResponse.json(route);
     } catch (error) {
         console.error(error);

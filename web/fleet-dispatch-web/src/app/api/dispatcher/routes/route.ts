@@ -11,7 +11,7 @@ export async function GET(request: Request) {
         
         const routes = await prisma.route.findMany({
             include: {
-                routeLoads: {
+                loads: {
                     include: {
                         load: true
                     },
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
         // Transform to include loads directly
         const routesWithLoads = routes.map(route => ({
             ...route,
-            loads: route.routeLoads.map(rl => rl.load)
+            loads: route.loads.map(rl => rl.load)
         }));
 
         return NextResponse.json(routesWithLoads);
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
                 assigned_driver: body.assigned_driver,
                 assigned_truck: body.assigned_truck,
                 assigned_trailer: body.assigned_trailer,
-                routeLoads: {
+                loads: {
                     create: body.loads.map((load: { id: string }, index: number) => ({
                         loadId: load.id,
                         order: index  // Optional: preserves the order of loads
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
                 }
             },
             include: { 
-                routeLoads: {
+                loads: {
                     include: {
                         load: true  // Include the actual load data
                     },
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
         // Transform the response to match your expected format
         const routeWithLoads = {
             ...newRoute,
-            loads: newRoute.routeLoads.map(rl => rl.load)
+            loads: newRoute.loads.map(rl => rl.load)
         };
 
         return NextResponse.json(routeWithLoads);

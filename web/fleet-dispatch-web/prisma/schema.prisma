@@ -128,7 +128,7 @@ model RouteLoad {
   id        String   @id @default(cuid())
   routeId   String
   loadId    String
-  order     Int?     // Optional: if you want to track order of loads in route
+  order     Int?     // Track order of Loads in Route
   route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
   load      Load     @relation(fields: [loadId], references: [id], onDelete: Cascade)
   
