@@ -49,9 +49,7 @@ export async function POST(request: Request) {
         // Create the route with the loads through the join table
         const newRoute = await prisma.route.create({ 
             data: { 
-                assigned_driver: body.assigned_driver,
-                assigned_truck: body.assigned_truck,
-                assigned_trailer: body.assigned_trailer,
+                ...body,
                 loads: {
                     create: body.loads.map((load: { id: string }, index: number) => ({
                         loadId: load.id,

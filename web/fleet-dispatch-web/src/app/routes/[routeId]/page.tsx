@@ -30,8 +30,6 @@ export default async function Page({ params }: RouteViewProps) {
     else if (session?.user === undefined) return <div>Loading...</div>;
 
     const { routeId } = await params;
-    console.log("Params: ", params);
-    console.log("Load ID:", routeId);
 
     // async function assignDriver(loadId: string, driverId: string) {
     //     try {
@@ -235,12 +233,12 @@ export default async function Page({ params }: RouteViewProps) {
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-600">Feasibility Score:</span>
-                                <span className="text-lg font-bold text-gray-400">{route.feasibilityScore} lbs</span>
+                                <span className="text-lg font-bold text-gray-400">{route.feasibilityScore}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-600">Total Cost:</span>
                                 <span className="text-lg font-bold text-gray-400">
-                                    {route.totalCost || "N/A"}
+                                    {route.totalCost?.toFixed(2) || "N/A"}
                                 </span>
                             </div>
                             

@@ -4,7 +4,7 @@ import { Trailer, Load, Driver, Truck, Route } from "@prisma/client";
 import Link from 'next/link';
 import { RoutePlanner } from '../hooks/routePlanner';
 import { RoutePlannerContext, TreeBasedAssignment, RouteNode } from '../hooks/routePlanner';
-import { clear } from 'console';
+import { useSession } from 'next-auth/react';
 
 
 export default function AIBoard() {
@@ -17,6 +17,7 @@ export default function AIBoard() {
     const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
     const [clearingSuggestions, setClearingSuggestions] = useState(false);
     const url = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const { data: session } = useSession();
 
     useEffect(() => {
         // Only load existing suggestions on mount, don't automatically generate new ones
@@ -230,6 +231,12 @@ const makeSuggestionsParallel = async () => {
 
             const validLoads = assigned_loads.filter((load: Load) => !load.id.includes('current_'));
 
+            const totalCost = suggestion.primaryRoute.totalCost;
+
+            const totalDistance = suggestion.primaryRoute.totalDistance;
+
+            const feasibilityScore = suggestion.primaryRoute.feasibilityScore;
+
             // Deduplicate by ID
             const uniqueLoads = validLoads.filter((load, index, self) => 
                 index === self.findIndex((l) => l.id === load.id)
@@ -239,6 +246,10 @@ const makeSuggestionsParallel = async () => {
             console.log("Valid load IDs:", validLoads.map(load => load.id));
             console.log("Unique loads:", uniqueLoads.length);
             console.log("Unique load IDs:", uniqueLoads.map(load => load.id));
+
+            console.log("Total Distance: ", totalDistance);
+            console.log("Total Cost: ", totalCost);
+            console.log("Feasibility Score: ", feasibilityScore);
 
             uniqueLoads.forEach((load: Load) => {
                 allApiCalls.push(fetch(`${url}/api/dispatcher/${load.id}`, {
@@ -250,6 +261,8 @@ const makeSuggestionsParallel = async () => {
                         assigned_driver,
                         assigned_truck,
                         assigned_trailer,
+                        status: 'SUGGESTED',
+                        assigned_by: session?.user?.id
                     }),
                 }));
             });
@@ -264,6 +277,9 @@ const makeSuggestionsParallel = async () => {
                     assigned_truck: assigned_truck,
                     assigned_trailer: assigned_trailer,
                     loads: uniqueLoads.map(load => ({ id: load.id })),
+                    totalCost: totalCost as number,
+                    totalDistance: totalDistance as number,
+                    feasibilityScore: feasibilityScore as number
                 })
             })))
             

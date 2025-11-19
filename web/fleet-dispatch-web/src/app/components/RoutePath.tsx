@@ -5,6 +5,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Route, Truck, Driver, Trailer, Load } from "@prisma/client";
 import Link from "next/link";
+import LoadStatusWrapper from "./LoadStatusWrapper";
+import LoadStatusClient from "./LoadStatusClient";
 
 export default function RoutePath({ routeId }: { routeId: string }) {
     const { data: session } = useSession();
@@ -88,7 +90,7 @@ export default function RoutePath({ routeId }: { routeId: string }) {
                                         <p>Load {index + 1}</p>
                                     </div>
                                     </Link>
-                                    <div className="text-sm font-bold">
+                                    <div className="text-sm font-bold justify-end">
                                         <button>X</button>
                                     </div>
                                 </div>
@@ -104,7 +106,7 @@ export default function RoutePath({ routeId }: { routeId: string }) {
                                     <p>{new Date(load.load.due_by).toLocaleDateString()}</p>
                                 </div>
                                 <div className="flex flex-col">
-                                    <p>{load.status}</p>
+                                    <LoadStatusClient loadId={load.load.id} initialStatus={load.load.status} />
                                 </div>
                             </div>
                         </Reorder.Item>
