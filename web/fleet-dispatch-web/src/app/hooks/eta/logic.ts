@@ -32,7 +32,7 @@ class Driver {
     // this.age = age;
     this.id = id;
     this.eight_day_total = eight_day_total;
-    this.total_70_hour = eight_day_total.reduce((sum, hrs) => sum + hrs, 0);;
+    this.total_70_hour = eight_day_total.reduce((sum, hrs) => sum + hrs, 0);
     this.total_14_hour = total_14_hour;
     this.total_11_hour = total_11_hour;
     this.total_8_hour = total_8_hour;
@@ -52,20 +52,21 @@ function getDrivingTimeFromApi(): number {
   return 37;
  }
 
- // potentially just get from like a datetime.now type thing
-function getStartingHoursFromApi(): number {
-  // What hour is it according to military time?
-  return 15;
- }
+ // manually input for now- it will dictate how long the driver must wait if they hit their 70 max
+// function getStartingHoursFromApi(): number {
+//   // What hour is it according to military time?
+//   return 15;
+//  }
 
 // Calculate ETA
 function calcEta(driver: Driver, estimate: number, start_time: number): number {
   let end_estimate = estimate;
   let remaining_time = estimate;
   //I think we need to use the time the driver will start rather than time right now
-  // let current_time = Date.now.toString();
+  //let start_time = getStartingHoursFromApi();
 
   //start while loop that will iterate until there is no time left to drive
+  //MAKE SURE off_duty is getting reset so it's not incorrect with every iteration
 
   while (remaining_time > 0)
   {
@@ -97,11 +98,28 @@ function calcEta(driver: Driver, estimate: number, start_time: number): number {
       let wait_hours = 24 - start_time;
       end_estimate += wait_hours;
       driver.off_duty = wait_hours;
+      driver.on_duty = 0;
+
+      //if wait_hours are big enough, some values will get reset
+      //duplicate of code just above- way to simplify??
+      if (wait_hours >= 10)
+      {
+        driver.total_14_hour = 14;
+        driver.total_11_hour = 11;
+        driver.total_8_hour = 8;
+        driver.on_duty = 0;
+      }
+
       //oldest day rolls off, hours get subtracted from total_70_hour
+      let updated_days = [...driver.eight_day_total.slice(1), 0];
+      driver.eight_day_total = updated_days as [number, number, number, number, number, number, number, number];
+      driver.total_70_hour = driver.eight_day_total.reduce((sum, hrs) => sum + hrs, 0);
       continue;
     }
 
-    if(driver.total_14_hour <= 0)
+    
+    //if driver is empty on one of their clocks, they have to take a break
+    if(driver.total_14_hour <= 0 || driver.total_11_hour <= 0)
     {
       end_estimate += 10;
       driver.off_duty = 10;
@@ -114,14 +132,11 @@ function calcEta(driver: Driver, estimate: number, start_time: number): number {
       driver.total_8_hour = 8;
       driver.total_11_hour -= .5;
       driver.total_14_hour -= .5;
-
     }
 
-    //drive function?
-    //drive()
-
-
     //only if there is no extenuating issues, then drive as long as you can before stopping
+    //meaning: if you hit your limit for ANY clock, that's the maximum amount of time you can drive
+    //when driving happens, set off_duty hours to equal 0
     
     
   }
@@ -129,9 +144,10 @@ function calcEta(driver: Driver, estimate: number, start_time: number): number {
   return end_estimate;
 }
 
-function drive() {
+// decided for now that this was not needed
+// function drive() {
 
-}
+// }
 
 
 // Main
