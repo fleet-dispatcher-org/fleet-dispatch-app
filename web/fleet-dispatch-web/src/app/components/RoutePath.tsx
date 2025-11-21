@@ -3,9 +3,8 @@
 import { Reorder } from "motion/react";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Route, Truck, Driver, Trailer, Load } from "@prisma/client";
+import { Load } from "@prisma/client";
 import Link from "next/link";
-import LoadStatusWrapper from "./LoadStatusWrapper";
 import LoadStatusClient from "./LoadStatusClient";
 
 export default function RoutePath({ routeId }: { routeId: string }) {
@@ -74,6 +73,16 @@ export default function RoutePath({ routeId }: { routeId: string }) {
         );
     }
 
+    if (session?.user?.id != loads.at(0)?.assigned_driver && session?.user?.role != "ADMIN" && session?.user?.role != "DISPATCHER") {
+        return (
+            <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
+                <div className="flex items-center justify-center">
+                    <p className="text-gray-400">You are not permitted to view this route</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
             <div className="flex flex-col justify-center space-x-4">
@@ -83,10 +92,10 @@ export default function RoutePath({ routeId }: { routeId: string }) {
                     {loads.map((load: any, index: number) => (
                         <Reorder.Item draggable drag={true} value={load} key={load.id} className="mx-2 p-4 border
                          border-gray-600 rounded-2xl mb-2">
-                            <div className="flex flex-col items-center justify-center space-y-2">
-                                <div className="flex flex-row items-center justify-center">
+                            <div className="flex flex-col justify-between space-y-2">
+                                <div className="flex flex-row text-gray-400 justify-between">
                                     <Link href={`/load/${load.load.id}`}>
-                                    <div className="text-sm font-bold">
+                                    <div className="text-sm text-gray-400 font-bold">
                                         <p>Load {index + 1}</p>
                                     </div>
                                     </Link>
@@ -95,7 +104,7 @@ export default function RoutePath({ routeId }: { routeId: string }) {
                                     </div>
                                 </div>
                                 <br />
-                                <div className="flex flex-row items-center justify-center">
+                                <div className="flex flex-row items-center text-gray-300 justify-center">
                                     <p>{load.load.origin}</p>
                                     <p className="mx-2">to</p>
                                     <p>{load.load.destination}</p>

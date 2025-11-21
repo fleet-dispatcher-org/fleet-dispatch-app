@@ -141,15 +141,6 @@ export default async function Page({ params }: RouteViewProps) {
         return notFound();
     }
     
-    const serializedTrailer = assigned_trailer ? {
-    ...assigned_trailer,
-    max_cargo_capacity: assigned_trailer.max_cargo_capacity?.toNumber() || 0,
-    current_cargo_weight: assigned_trailer.current_cargo_weight?.toNumber() || 0,
-} : {
-    max_cargo_capacity: 0,
-    current_cargo_weight: 0,
-    // add other default properties as needed
-};
     return ( 
         <div className="min-h-screen bg-black">
             {/* Header */}
@@ -233,7 +224,7 @@ export default async function Page({ params }: RouteViewProps) {
                         <div className="space-y-3">
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-600">Feasibility Score:</span>
-                                <span className="text-lg font-bold text-gray-400">{route.feasibilityScore}</span>
+                                <span className="text-lg font-bold text-gray-400">{route.feasibilityScore} / 1000</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-600">Total Cost:</span>
@@ -258,11 +249,6 @@ export default async function Page({ params }: RouteViewProps) {
 
                     </div>
                 </div>
-
-                <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
-
-                </div>
-
                
                 { route.status === "SUGGESTED" &&
                     <AcceptDenyRoute routeId={route.id} driverId={route.assigned_driver!} 
@@ -272,7 +258,8 @@ export default async function Page({ params }: RouteViewProps) {
                     href={`/dispatcher`}
                     className="group"
                 >
-                <p className="text-sm font-medium text-gray-400 hover:text-gray-200 hover:underline transition-colors duration-300" >Back to Loads &rarr;</p>
+                <p className="text-sm font-medium text-gray-400 hover:text-gray-200 
+                hover:underline transition-colors duration-300" >Back to Loads &rarr;</p>
                 </Link>
                 
                 
