@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import Papa from "papaparse";
 import { set } from "zod";
+import { send } from "process";
 
 export default function BatchUploadHandler() {
     const [file, setFile] = useState<File | undefined>(undefined);
@@ -12,38 +13,77 @@ export default function BatchUploadHandler() {
     const [loading, setLoading] = useState<boolean>(false);
     const [columns, setColumns] = useState<string[][]>([]);
     const [values, setValues] = useState<string[][]>([]);
+    const [editingCell, setEditingCell] = useState<{row: number, col: number} | null>(null);
     
     async function handleOnSubmit(e: React.SyntheticEvent) {
         e.preventDefault();
+
+        console.log("Submitting file:", file);
+
+        if (!file) {
+            console.error("No file selected");
+            return;
+        }
+
+        if (file) {
+            Papa.parse(file, {
+                header: true,
+                complete: function(results: any, file: File) {
+                    const newColumns = [];
+                    const newValues: ((prevState: string[][]) => string[][]) | unknown[][] = [];
+                    console.log("Parsing complete:", results);
+                    setData(results.data);
+                    console.log("Results Data:", results.data);
+                    results.data[0] && newColumns.push(Object.keys(results.data[0]));
+                    setColumns(newColumns);
+                    results.data.map((row: any) => {
+                        newValues.push(Object.values(row));
+                    });
+                    setValues(newValues as string[][]);
+                }
+            });
+            console.log("Parsed Data:", data);
+            setIsOpen(true);
+            setLoading(false);
+
+            console.log("Columns:", columns);
+            console.log("Values:", values);
+        }
 
     }
 
     async function handleOnChange(e: React.FormEvent<HTMLInputElement>) {
         const target = e.target as HTMLInputElement & { files: FileList | null };
 
+        // console.log(target.files);
+
         setFile(target.files ? target.files[0] : undefined);
+    }
 
-        if (target.files && target.files[0]) {
-            Papa.parse(target.files[0], {
-                header: true,
-                complete: function(results: { data: any; }) {
-                    const columns = [];
-                    const values = [];
-                    setData(results.data);
+    async function handleCellClick(rowIndex: number, colIndex: number) {
+        setEditingCell({ row: rowIndex, col: colIndex });
+    }
 
-                    results.data.map((row: any) => {
-                        columns.push(Object.keys(row));
-                        values.push(Object.values(row));
-                    });
-                }
-            });
+    async function handleCellChange(rowIndex: number, colIndex: number, newValue: string) {
+        const newValues = [...values];
+        newValues[rowIndex][colIndex] = newValue;
+        setValues(newValues);
+    }
 
-            setData(data);
-            setIsOpen(true);
-            setLoading(false);
-            setColumns(columns);
-            setValues(values);
+    async function handleCellBlur() {
+        setEditingCell(null);
+    }
+
+    async function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number, colIndex: number) {
+        if (e.key === 'Enter') {
+            setEditingCell(null);
+        } else if (e.key === 'Escape') {
+            setEditingCell(null);
         }
+    }
+
+    async function sendToDatabase() {
+        // Implement database sending logic here
     }
     
     return (
@@ -58,8 +98,72 @@ export default function BatchUploadHandler() {
                     </div>
                     <h3 className="text-xl font-bold text-gray-400">Upload a CSV File</h3>
                 </div>
-                <input type="file" accept=".csv" name="batch" onChange={handleOnChange}></input>
+                
+                <div className="flex flex-col items-center justify-center space-x-3 mb-8">
+                    <div>
+                        <label htmlFor="batch" className="cursor-pointer"> <Plus size={32} /></label>
+                        <input type="file" accept=".csv" name="batch" id="batch" onChange={handleOnChange}></input>
+                        <button onClick={handleOnSubmit} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded mt-4">
+                            Upload
+                        </button>
+                    </div>
+                </div>
+                
             </div>
+            {isOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm z-50 items-center justify-center p-4">
+                    <div className="flex flex-row justify-between items-center mb-4">
+                        <h4 className="text-lg font-semibold text-gray-300 mb-4">Parsed CSV Data Preview (Click cells to edit)</h4>
+                        <div className="flex gap-4">
+                            <button 
+                                onClick={sendToDatabase}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
+                            >
+                                Save info
+                            </button>
+                            <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setIsOpen(false)}>X</h4>
+                        </div>
+                    </div>
+                    <div className="overflow-scroll max-h-[80vh] max-w-full" onClick={(e) => e.stopPropagation()}>
+                        <table className="min-w-full bg-gray-900 border border-gray-700 scroll-auto">
+                            <thead>
+                                <tr>
+                                    {columns[0] && columns[0].map((col, index) => (
+                                        <th key={index} className="px-4 py-2 border-b border-gray-700 text-left text-gray-400">{col}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {values.map((row, rowIndex) => (
+                                    <tr key={rowIndex} className="hover:bg-gray-800">
+                                        {row.map((cell, colIndex) => (
+                                            <td 
+                                                key={colIndex} 
+                                                className="px-4 py-2 border-b border-gray-700 text-left text-gray-400 cursor-pointer"
+                                                onClick={() => handleCellClick(rowIndex, colIndex)}
+                                            >
+                                                {editingCell?.row === rowIndex && editingCell?.col === colIndex ? (
+                                                    <input
+                                                        type="text"
+                                                        value={cell}
+                                                        onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
+                                                        onBlur={handleCellBlur}
+                                                        onKeyDown={(e) => handleKeyDown(e, rowIndex, colIndex)}
+                                                        autoFocus
+                                                        className="w-full bg-gray-800 text-gray-200 px-2 py-1 rounded border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                ) : (
+                                                    <span className="hover:bg-gray-700 px-2 py-1 rounded block">{cell}</span>
+                                                )}
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

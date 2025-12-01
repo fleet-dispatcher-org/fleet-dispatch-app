@@ -23,7 +23,7 @@ export default function Dispatcher() {
       {/* <AlgorithmBoard/> */}
       <RouteBoard />
     <UnassignedBoardMini/>
-    {/* <BatchUploadHandler /> */}
+    <BatchUploadHandler />
     <CreateLoadCard/>
       <div className="flex flex-row">
         <div>
