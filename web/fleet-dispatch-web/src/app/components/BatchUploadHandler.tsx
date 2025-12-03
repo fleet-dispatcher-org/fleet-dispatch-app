@@ -3,8 +3,7 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import Papa from "papaparse";
-import { set } from "zod";
-import { send } from "process";
+import { Driver, User } from "@prisma/client";
 
 export default function BatchUploadHandler() {
     const [file, setFile] = useState<File | undefined>(undefined);
@@ -14,6 +13,14 @@ export default function BatchUploadHandler() {
     const [columns, setColumns] = useState<string[][]>([]);
     const [values, setValues] = useState<string[][]>([]);
     const [editingCell, setEditingCell] = useState<{row: number, col: number} | null>(null);
+    const [userInfo, setUserInfo] = useState<any[]>([]);
+    const [selecting, setSelecting] = useState<boolean>(false);
+    const [userColumns, setUserColumns] = useState<string[]>([]);
+    const [userOpen, setUserOpen] = useState<boolean>(false);
+    const [truckOpen, setTruckOpen] = useState<boolean>(false);
+
+    const EXPECTED_USER_COLUMNS = ['name', 'email'];
+    const EXPECTED_TRUCK_COLUMNS = ['license_plate', 'make', 'model', 'year', 'current_location', 'next_maintenance_date'];
     
     async function handleOnSubmit(e: React.SyntheticEvent) {
         e.preventDefault();
@@ -54,9 +61,8 @@ export default function BatchUploadHandler() {
 
     async function handleOnChange(e: React.FormEvent<HTMLInputElement>) {
         const target = e.target as HTMLInputElement & { files: FileList | null };
-
+        const display = target.getAttribute("className")
         // console.log(target.files);
-
         setFile(target.files ? target.files[0] : undefined);
     }
 
@@ -85,6 +91,29 @@ export default function BatchUploadHandler() {
     async function sendToDatabase() {
         // Implement database sending logic here
     }
+
+    async function selectInfo(e: React.MouseEvent<HTMLButtonElement>) {
+        setSelecting(true);
+        const value = e.currentTarget.textContent
+        console.log(value);
+        switch (value) {
+            case "User":
+                setUserOpen(true);
+                break;
+            case "Truck":
+                setTruckOpen(true);
+                break;
+            case "Trailer":
+                // setTrailerOpen(true);
+                break;
+            default:
+                break;
+         }
+    }
+
+    function toTitleCase(str: string): string {
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
     
     return (
         <div className="max-w-4xl mx-auto p-6">
@@ -99,12 +128,13 @@ export default function BatchUploadHandler() {
                     <h3 className="text-xl font-bold text-gray-400">Upload a CSV File</h3>
                 </div>
                 
-                <div className="flex flex-col items-center justify-center space-x-3 mb-8">
-                    <div>
-                        <label htmlFor="batch" className="cursor-pointer"> <Plus size={32} /></label>
-                        <input type="file" accept=".csv" name="batch" id="batch" onChange={handleOnChange}></input>
-                        <button onClick={handleOnSubmit} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded mt-4">
-                            Upload
+                <div className="flex flex-row items-center justify-center space-x-3 mb-8">
+                    <div className="flex flex-col items-center gap-4 justify-center">
+                        <label htmlFor="batch" className="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 hover:text-white hover:cursor-pointer p-6 rounded-lg font-semibold text-xl transition-colors duration-300 flex items-center justify-center mx-auto"> <Plus size={32} /></label>
+                        <input type="file" accept=".csv" name="batch" id="batch" onChange={handleOnChange} className="hidden" />
+                        <span className="text-gray-400 italic text-sm"> {file ? `File selected: ${file.name}` : ""}</span>
+                        <button onClick={handleOnSubmit} hidden={!file} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded mt-4">
+                            View
                         </button>
                     </div>
                 </div>
@@ -119,7 +149,7 @@ export default function BatchUploadHandler() {
                                 onClick={sendToDatabase}
                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
                             >
-                                Save info
+                                Add to Board
                             </button>
                             <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setIsOpen(false)}>X</h4>
                         </div>
@@ -162,7 +192,46 @@ export default function BatchUploadHandler() {
                             </tbody>
                         </table>
                     </div>
+                    <div className="flex flex-row justify-beginning mt-4 gap-4">
+                        <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium" onClick={selectInfo}>User</button>
+                        <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium" onClick={selectInfo}>Truck</button>
+                    </div>
+                    {userOpen && (
+                        <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-3xl w-full">
+                                <div className="flex flex-row justify-between items-center mb-4">
+                                    <h4 className="text-lg font-semibold text-gray-300 mb-4">Select Column to Map</h4>
+                                    <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setUserOpen(false)}>X</h4>
+                                </div>
+                                <div>
+                                    {EXPECTED_USER_COLUMNS.map((column, index) => (
+                                        <div key={index} className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2">
+                                            {toTitleCase(column)}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {truckOpen && (
+                        <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-3xl w-full">
+                                <div className="flex flex-row justify-between items-center mb-4">
+                                    <h4 className="text-lg font-semibold text-gray-300 mb-4">Select Column to Map</h4>
+                                    <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setTruckOpen(false)}>X</h4>
+                                </div>
+                                <div>
+                                    {EXPECTED_TRUCK_COLUMNS.map((column, index) => (
+                                        <div key={index} className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2">
+                                            {toTitleCase(column)}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
+                
             )}
         </div>
     )
