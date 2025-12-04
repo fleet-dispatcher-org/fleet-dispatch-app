@@ -58,7 +58,7 @@ model Week {
   day_5_stop              String?
   day_6_stop              String?
   day_7_stop              String?
-
+  current_70_total        Int?    @default(70)
 
   userId                String
   user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -76,13 +76,19 @@ model Trailer {
   make                      String    @db.VarChar(20)
   model                     String    @db.VarChar(20)
   year                      Int?
+  trailer_vessel_type        String?   @db.VarChar(20)
+  trailer_door_type          String?   @db.VarChar(20)
+  specialized_equipment_quantity     Int?
+  specialized_equipment_list String[] 
   max_cargo_capacity        Decimal?  @db.Decimal(7, 2)
   current_cargo_weight      Decimal?  @db.Decimal(7, 2)
   license_plate             String?   @db.VarChar(20)
   registration_expiry       DateTime? @db.Date
   last_inspection_date      DateTime? @db.Date
-  next_inspection_due       DateTime? @db.Date
-  trailer_status            Availability_Status @default(AVAILABLE)
+  next_inspection_date       DateTime? @db.Date
+  next_admin_date           DateTime? @db.Date
+  trailer_loaded_status     BigInt? 
+  trailer_admin_designator   BigInt?
   required_permits          String[]
   assigned_fleet            String? 
   insurance_valid           Boolean?
@@ -204,6 +210,8 @@ model Truck {
   required_certs   Json? 
   created_at       DateTime? @default(now()) @db.Timestamp(6)
   next_maintenance_date DateTime?
+  next_admin_date       DateTime?
+  truck_admin_designator BigInt?
   driver           Driver[]
   trailer          Trailer[]
   load             Load[]

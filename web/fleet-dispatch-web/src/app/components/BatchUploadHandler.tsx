@@ -4,8 +4,10 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import Papa from "papaparse";
 import { Driver, User } from "@prisma/client";
+import { set } from "zod";
 
 export default function BatchUploadHandler() {
+    // State variables. At some point or another all of these will be used.
     const [file, setFile] = useState<File | undefined>(undefined);
     const [data, setData] = useState<any[]>([]);
     const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -18,10 +20,16 @@ export default function BatchUploadHandler() {
     const [userColumns, setUserColumns] = useState<string[]>([]);
     const [userOpen, setUserOpen] = useState<boolean>(false);
     const [truckOpen, setTruckOpen] = useState<boolean>(false);
-
-    const EXPECTED_USER_COLUMNS = ['name', 'email'];
-    const EXPECTED_TRUCK_COLUMNS = ['license_plate', 'make', 'model', 'year', 'current_location', 'next_maintenance_date'];
+    const [trailerOpen, setTrailerOpen] = useState<boolean>(false);
+    const [columnMappings, setColumnMappings] = useState<{[key: string]: string}>({});
+    const [columnToMap, setColumnToMap] = useState<string>('');
+    const [expectedUserColumns, setExpectedUserColumns] = useState<string[]>(['name', 'email', 'current_location']); // [...olumns, ]
+    const [expectedTruckColumns, setExpectedTruckColumns] = useState<string[]>(['license_plate', 'make', 'model', 'year', 
+        'current_location', 'next_maintenance_date', 'next_admin_date', 'truck_admin_designator']);
+    const [expectedTrailerColumns, setExpectedTrailerColumns] = useState<string[]>(['trailer_number', 'type', 'capacity', 'current_location', 
+        'next_maintenance_date', 'next_admin_date', 'trailer_admin_designator']);
     
+    // Handles file submission and is sentinel for opening the data preview modal.
     async function handleOnSubmit(e: React.SyntheticEvent) {
         e.preventDefault();
 
@@ -59,27 +67,76 @@ export default function BatchUploadHandler() {
 
     }
 
+    // Handles file input change event. This sends the file to state.
     async function handleOnChange(e: React.FormEvent<HTMLInputElement>) {
         const target = e.target as HTMLInputElement & { files: FileList | null };
-        const display = target.getAttribute("className")
+        // const display = target.getAttribute("className")
         // console.log(target.files);
         setFile(target.files ? target.files[0] : undefined);
     }
 
+    // Handles cell click event. Basically sends the position of the cell to state for editing.
     async function handleCellClick(rowIndex: number, colIndex: number) {
-        setEditingCell({ row: rowIndex, col: colIndex });
+        if (!selecting) {
+            setEditingCell({ row: rowIndex, col: colIndex });
+        }
+        else {
+            return null;
+        }
     }
 
+    // Handles cell change event. This stores teh new value in its original position.
     async function handleCellChange(rowIndex: number, colIndex: number, newValue: string) {
         const newValues = [...values];
         newValues[rowIndex][colIndex] = newValue;
         setValues(newValues);
     }
 
+    // This andles the column change event. When selecting a column to map, it will update the selected column with the mapped value.
+    // It will also remove the mapped value from the expected columns list.
+    // It updates the columns state with the new mapping.
+    async function handleColumnChange(colIndex: number) {
+        if (selecting) {
+            const newColumns = [...columns];
+            newColumns[0][colIndex] = columnToMap;
+            if (expectedUserColumns.includes(columnToMap)) {
+                setExpectedUserColumns(expectedUserColumns.filter(col => col !== columnToMap));
+            }
+            else if (expectedTruckColumns.includes(columnToMap)) {
+                setExpectedTruckColumns(expectedTruckColumns.filter(col => col !== columnToMap));
+            }
+            else if (expectedTrailerColumns.includes(columnToMap)) {
+                setExpectedTrailerColumns(expectedTrailerColumns.filter(col => col !== columnToMap));
+            }
+            setColumns(newColumns);
+            setSelecting(false);
+            setColumnToMap('');
+        }
+        else {
+            return null;
+        }
+        
+    }
+
+    // Handles the column to map change event. Looks through expected columns and closes the appropriate modal.
+    async function handleColumnToMapChange(e: React.MouseEvent<HTMLDivElement>) {
+        const newValue = e.currentTarget.textContent.toLocaleLowerCase() || ''; 
+        if (expectedTruckColumns.includes(newValue)) {
+            setTruckOpen(false);
+        } else if (expectedUserColumns.includes(newValue)) {
+            setUserOpen(false);
+        } else if (expectedTrailerColumns.includes(newValue)) {
+            setTrailerOpen(false);
+        }
+        setColumnToMap(newValue);
+    }
+
+    // Handles the cell blur event. This sets the editing cell to null.
     async function handleCellBlur() {
         setEditingCell(null);
     }
 
+    // Handles the key down event. This sets the editing cell to null.
     async function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number, colIndex: number) {
         if (e.key === 'Enter') {
             setEditingCell(null);
@@ -97,14 +154,14 @@ export default function BatchUploadHandler() {
         const value = e.currentTarget.textContent
         console.log(value);
         switch (value) {
-            case "User":
+            case "Drivers":
                 setUserOpen(true);
                 break;
-            case "Truck":
+            case "Trucks":
                 setTruckOpen(true);
                 break;
-            case "Trailer":
-                // setTrailerOpen(true);
+            case "Trailers":
+                setTrailerOpen(true);
                 break;
             default:
                 break;
@@ -147,11 +204,15 @@ export default function BatchUploadHandler() {
                         <div className="flex gap-4">
                             <button 
                                 onClick={sendToDatabase}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
+                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium cursor-pointer"
                             >
-                                Add to Board
+                                Verify Info &rarr;
                             </button>
-                            <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setIsOpen(false)}>X</h4>
+                            <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => {
+                                setIsOpen(false)
+                                setSelecting(false);
+                                setEditingCell(null);
+                                }}>X</h4>
                         </div>
                     </div>
                     <div className="overflow-scroll max-h-[80vh] max-w-full" onClick={(e) => e.stopPropagation()}>
@@ -159,7 +220,7 @@ export default function BatchUploadHandler() {
                             <thead>
                                 <tr>
                                     {columns[0] && columns[0].map((col, index) => (
-                                        <th key={index} className="px-4 py-2 border-b border-gray-700 text-left text-gray-400">{col}</th>
+                                        <th key={index} className={`px-4 py-2 border-b border-gray-700 text-left text-gray-400 ${selecting ? 'cursor-pointer' : ''}`} onClick={() => handleColumnChange(index)}>{col}</th>
                                     ))}
                                 </tr>
                             </thead>
@@ -192,9 +253,18 @@ export default function BatchUploadHandler() {
                             </tbody>
                         </table>
                     </div>
+                    <span className="mt-4 italic">The following tables need to be mapped:</span>
                     <div className="flex flex-row justify-beginning mt-4 gap-4">
-                        <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium" onClick={selectInfo}>User</button>
-                        <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium" onClick={selectInfo}>Truck</button>
+                        {expectedUserColumns.length > 0 && (
+                            <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium cursor-pointer" onClick={selectInfo}>Drivers</button>
+                        )
+                        }
+                        {expectedTruckColumns.length > 0 && (
+                            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium cursor-pointer" onClick={selectInfo}>Trucks</button>
+                        )}
+                        {expectedTrailerColumns.length > 0 && (
+                            <button className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-medium cursor-pointer" onClick={selectInfo}>Trailers</button>
+                        )}                                                
                     </div>
                     {userOpen && (
                         <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -204,8 +274,8 @@ export default function BatchUploadHandler() {
                                     <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setUserOpen(false)}>X</h4>
                                 </div>
                                 <div>
-                                    {EXPECTED_USER_COLUMNS.map((column, index) => (
-                                        <div key={index} className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2">
+                                    {expectedUserColumns.map((column, index) => (
+                                        <div key={index} className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2" onClick={handleColumnToMapChange}>
                                             {toTitleCase(column)}
                                         </div>
                                     ))}
@@ -221,8 +291,25 @@ export default function BatchUploadHandler() {
                                     <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setTruckOpen(false)}>X</h4>
                                 </div>
                                 <div>
-                                    {EXPECTED_TRUCK_COLUMNS.map((column, index) => (
-                                        <div key={index} className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2">
+                                    {expectedTruckColumns.map((column, index) => (
+                                        <div key={index} className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2" onClick={handleColumnToMapChange}>
+                                            {toTitleCase(column)}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {trailerOpen && (
+                        <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-3xl w-full">
+                                <div className="flex flex-row justify-between items-center mb-4">
+                                    <h4 className="text-lg font-semibold text-gray-300 mb-4">Select Column to Map</h4>
+                                    <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setTrailerOpen(false)}>X</h4>
+                                </div>
+                                <div>
+                                    {expectedTrailerColumns.map((column, index) => (
+                                        <div key={index} className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2" onClick={handleColumnToMapChange}>
                                             {toTitleCase(column)}
                                         </div>
                                     ))}
