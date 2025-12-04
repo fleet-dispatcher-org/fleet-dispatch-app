@@ -5,6 +5,7 @@ import { useState } from "react";
 import Papa from "papaparse";
 import { Driver, User } from "@prisma/client";
 import { set } from "zod";
+import { table } from "console";
 
 export default function BatchUploadHandler() {
     // State variables. At some point or another all of these will be used.
@@ -16,12 +17,15 @@ export default function BatchUploadHandler() {
     const [values, setValues] = useState<string[][]>([]);
     const [editingCell, setEditingCell] = useState<{row: number, col: number} | null>(null);
     const [userInfo, setUserInfo] = useState<any[]>([]);
+    const [verifyOpen, setVerifyOpen] = useState<boolean>(false);
+    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const [selecting, setSelecting] = useState<boolean>(false);
-    const [userColumns, setUserColumns] = useState<string[]>([]);
+    const [userColumns, setUserColumns] = useState<Record<string, number>>({});
     const [userOpen, setUserOpen] = useState<boolean>(false);
     const [truckOpen, setTruckOpen] = useState<boolean>(false);
     const [trailerOpen, setTrailerOpen] = useState<boolean>(false);
-    const [columnMappings, setColumnMappings] = useState<{[key: string]: string}>({});
+    const [truckColumns, setTruckColumns] = useState<Record<string, number>>({});
+    const [trailerColumns, setTrailerColumns] = useState<Record<string, number>>({});
     const [columnToMap, setColumnToMap] = useState<string>('');
     const [expectedUserColumns, setExpectedUserColumns] = useState<string[]>(['name', 'email', 'current_location']); // [...olumns, ]
     const [expectedTruckColumns, setExpectedTruckColumns] = useState<string[]>(['license_plate', 'make', 'model', 'year', 
@@ -55,6 +59,8 @@ export default function BatchUploadHandler() {
                         newValues.push(Object.values(row));
                     });
                     setValues(newValues as string[][]);
+                    console.log("Values:", values);
+
                 }
             });
             console.log("Parsed Data:", data);
@@ -62,7 +68,7 @@ export default function BatchUploadHandler() {
             setLoading(false);
 
             console.log("Columns:", columns);
-            console.log("Values:", values);
+            
         }
 
     }
@@ -100,15 +106,23 @@ export default function BatchUploadHandler() {
             const newColumns = [...columns];
             newColumns[0][colIndex] = columnToMap;
             if (expectedUserColumns.includes(columnToMap)) {
-                setExpectedUserColumns(expectedUserColumns.filter(col => col !== columnToMap));
+                setExpectedUserColumns(prev => prev.filter(col => col !== columnToMap));
+                setUserColumns(prev => ({...prev, [columnToMap]: colIndex}));
             }
             else if (expectedTruckColumns.includes(columnToMap)) {
-                setExpectedTruckColumns(expectedTruckColumns.filter(col => col !== columnToMap));
+                setExpectedTruckColumns(prev => prev.filter(col => col !== columnToMap));
+                setTruckColumns(prev => ({...prev, [columnToMap]: colIndex}));
             }
             else if (expectedTrailerColumns.includes(columnToMap)) {
-                setExpectedTrailerColumns(expectedTrailerColumns.filter(col => col !== columnToMap));
+                setExpectedTrailerColumns(prev => prev.filter(col => col !== columnToMap));
+                setTrailerColumns(prev => ({...prev, [columnToMap]: colIndex}));
             }
             setColumns(newColumns);
+            console.log("Updated Columns:", columns);
+            console.log("Current Values:", values);
+            console.log("User Columns Mapping:", userColumns);
+            console.log("Truck Columns Mapping:", truckColumns);
+            console.log("Trailer Columns Mapping:", trailerColumns);
             setSelecting(false);
             setColumnToMap('');
         }
@@ -119,13 +133,14 @@ export default function BatchUploadHandler() {
     }
 
     // Handles the column to map change event. Looks through expected columns and closes the appropriate modal.
-    async function handleColumnToMapChange(e: React.MouseEvent<HTMLDivElement>) {
-        const newValue = e.currentTarget.textContent.toLocaleLowerCase() || ''; 
-        if (expectedTruckColumns.includes(newValue)) {
+    async function handleColumnToMapChange(e: React.MouseEvent<HTMLLIElement>) {
+        const newValue = e.currentTarget.textContent.toLocaleLowerCase().split('map to ')[1] || ''; 
+        // console.log("Selected column to map:", newValue);
+        if (expectedTruckColumns.includes(newValue) && truckOpen) {
             setTruckOpen(false);
-        } else if (expectedUserColumns.includes(newValue)) {
+        } else if (expectedUserColumns.includes(newValue) && userOpen) {
             setUserOpen(false);
-        } else if (expectedTrailerColumns.includes(newValue)) {
+        } else if (expectedTrailerColumns.includes(newValue) && trailerOpen) {
             setTrailerOpen(false);
         }
         setColumnToMap(newValue);
@@ -203,7 +218,7 @@ export default function BatchUploadHandler() {
                         <h4 className="text-lg font-semibold text-gray-300 mb-4">Parsed CSV Data Preview (Click cells to edit)</h4>
                         <div className="flex gap-4">
                             <button 
-                                onClick={sendToDatabase}
+                                onClick={() => {setVerifyOpen(true); setIsOpen(false); setSelecting(false); setEditingCell(null);}}
                                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium cursor-pointer"
                             >
                                 Verify Info &rarr;
@@ -274,11 +289,37 @@ export default function BatchUploadHandler() {
                                     <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setUserOpen(false)}>X</h4>
                                 </div>
                                 <div>
-                                    {expectedUserColumns.map((column, index) => (
-                                        <div key={index} className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2" onClick={handleColumnToMapChange}>
-                                            {toTitleCase(column)}
-                                        </div>
-                                    ))}
+                                     {expectedUserColumns.map((column) => (
+                                            <div className="flex flex-row justify-between items-center mb-4" key={`user-${column}`}>
+                                                <div 
+                                                    className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2" 
+                                                    onClick={() => setOpenDropdown(openDropdown === column ? null : column)}
+                                                >
+                                                    <span>{expectedUserColumns.indexOf(column) + 1}. </span>
+                                                    <span>{toTitleCase(column)}</span>
+                                                </div>
+                                                
+                                                <div className="relative">
+                                                    <button 
+                                                        onClick={() => setOpenDropdown(openDropdown === column ? null : column)}
+                                                        className="text-gray-400 px-4 py-2 border border-gray-600 rounded hover:bg-gray-800"
+                                                    >
+                                                        Select Action ▼
+                                                    </button>
+                                                    
+                                                    {openDropdown === column && (
+                                                        <ul className="absolute right-0 mt-1 bg-gray-900 border border-gray-600 rounded shadow-lg z-10 min-w-[200px]">
+                                                            <li className="text-gray-300 px-4 py-2 hover:bg-gray-800 cursor-pointer" onClick={handleColumnToMapChange}>
+                                                                Map to {toTitleCase(column)}
+                                                            </li>
+                                                            <li className="text-gray-300 px-4 py-2 hover:bg-gray-800 cursor-pointer">
+                                                                Fill out in next step
+                                                            </li>
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
                                 </div>
                             </div>
                         </div>
@@ -291,11 +332,37 @@ export default function BatchUploadHandler() {
                                     <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setTruckOpen(false)}>X</h4>
                                 </div>
                                 <div>
-                                    {expectedTruckColumns.map((column, index) => (
-                                        <div key={index} className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2" onClick={handleColumnToMapChange}>
-                                            {toTitleCase(column)}
-                                        </div>
-                                    ))}
+                                    {expectedTruckColumns.map((column) => (
+                                            <div className="flex flex-row justify-between items-center mb-4" key={`user-${column}`}>
+                                                <div 
+                                                    className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2" 
+                                                    onClick={() => setOpenDropdown(openDropdown === column ? null : column)}
+                                                >
+                                                    <span>{expectedTruckColumns.indexOf(column) + 1}. </span>
+                                                    <span>{toTitleCase(column)}</span>
+                                                </div>
+                                                
+                                                <div className="relative">
+                                                    <button 
+                                                        onClick={() => setOpenDropdown(openDropdown === column ? null : column)}
+                                                        className="text-gray-400 px-4 py-2 border border-gray-600 rounded hover:bg-gray-800"
+                                                    >
+                                                        Select Action ▼
+                                                    </button>
+                                                    
+                                                    {openDropdown === column && (
+                                                        <ul className="absolute right-0 mt-1 bg-gray-900 border border-gray-600 rounded shadow-lg z-10 min-w-[200px]">
+                                                            <li className="text-gray-300 px-4 py-2 hover:bg-gray-800 cursor-pointer" onClick={handleColumnToMapChange}>
+                                                                Map to {toTitleCase(column)}
+                                                            </li>
+                                                            <li className="text-gray-300 px-4 py-2 hover:bg-gray-800 cursor-pointer">
+                                                                Fill out in next step
+                                                            </li>
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
                                 </div>
                             </div>
                         </div>
@@ -308,17 +375,90 @@ export default function BatchUploadHandler() {
                                     <h4 className="text-lg font-semibold text-gray-300 mb-4 cursor-pointer" onClick={() => setTrailerOpen(false)}>X</h4>
                                 </div>
                                 <div>
-                                    {expectedTrailerColumns.map((column, index) => (
-                                        <div key={index} className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2" onClick={handleColumnToMapChange}>
-                                            {toTitleCase(column)}
-                                        </div>
-                                    ))}
+                                    {expectedTrailerColumns.map((column) => (
+                                            <div className="flex flex-row justify-between items-center mb-4" key={`user-${column}`}>
+                                                <div 
+                                                    className="text-gray-400 py-2 cursor-pointer hover:bg-gray-800 px-4 rounded mb-2" 
+                                                    onClick={() => setOpenDropdown(openDropdown === column ? null : column)}
+                                                >
+                                                    <span>{expectedTrailerColumns.indexOf(column) + 1}. </span>
+                                                    <span>{toTitleCase(column)}</span>
+                                                </div>
+                                                
+                                                <div className="relative">
+                                                    <button 
+                                                        onClick={() => setOpenDropdown(openDropdown === column ? null : column)}
+                                                        className="text-gray-400 px-4 py-2 border border-gray-600 rounded hover:bg-gray-800"
+                                                    >
+                                                        Select Action ▼
+                                                    </button>
+                                                    
+                                                    {openDropdown === column && (
+                                                        <ul className="absolute right-0 mt-1 bg-gray-900 border border-gray-600 rounded shadow-lg z-10 min-w-[200px]">
+                                                            <li className="text-gray-300 px-4 py-2 hover:bg-gray-800 cursor-pointer" onClick={handleColumnToMapChange}>
+                                                                Map to {toTitleCase(column)}
+                                                            </li>
+                                                            <li className="text-gray-300 px-4 py-2 hover:bg-gray-800 cursor-pointer">
+                                                                Fill out in next step
+                                                            </li>
+                                                        </ul>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
                                 </div>
                             </div>
                         </div>
                     )}
                 </div>
                 
+            )}
+            {verifyOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 max-w-6xl w-full max-h-[90vh] overflow-auto">
+                        <div className="flex flex-row justify-between items-center mb-4">
+                            <h4 className="text-lg font-semibold text-gray-300">Information to Verify</h4>
+                            <div className="flex gap-4 items-center">
+                                <button 
+                                    onClick={() => {
+                                        setVerifyOpen(false); 
+                                        setIsOpen(false);
+                                        setSelecting(false); 
+                                        setEditingCell(null);
+                                    }}
+                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium cursor-pointer"
+                                >
+                                    Send to Boards &rarr;
+                                </button>
+                                <h4 
+                                    className="text-lg font-semibold text-gray-300 cursor-pointer" 
+                                    onClick={() => {
+                                        setVerifyOpen(false);
+                                        setSelecting(false);
+                                        setEditingCell(null);
+                                    }}
+                                >
+                                    X
+                                </h4>
+                            </div>
+                        </div>
+                        
+                        <div className="overflow-scroll max-h-[70vh] max-w-full">
+                            <table className="min-w-full bg-gray-900 border border-gray-700">
+                                <thead>
+                                    <tr>
+                                        {Object.keys(userColumns).map((col, index) => (
+                                            <th key={index} className="px-4 py-2 border-b border-gray-700 text-left text-gray-400">{col}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {/* Add your table body content here */}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     )
