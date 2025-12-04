@@ -129,16 +129,29 @@ function calcEta(driver: Driver, estimate: number, start_time: number): number {
     if(driver.total_8_hour <= 0)
     {
       end_estimate += .5;
+      driver.off_duty += .5;
       driver.total_8_hour = 8;
       driver.total_11_hour -= .5;
       driver.total_14_hour -= .5;
+      continue;
     }
 
     //only if there is no extenuating issues, then drive as long as you can before stopping
     //meaning: if you hit your limit for ANY clock, that's the maximum amount of time you can drive
     //when driving happens, set off_duty hours to equal 0
-    
-    
+    let drivable = Math.min( remaining_time, driver.total_11_hour, driver.total_14_hour, driver.total_8_hour, 70 - driver.total_70_hour );
+
+    remaining_time -= drivable;
+    driver.total_11_hour -= drivable;
+    driver.total_14_hour -= drivable;
+    driver.total_8_hour -= drivable;
+
+    driver.total_70_hour += drivable;
+    driver.eight_day_total[7] += drivable;
+    driver.on_duty = drivable;
+    driver.off_duty = 0;
+
+    end_estimate += drivable;
   }
 
   return end_estimate;
@@ -158,7 +171,7 @@ function main() {
   //eventually take in variable from api on how long the original estimate 
   //also pass in time that they will start their drive
     let eta: number = calcEta(newDriver, fake_estimate, start_time);
-    console.log(`Your ETA is ${eta} minutes.`)
+    console.log(`Your ETA is ${eta} hours.`)
 }
 
 // Call Main
