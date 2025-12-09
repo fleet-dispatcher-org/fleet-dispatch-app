@@ -73,9 +73,10 @@ model Trailer {
   bureaucratically_sound    Boolean?  @default(true)
   correct_equipment_working Boolean?  @default(true)
   in_range_first_stop       Boolean?  @default(false)
-  make                      String    @db.VarChar(20)
-  model                     String    @db.VarChar(20)
+  make                      String?    @db.VarChar(20)
+  model                     String?    @db.VarChar(20)
   year                      Int?
+  trailer_number            BigInt?   @unique
   trailer_vessel_type        String?   @db.VarChar(20)
   trailer_door_type          String?   @db.VarChar(20)
   specialized_equipment_quantity     Int?
@@ -84,11 +85,11 @@ model Trailer {
   current_cargo_weight      Decimal?  @db.Decimal(7, 2)
   license_plate             String?   @db.VarChar(20)
   registration_expiry       DateTime? @db.Date
-  last_inspection_date      DateTime? @db.Date
-  next_inspection_date       DateTime? @db.Date
   next_admin_date           DateTime? @db.Date
   trailer_loaded_status     BigInt? 
   trailer_admin_designator   BigInt?
+  last_maintenance_date  DateTime?
+  next_maintenance_date     DateTime?
   required_permits          String[]
   assigned_fleet            String? 
   insurance_valid           Boolean?
@@ -106,7 +107,7 @@ model Load {
   id               String    @id @default(cuid())
   origin           String    @db.VarChar(20)
   destination      String    @db.VarChar(20)
-  weight           Decimal
+  weight           Decimal?
   pick_up_by       DateTime   @default(now())
   due_by           DateTime  @default(now())
   status           Status     @default(UNASSIGNED)
@@ -191,9 +192,9 @@ model Fleet {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model Truck {
   id               String    @id @default(cuid())
-  license_plate    String    @unique @db.VarChar(20)
-  make             String    @db.VarChar(20)
-  model            String    @db.VarChar(20)
+  license_plate    String?    @unique @db.VarChar(20)
+  make             String?    @db.VarChar(20)
+  model            String?    @db.VarChar(20)
   year             Int?
   capacity_tons    Decimal?  @db.Decimal(5, 2)
   mileage          Int?
@@ -204,7 +205,7 @@ model Truck {
   driver_id        String?
   assigned_trailer Boolean?  @default(false)
   trailer_id       String?
-  truck_number     String? 
+  truck_number     BigInt?   @unique 
   current_coordinates Json? 
   // This would be "permit": Expiration Time. 
   required_certs   Json? 

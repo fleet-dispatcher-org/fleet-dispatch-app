@@ -22,3 +22,17 @@ export async function GET() {
         return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
     }
 }
+
+export async function POST(request: Request) {
+    try {
+        const session = await auth();
+        if(!session || session.user?.role != "ADMIN") 
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        const body = await request.json();
+        const newTrailer = await prisma.trailer.create({ data: body });
+        return NextResponse.json(newTrailer);
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ message: `Internal Server Error: ${error}` }, { status: 500 });
+    }
+}
