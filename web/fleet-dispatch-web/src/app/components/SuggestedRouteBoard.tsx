@@ -5,11 +5,10 @@ import Link from 'next/link';
 import { RoutePlanner } from '../hooks/routePlanner';
 import { RoutePlannerContext, TreeBasedAssignment, RouteNode } from '../hooks/routePlanner';
 import { useSession } from 'next-auth/react';
-import Logo from './Logo';
 
 
 export default function SuggestedRouteBoard() {
-    const [routes, setRoutes] = useState<Load[]>([]);
+    const [suggestedRoutes, setSuggestedRoutes] = useState<Load[]>([]);
     const [trucks, setTrucks] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -22,7 +21,7 @@ export default function SuggestedRouteBoard() {
 
     useEffect(() => {
         // Only load existing suggestions on mount, don't automatically generate new ones
-        getRoutes();   
+        getSuggestions();   
     }, []);
     const fetchUnassignedDrivers = async (): Promise<Driver[]> => {
     try {
@@ -65,6 +64,40 @@ export default function SuggestedRouteBoard() {
     }
 };
 
+const clearSuggestions = async () => {
+    try {
+        setLoading(true);
+        setClearingSuggestions(true);
+        await fetch(`${url}/api/dispatcher/loads/clear-suggestions`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                assigned_driver: null,
+                assigned_by: null,
+                assigned_truck: null,
+                assigned_trailer: null,
+                status: 'UNASSIGNED'
+            }),
+        });
+
+        await fetch(`${url}/api/dispatcher/routes/clear-suggestions`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            
+        })
+        setError(null);
+    } catch (error) {
+        console.error('Error clearing suggestions:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error occurred');
+    } finally {
+        setLoading(false);
+        setClearingSuggestions(false);
+    }
+};
 
 const fetchUnassignedTrucks = async (): Promise<Truck[]> => {
     try {
@@ -160,8 +193,117 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
     }
     }
 
+const makeSuggestionsParallel = async () => {
+    try {
+        setGeneratingSuggestions(true);
+        setError(null);
+        
+        const [unassignedDrivers, unassignedTrucks, unassignedTrailers, unassignedLoads] = await Promise.all([
+            fetchUnassignedDrivers(), 
+            fetchUnassignedTrucks(), 
+            fetchUnassignedTrailers(),
+            fetchUnassignedLoads()
+        ]);
 
-    const getRoutes = async () => {
+
+        const assignmentData: RoutePlannerContext = {
+            drivers: unassignedDrivers,
+            trucks: unassignedTrucks,
+            trailers: unassignedTrailers,
+            loads: unassignedLoads
+        }
+
+        const routePlanner = new RoutePlanner();
+        const suggestions = routePlanner.makeChronologicalTreeBasedAssignments(assignmentData, 600, 10, 10, "HIGHEST_FEASIBILITY", "pick_up_by");
+
+        console.log("Suggestions:", suggestions);
+        
+        // Create all API calls as promises
+        const allApiCalls: Promise<Response>[] = [];
+        
+        // Fixed version of your function
+        suggestions.forEach((suggestion: TreeBasedAssignment) => {
+            const assigned_driver = suggestion.driverGroup.driver.id;
+            const assigned_truck = suggestion.driverGroup.truck.id;
+            const assigned_trailer = suggestion.driverGroup.trailer.id;
+
+            const assigned_loads = suggestion.primaryRoute.routePath.map((node: RouteNode) => node.load);
+
+            const validLoads = assigned_loads.filter((load: Load) => !load.id.includes('current_'));
+
+            const totalCost = suggestion.primaryRoute.totalCost;
+
+            const totalDistance = suggestion.primaryRoute.totalDistance;
+
+            const feasibilityScore = suggestion.primaryRoute.feasibilityScore;
+
+            // Deduplicate by ID
+            const uniqueLoads = validLoads.filter((load, index, self) => 
+                index === self.findIndex((l) => l.id === load.id)
+            );
+            console.log("Total assigned loads:", assigned_loads.length);
+            console.log("Valid loads after filter:", validLoads.length);
+            console.log("Valid load IDs:", validLoads.map(load => load.id));
+            console.log("Unique loads:", uniqueLoads.length);
+            console.log("Unique load IDs:", uniqueLoads.map(load => load.id));
+
+            console.log("Total Distance: ", totalDistance);
+            console.log("Total Cost: ", totalCost);
+            console.log("Feasibility Score: ", feasibilityScore);
+
+            uniqueLoads.forEach((load: Load) => {
+                allApiCalls.push(fetch(`${url}/api/dispatcher/${load.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        assigned_driver,
+                        assigned_truck,
+                        assigned_trailer,
+                        status: 'SUGGESTED',
+                        assigned_by: session?.user?.id
+                    }),
+                }));
+            });
+
+            allApiCalls.push((fetch(`${url}/api/dispatcher/routes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    assigned_driver: assigned_driver,
+                    assigned_truck: assigned_truck,
+                    assigned_trailer: assigned_trailer,
+                    loads: uniqueLoads.map(load => ({ id: load.id })),
+                    totalCost: totalCost as number,
+                    totalDistance: totalDistance as number,
+                    feasibilityScore: feasibilityScore as number
+                })
+            })))
+            
+
+        });
+
+        // Execute all API calls in parallel
+        await Promise.all(allApiCalls);
+
+        console.log("Suggestions made successfully");
+        await getSuggestions();
+        
+    } catch (error) {
+        console.error('Error making suggestions:', error);
+        setError(error instanceof Error ? error.message : 'Failed to generate suggestions');
+    } finally {
+        setGeneratingSuggestions(false);
+    }
+}
+
+const handleGetSuggestions = async () => {
+    await makeSuggestionsParallel();
+}
+    const getSuggestions = async () => {
         try {
             setLoading(true);
             setError(null);
@@ -197,11 +339,11 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
                 getTrailerMakeModel(id)
             }});
                         
-            setRoutes(data.filter((route: Route) => route.status != 'SUGGESTED') || []);
+            setSuggestedRoutes(data.filter((route: Route) => route.status === 'SUGGESTED') || []);
         } catch (err) {
             console.error('Error fetching suggestions:', err);
             setError(err instanceof Error ? err.message : 'Failed to fetch loads');
-            setRoutes([]);
+            setSuggestedRoutes([]);
         } finally {
             setLoading(false);
         }
@@ -286,7 +428,7 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
         }
     }
     
-    if (loading && routes.length === 0) {
+    if (loading && suggestedRoutes.length === 0) {
         return (
             <div className="max-w-7xl mx-auto p-6 mt-4">
                 <div className="bg-gray-900 shadow rounded-lg overflow-hidden">
@@ -300,36 +442,23 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
 
     return (
         <div className="max-w-7xl mx-auto p-6 mt-4">
-            <div className="max-w-7xl mx-auto p-6k">
-                        {/* Outer Container ^*/}
-                        
-                        {/* Header */}
-                        <div className="mb-8">
-                            <div className="flex flex-row mb-2">
-                                <Logo 
-                                    path="/fleet-dispatch-logo-no-background.png"
-                                    alt="Inverted Logo"
-                                    width={38}
-                                    height={38}
-                                    reroute="/"
-                                />
-                                <h1 className="text-3xl mt-0.5 ml-2 font-bold text-gray-400">Dispatcher Dashboard</h1>
-                            </div>
-                            <p className="text-gray-500 mt-2">
-                                Welcome back, {session?.user?.name}. Manage your drivers and loads here.
-                            </p>
-                        </div>
-                    </div>
             <div className="bg-gray-900 shadow rounded-lg overflow-hidden">
                 {/* Table Header */}
                 <div className="px-6 py-4 border-b border-gray-900">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h2 className="text-xl font-semibold text-gray-400">Current Routes</h2>
+                            <h2 className="text-xl font-semibold text-gray-400">AI Suggested Loads</h2>
                             <p className="text-sm text-gray-600 mt-1">
-                                View current or pending routes here. 
+                                Accept or Deny suggested loads here
                             </p>
                         </div>
+                        <button
+                            onClick={handleGetSuggestions}
+                            disabled={generatingSuggestions}
+                            className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 hover:cursor-pointer"
+                        >
+                            {generatingSuggestions ? 'Generating Suggestions...' : 'Get Suggestions'}
+                        </button>
                     </div>
                     {error && (
                         <div className="mt-2 p-2 bg-red-900 border border-red-700 rounded text-red-300 text-sm">
@@ -347,21 +476,21 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
                                 Route ID
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Assigned Driver
+                                Suggested Driver
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Assigned Truck
+                                Suggested Truck
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Assigned Trailer
+                                Suggested Trailer
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                View Route
+                                View Actions
                             </th>
                         </tr>
                     </thead>
                     <tbody className="bg-gray-900 divide-y divide-gray-400">
-                        {routes.map((route) => (
+                        {suggestedRoutes.map((route) => (
                             <tr key={route.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm text-gray-400">{route.id}</div>
@@ -379,8 +508,7 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-400">{
-                                    route.assigned_truck ? (trucks[route.assigned_truck] || 'Assigning Truck...'): 'No Truck Assigned'}</div>
+                                    <div className="text-sm text-gray-400">{route.assigned_truck ? (trucks[route.assigned_truck] || 'Assigning Truck...'): 'No Truck Assigned'}</div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="text-sm text-gray-400">{route.assigned_trailer ? (trailers[route.assigned_trailer] || 'Assigning Trailer...'): 'No Trailer Assigned'}</div>
@@ -401,17 +529,25 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
                 </table>
             </div>
             
-            {routes.length === 0 && !loading && (
+            {suggestedRoutes.length === 0 && !loading && (
                 <div className='text-center py-8'>
                     <p className="text-gray-500 mt-2">No suggested loads found.</p>
                 </div>
             )}
 
+            <div className="mt-6 flex justify-start">
+                <button
+                    onClick={clearSuggestions}
+                    disabled={loading || clearingSuggestions}
+                    className='bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed'>
+                    {clearingSuggestions ? 'Clearing Suggestions...' : 'Clear Suggestions'}
+                </button>
+            </div>
             
             {/* Refresh Button */}
             <div className="mt-6 flex justify-end">
                 <button
-                    onClick={getRoutes}
+                    onClick={getSuggestions}
                     disabled={loading || generatingSuggestions}
                     className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

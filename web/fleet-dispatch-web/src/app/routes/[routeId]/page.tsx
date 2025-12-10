@@ -259,7 +259,7 @@ export default async function Page({ params }: RouteViewProps) {
                     className="group"
                 >
                 <p className="text-sm font-medium text-gray-400 hover:text-gray-200 
-                hover:underline transition-colors duration-300" >Back to Loads &rarr;</p>
+                hover:underline transition-colors duration-300" > &larr; Back to Dispatcher </p>
                 </Link>
                 
                 

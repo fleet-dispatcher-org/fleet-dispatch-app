@@ -63,7 +63,7 @@ export default function AssignTrailerClient({ routeId, assignedTrailer }: Assign
                 throw new Error("Invalid response format: expected array or object with trailers property");
             }
 
-            const availableTrailers = trailersArray.filter((trailer: Trailer) => trailer.trailer_status === "AVAILABLE");
+            const availableTrailers = trailersArray.filter((trailer: Trailer) => trailer.status === "AVAILABLE");
             setTrailers(availableTrailers);
             setLoading(false);
             setError(null);
@@ -134,7 +134,7 @@ export default function AssignTrailerClient({ routeId, assignedTrailer }: Assign
                     href={`/admin/trailers/${assignedTrailer.id}`}
                     className="group"
                 >
-                    <span>{assignedTrailer.make} {assignedTrailer.model} ({assignedTrailer.year})</span>
+                    <span>{assignedTrailer.make ? assignedTrailer.make : "No info provided"} {assignedTrailer.model ? assignedTrailer.model : ""} ({assignedTrailer.year ? assignedTrailer.year : ""})</span>
                 </Link>
                 <button 
                 className="ml-auto text-gray-400 hover:text-gray-500" onClick={() => handleDeleteTrailer(assignedTrailer.id)}>x</button>

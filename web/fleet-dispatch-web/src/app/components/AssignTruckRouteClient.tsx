@@ -9,9 +9,9 @@ interface AssignTruckRouteClientProps {
     routeId: string;
     assignedTruck: {
         id: string;
-        license_plate: string;
-        make: string;
-        model: string;
+        license_plate: string | null;
+        make: string | null;
+        model: string | null;
         year: number | null;
         capacity_tons: number | null; // Changed to number
         mileage: number | null;
@@ -159,7 +159,7 @@ export default function AssignTruckRouteClient({routeId, assignedTruck}: AssignT
                     href={`/admin/trucks/${assignedTruck.id}`}
                     className="group"
                 >
-                    <span>{assignedTruck.make} {assignedTruck.model} ({assignedTruck.year})</span>
+                    <span>{assignedTruck.make ? assignedTruck.make : "No Info Provided"} {assignedTruck.model ? assignedTruck.model : ""} ({assignedTruck.year ? assignedTruck.year : ""})</span>
                 </Link>
                 <button 
                 className="ml-auto text-gray-400 hover:text-gray-500" onClick={() => handleDeleteTruck(assignedTruck.id)}>x</button>

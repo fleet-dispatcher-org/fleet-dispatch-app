@@ -7,21 +7,24 @@ import UnassignedTrucksBoard from "../components/UnassignedTrucksBoard";
 import UnassignedTrailersBoard from "../components/UnassignedTrailersBoard";
 import CreateLoadCard from "../components/CreateLoadCard";
 import AlgorithmBoard from "../components/AlgorithmBoard";
-import RouteBoard from "../components/RouteBoard";
+import SuggestedRouteBoard from "../components/SuggestedRouteBoard";
 import BatchUploadHandler from "../components/BatchUploadHandler";
+import RouteBoard from "../components/RouteBoard";
 
 export const metadata: Metadata = {
   title: 'Dispatcher Dashboard',
 }
 
 export default function Dispatcher() {
+    
   
     return (
+  
     <main>
-      <DispatchBoard />
+      <RouteBoard />
       {/* <AIBoard/> */}
       {/* <AlgorithmBoard/> */}
-      <RouteBoard />
+      <SuggestedRouteBoard />
       <BatchUploadHandler />
       <CreateLoadCard/>
       <UnassignedBoardMini/>

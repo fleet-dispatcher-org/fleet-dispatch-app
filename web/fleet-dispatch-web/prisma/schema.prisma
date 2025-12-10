@@ -76,7 +76,7 @@ model Trailer {
   make                      String?    @db.VarChar(20)
   model                     String?    @db.VarChar(20)
   year                      Int?
-  trailer_number            BigInt?   @unique
+  trailer_number            Int?   @unique
   trailer_vessel_type        String?   @db.VarChar(20)
   trailer_door_type          String?   @db.VarChar(20)
   specialized_equipment_quantity     Int?
@@ -86,8 +86,9 @@ model Trailer {
   license_plate             String?   @db.VarChar(20)
   registration_expiry       DateTime? @db.Date
   next_admin_date           DateTime? @db.Date
-  trailer_loaded_status     BigInt? 
-  trailer_admin_designator   BigInt?
+  trailer_loaded_status     Int?
+  status                    Availability_Status @default(AVAILABLE) 
+  trailer_admin_designator   Int?
   last_maintenance_date  DateTime?
   next_maintenance_date     DateTime?
   required_permits          String[]
@@ -205,14 +206,14 @@ model Truck {
   driver_id        String?
   assigned_trailer Boolean?  @default(false)
   trailer_id       String?
-  truck_number     BigInt?   @unique 
+  truck_number     Int?   @unique 
   current_coordinates Json? 
   // This would be "permit": Expiration Time. 
   required_certs   Json? 
   created_at       DateTime? @default(now()) @db.Timestamp(6)
   next_maintenance_date DateTime?
   next_admin_date       DateTime?
-  truck_admin_designator BigInt?
+  truck_admin_designator Int?
   driver           Driver[]
   trailer          Trailer[]
   load             Load[]
