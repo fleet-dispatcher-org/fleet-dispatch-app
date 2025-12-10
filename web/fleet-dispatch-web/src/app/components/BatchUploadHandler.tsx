@@ -32,7 +32,7 @@ export default function BatchUploadHandler() {
                 
                 try {
                     // Send parsed data to API route
-                    const response = await fetch('/api/upload-routes', {
+                    const response = await fetch('/api/batch-upload', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

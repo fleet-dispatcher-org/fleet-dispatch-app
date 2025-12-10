@@ -80,14 +80,14 @@ function parseRouteData(routeRows: any[], routeId: string): ParsedRoute {
     truck_admin_designator: firstRow['TRUCK ADMIN DESIGNATOR'],
   };
 
-  const firstTrailerRow = routeRows.find(row => row['TRAILER']);
+  // const firstTrailerRow = routeRows.find(row => row['TRAILER']);
   const trailer = {
-    trailer_number: firstTrailerRow['TRAILER'],
-    next_maintenance_date: new Date(firstTrailerRow['TRAILER MAINT DATE']),
-    next_admin_date: new Date(firstTrailerRow['TRAILER ADMIN DATE']),
-    current_location: firstTrailerRow['TRAILER GO LOCATION NAME'],
-    trailer_admin_designator: firstTrailerRow['TRAILER ADMIN DESIGNATION'],
-    trailer_vessel_type: firstTrailerRow['TRAILER VESSEL TYPE'],
+    trailer_number: firstRow['TRAILER'],
+    next_maintenance_date: new Date(firstRow['TRAILER MAINT DATE']),
+    next_admin_date: new Date(firstRow['TRAILER ADMIN DATE']),
+    current_location: firstRow['TRAILER GO LOCATION NAME'],
+    trailer_admin_designator: firstRow['TRAILER ADMIN DESIGNATION'],
+    trailer_vessel_type: firstRow['TRAILER VESSEL TYPE'],
   };
 
   const loads: ParsedRoute['loads'] = [];
@@ -110,7 +110,7 @@ function parseRouteData(routeRows: any[], routeId: string): ParsedRoute {
         weight: 0,
         pick_up_by: new Date(pickupRow['APPT TIME']),
         due_by: new Date(deliveryRow['APPT TIME']),
-        status: 'ASSIGNED' as Status,
+        status: 'PENDING' as Status,
         assigned_driver: driver.name,
         assigned_trailer: pickupRow['LOAD'] || trailer.trailer_number,
         assigned_truck: truck.truck_number,
@@ -134,7 +134,7 @@ function parseRouteData(routeRows: any[], routeId: string): ParsedRoute {
     assigned_driver: driver.name,
     assigned_truck: truck.truck_number,
     assigned_trailer: trailer.trailer_number,
-    status: 'ASSIGNED' as Status,
+    status: 'PENDING' as Status,
   };
 
   return {
@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
         data: {
           totalDistance: parsed.route.totalDistance,
           totalCost: parsed.route.totalCost,
-          status: parsed.route.status,
+          status: parsed.route.status as Status,
           assigned_driver: driver.id,
           assigned_truck: truck.id,
           assigned_trailer: trailer.id,
