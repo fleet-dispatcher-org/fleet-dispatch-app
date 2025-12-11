@@ -13,9 +13,13 @@ export default function MaintenanceCalendar({ maintenance_date }: MaintenanceCal
 
     // Initialize dates on client side only to prevent hydration mismatch
     useEffect(() => {
+        const startDate = new Date(maintenance_date);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 7);
+
         setSelectedDays({
-            from: maintenance_date,
-            to: new Date(maintenance_date.setDate(maintenance_date.getDate() + 7)),
+            from: startDate,
+            to: endDate,
         });
     }, []);
 

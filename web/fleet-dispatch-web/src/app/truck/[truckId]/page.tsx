@@ -3,9 +3,9 @@ import { Truck } from "@prisma/client";
 import { auth } from "@/auth";
 import Logo from "../../components/Logo";
 import MaintenanceCalendar from "../../components/MaintenanceCalendar";
+import Link from "next/link";
 
 export default async function TruckPage({ params }: { params: Promise<{ truckId: string }> }) {
-
     const session = await auth();
 
     if (session?.user === null) return <div>Error signing in. Please try again. </div>;
@@ -218,8 +218,11 @@ export default async function TruckPage({ params }: { params: Promise<{ truckId:
                             <MaintenanceCalendar maintenance_date={truck?.next_maintenance_date as unknown as Date || new Date()} />
                             </div>
                         </div>
-                         
+                         <Link href="/dispatcher" className="flex items-center px-1 pt-1 text-gray-400 text-sm font-medium hover:underline">
+                            &larr; Back to Dispatcher
+                        </Link>
                     </main>
+                    
         </div>
     )
 }
