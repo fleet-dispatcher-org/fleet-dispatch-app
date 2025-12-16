@@ -4,6 +4,8 @@ import { auth } from "@/auth";
 import Logo from "../../components/Logo";
 import MaintenanceCalendar from "../../components/MaintenanceCalendar";
 import Link from "next/link";
+import ReassignTruckStatus from "../../components/ReassignTruckStatus";
+import ChangeTruckCapacity from "../../components/ChangeTruckCapacity";
 
 export default async function TruckPage({ params }: { params: Promise<{ truckId: string }> }) {
     const session = await auth();
@@ -162,41 +164,12 @@ export default async function TruckPage({ params }: { params: Promise<{ truckId:
                                     </div>
                                     <div className="flex items-center space-x-3">
                                         <div className="text-gray-400">
-                                            <p className="text-sm">{truck?.capacity_tons as unknown as number} tons</p>
+                                            <ChangeTruckCapacity truck={truck!.id} />
                                         </div>
                                     </div>
                                 </div>
                                 {/* Status */}
-                                <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
-                                    <div className="flex items-center space-x-3 mb-4">
-                                        {truck?.truck_status === "AVAILABLE" ? (
-                                            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                </div>
-                                        ) : (
-                                            <div className="flex items-center space-x-3">
-                                                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                                                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                        )
-                                        }
-                                        <h3 className="text-lg font-semibold text-gray-400">Truck Status</h3>
-                                    </div>
-                                        {truck?.truck_status === "AVAILABLE" ? (
-                                            <div className="flex items-center space-x-3">
-                                                <p className="text-gray-400">Available</p>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center space-x-3">
-                                                <p className="text-gray-400">Unavailable</p>
-                                            </div>
-                                        )}
-                            </div>
+                                <ReassignTruckStatus truck={truck!.id || null} />
                          </div>
                          <div className="bg-gray-900 rounded-lg shadow-sm border border-gray-700 p-6">
                             <div className="flex items-center space-x-3 mb-4">
