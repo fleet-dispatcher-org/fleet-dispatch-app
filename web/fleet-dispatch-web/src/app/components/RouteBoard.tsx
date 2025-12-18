@@ -221,7 +221,7 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
             // This is the actual data you want
             setTrucks(prevTrucks => ({
                 ...prevTrucks,
-                [truckId]: `${data.year} ${data.make}, ${data.model} `
+                [truckId]: `${data.truck_number} `
             }))
             
         } catch (err) {

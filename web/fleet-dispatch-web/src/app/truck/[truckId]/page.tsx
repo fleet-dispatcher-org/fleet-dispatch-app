@@ -102,7 +102,7 @@ export default async function TruckPage({ params }: { params: Promise<{ truckId:
                                 <h1 className="text-2xl font-bold text-white">Fleet Dispatch</h1>
                             </div>
                             <div className="text-sm text-gray-500">
-                                Truck ID: {truck?.id}
+                                Truck Number: {truck?.truck_number}
                             </div>
                         </div>
                     </header>
