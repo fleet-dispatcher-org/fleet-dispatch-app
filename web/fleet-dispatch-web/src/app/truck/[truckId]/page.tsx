@@ -6,6 +6,7 @@ import MaintenanceCalendar from "../../components/MaintenanceCalendar";
 import Link from "next/link";
 import ReassignTruckStatus from "../../components/ReassignTruckStatus";
 import ChangeTruckCapacity from "../../components/ChangeTruckCapacity";
+import MissingInfoModal from "../../components/MissingInfoModal"
 
 export default async function TruckPage({ params }: { params: Promise<{ truckId: string }> }) {
     const session = await auth();
@@ -195,7 +196,7 @@ export default async function TruckPage({ params }: { params: Promise<{ truckId:
                             &larr; Back to Dispatcher
                         </Link>
                     </main>
-                    
+            <MissingInfoModal id={truck?.id!} type='truck' open={true} />
         </div>
     )
 }
