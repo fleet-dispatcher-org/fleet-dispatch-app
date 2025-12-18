@@ -253,7 +253,7 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
             const data = await response.json();
             setTrailers(prevTrailers => ({
                 ...prevTrailers,
-                [trailerId]: `${data.year} ${data.make}, ${data.model} `
+                [trailerId]: `${data.trailer_number}`
             }))
         } catch (err) {
             console.error('Error fetching trailer name:', err);
