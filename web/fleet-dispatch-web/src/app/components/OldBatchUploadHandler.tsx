@@ -3,9 +3,6 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import Papa from "papaparse";
-import { Driver, User } from "@prisma/client";
-import { set } from "zod";
-import { table } from "console";
 
 export default function BatchUploadHandler() {
     // State variables. At some point or another all of these will be used.
@@ -16,7 +13,6 @@ export default function BatchUploadHandler() {
     const [columns, setColumns] = useState<string[][]>([]);
     const [values, setValues] = useState<string[][]>([]);
     const [editingCell, setEditingCell] = useState<{row: number, col: number} | null>(null);
-    const [userInfo, setUserInfo] = useState<any[]>([]);
     const [verifyOpen, setVerifyOpen] = useState<boolean>(false);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
     const [selecting, setSelecting] = useState<boolean>(false);

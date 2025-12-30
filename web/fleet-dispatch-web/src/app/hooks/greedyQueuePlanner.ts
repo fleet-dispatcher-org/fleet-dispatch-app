@@ -1,5 +1,4 @@
 import {Driver, Truck, Trailer, Load} from "@prisma/client";
-import { time } from "console";
 
 // Queue-based route planner. Doesn't account for dates. Works entirely spatially and prioritizes distance.
 
@@ -537,8 +536,8 @@ export class RoutePlanner {
         );
         
         const assignments: TreeBasedAssignment[] = [];
-        const datesWithLoads = assignmentContext.unassignedLoads.map(load => load.pick_up_by);
-        let availableLoads = [...assignmentContext.unassignedLoads];
+        // const datesWithLoads = assignmentContext.unassignedLoads.map(load => load.pick_up_by);
+        const availableLoads = [...assignmentContext.unassignedLoads];
         const earliestDate = availableLoads.reduce((earliest, load) => 
             !earliest || (load.pick_up_by && load.pick_up_by < earliest) 
             ? load.pick_up_by 

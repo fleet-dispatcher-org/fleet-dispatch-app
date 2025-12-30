@@ -10,7 +10,7 @@ interface MissingInfoModalProps {
     onClose?: () => void;
 }
 
-export default function MissingInfoModal({ id, type, open, onClose }: MissingInfoModalProps)  {
+export default function MissingInfoModal({ id, type, open}: MissingInfoModalProps)  {
     const [missingInfo, setMissingInfo] = useState({});
     const [loading, setLoading] = useState<boolean>(false);
     const [isOpen, setIsOpen] = useState<boolean>(open);

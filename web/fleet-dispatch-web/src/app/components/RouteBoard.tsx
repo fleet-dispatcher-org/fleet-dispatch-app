@@ -1,9 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react';
-import { Trailer, Load, Driver, Truck, Route } from "@prisma/client";
+import { Load, Route } from "@prisma/client";
 import Link from 'next/link';
-import { RoutePlanner } from '../hooks/routePlanner';
-import { RoutePlannerContext, TreeBasedAssignment, RouteNode } from '../hooks/routePlanner';
 import { useSession } from 'next-auth/react';
 import Logo from './Logo';
 
@@ -15,150 +13,149 @@ export default function SuggestedRouteBoard() {
     const [error, setError] = useState<string | null>(null);
     const [trailers, setTrailers] = useState<Record<string, string>>({});
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
-    const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
-    const [clearingSuggestions, setClearingSuggestions] = useState(false);
-    const url = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const [generatingSuggestions] = useState(false);
+    // const url = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const { data: session } = useSession();
 
     useEffect(() => {
         // Only load existing suggestions on mount, don't automatically generate new ones
         getRoutes();   
     }, []);
-    const fetchUnassignedDrivers = async (): Promise<Driver[]> => {
-    try {
-        setLoading(true);
+//     const fetchUnassignedDrivers = async (): Promise<Driver[]> => {
+//     try {
+//         setLoading(true);
         
-        const response = await fetch(`${url}/api/dispatcher/drivers`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            cache: 'no-store'
-        });
+//         const response = await fetch(`${url}/api/dispatcher/drivers`, {
+//             method: 'GET',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             cache: 'no-store'
+//         });
         
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
+//         if (!response.ok) {
+//             const errorData = await response.json().catch(() => ({}));
+//             throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+//         }
         
-        const data = await response.json();
+//         const data = await response.json();
         
-        // Handle both array and object responses
-        let driversArray;
-        if (Array.isArray(data)) {
-            driversArray = data;
-        } else if (data && Array.isArray(data.drivers)) {
-            driversArray = data.drivers;
-        } else {
-            throw new Error('Invalid response format: expected array or object with drivers property');
-        }
+//         // Handle both array and object responses
+//         let driversArray;
+//         if (Array.isArray(data)) {
+//             driversArray = data;
+//         } else if (data && Array.isArray(data.drivers)) {
+//             driversArray = data.drivers;
+//         } else {
+//             throw new Error('Invalid response format: expected array or object with drivers property');
+//         }
         
-        const availableDrivers = driversArray.filter((driver: Driver) => driver.driver_status === 'AVAILABLE');
-        setError(null);
-        return availableDrivers; // Return the data
-    } catch (error) {
-        console.error('Error fetching unassigned drivers:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        return []; // Return empty array on error
-    } finally {
-        setLoading(false);
-    }
-};
+//         const availableDrivers = driversArray.filter((driver: Driver) => driver.driver_status === 'AVAILABLE');
+//         setError(null);
+//         return availableDrivers; // Return the data
+//     } catch (error) {
+//         console.error('Error fetching unassigned drivers:', error);
+//         setError(error instanceof Error ? error.message : 'Unknown error occurred');
+//         return []; // Return empty array on error
+//     } finally {
+//         setLoading(false);
+//     }
+// };
 
 
-const fetchUnassignedTrucks = async (): Promise<Truck[]> => {
-    try {
-        setLoading(true);
+// const fetchUnassignedTrucks = async (): Promise<Truck[]> => {
+//     try {
+//         setLoading(true);
         
-        const response = await fetch(`${url}/api/trucks`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+//         const response = await fetch(`${url}/api/trucks`, {
+//             method: 'GET',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//         });
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
+//         if (!response.ok) {
+//             const errorData = await response.json();
+//             throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+//         }
         
-        const data = await response.json();
-        // Filter for truly unassigned trucks - available status and no assigned driver
-        const availableTrucks = data.filter((truck: Truck) => 
-            truck.truck_status === 'AVAILABLE' // && !truck.assigned_driver
-        );
-        setError(null);
-        return availableTrucks; // Return the filtered available trucks
-    } catch (error) {
-        console.error('Error fetching unassigned trucks:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        return []; // Return empty array on error
-    } finally {
-        setLoading(false);
-    }
-};
+//         const data = await response.json();
+//         // Filter for truly unassigned trucks - available status and no assigned driver
+//         const availableTrucks = data.filter((truck: Truck) => 
+//             truck.truck_status === 'AVAILABLE' // && !truck.assigned_driver
+//         );
+//         setError(null);
+//         return availableTrucks; // Return the filtered available trucks
+//     } catch (error) {
+//         console.error('Error fetching unassigned trucks:', error);
+//         setError(error instanceof Error ? error.message : 'Unknown error occurred');
+//         return []; // Return empty array on error
+//     } finally {
+//         setLoading(false);
+//     }
+// };
 
-const fetchUnassignedTrailers = async (): Promise<Trailer[]> => {
-    try {
-        setLoading(true);
+// const fetchUnassignedTrailers = async (): Promise<Trailer[]> => {
+//     try {
+//         setLoading(true);
         
-        const response = await fetch(`${url}/api/trailers`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+//         const response = await fetch(`${url}/api/trailers`, {
+//             method: 'GET',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//         });
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
+//         if (!response.ok) {
+//             const errorData = await response.json();
+//             throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+//         }
         
-        const data = await response.json();
-        // Filter for truly unassigned trailers - available status
-        const availableTrailers = data.filter((trailer: Trailer) => 
-            trailer.status === 'AVAILABLE'
-        );
-        setError(null);
-        return availableTrailers; // Return the filtered available trailers
-    } catch (error) {
-        console.error('Error fetching unassigned trailers:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        return []; // Return empty array on error
-    } finally {
-        setLoading(false);
-    }
-};
+//         const data = await response.json();
+//         // Filter for truly unassigned trailers - available status
+//         const availableTrailers = data.filter((trailer: Trailer) => 
+//             trailer.status === 'AVAILABLE'
+//         );
+//         setError(null);
+//         return availableTrailers; // Return the filtered available trailers
+//     } catch (error) {
+//         console.error('Error fetching unassigned trailers:', error);
+//         setError(error instanceof Error ? error.message : 'Unknown error occurred');
+//         return []; // Return empty array on error
+//     } finally {
+//         setLoading(false);
+//     }
+// };
 
-const fetchUnassignedLoads = async (): Promise<Load[]> => {
-    try {
-        setLoading(true);
+// const fetchUnassignedLoads = async (): Promise<Load[]> => {
+//     try {
+//         setLoading(true);
         
-        const response = await fetch(`${url}/api/dispatcher/loads`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+//         const response = await fetch(`${url}/api/dispatcher/loads`, {
+//             method: 'GET',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//         });
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
+//         if (!response.ok) {
+//             const errorData = await response.json();
+//             throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+//         }
         
-        const data = await response.json();
-        // let unassignedLoads = data.filter((load: Load) => !load.assigned_driver || !load.assigned_truck || !load.assigned_trailer);
-        const unassignedLoads = data.filter((load: Load) => load.status === 'UNASSIGNED');
-        setError(null);
-        return unassignedLoads; // Return the filtered unassigned loads
-    } catch (error) {
-        console.error('Error fetching unassigned loads:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        return []; // Return empty array on error
-    } finally {
-        setLoading(false);
-    }
-    }
+//         const data = await response.json();
+//         // let unassignedLoads = data.filter((load: Load) => !load.assigned_driver || !load.assigned_truck || !load.assigned_trailer);
+//         const unassignedLoads = data.filter((load: Load) => load.status === 'UNASSIGNED');
+//         setError(null);
+//         return unassignedLoads; // Return the filtered unassigned loads
+//     } catch (error) {
+//         console.error('Error fetching unassigned loads:', error);
+//         setError(error instanceof Error ? error.message : 'Unknown error occurred');
+//         return []; // Return empty array on error
+//     } finally {
+//         setLoading(false);
+//     }
+//     }
 
 
     const getRoutes = async () => {

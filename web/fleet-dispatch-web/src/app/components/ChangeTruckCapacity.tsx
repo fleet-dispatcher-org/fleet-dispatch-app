@@ -12,13 +12,6 @@ export default function ReassignTruckStatus(ReassignStatusProps: ReassignStatusP
     const [truckDetails, setTruckDetails] = useState<Truck | null>(null);
     const [truckCapacity, setTruckCapacity] = useState<number>(0); 
     const { truck } = ReassignStatusProps;
-    const AVAILABILITY_STATUSES = [ 
-        "AVAILABLE",
-        "ASSIGNED",
-        "HAS_EMERGENCY",
-        "UNAVAILABLE",
-        "SUGGESTED",
-        "SECONDARY_DUTY"];
 
     useEffect(() => {
         if (truck) {

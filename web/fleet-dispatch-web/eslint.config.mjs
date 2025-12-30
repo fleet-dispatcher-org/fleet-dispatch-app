@@ -9,7 +9,13 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-const eslintConfig = [
+const eslintConfig = [ {
+  ignores: [
+    "greedyQueuePlanner.ts",
+    "OldBatchUploadHandler.tsx"
+  ]
+
+},
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 ];
 

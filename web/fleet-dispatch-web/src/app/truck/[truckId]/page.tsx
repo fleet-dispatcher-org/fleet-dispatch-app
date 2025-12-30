@@ -196,7 +196,7 @@ export default async function TruckPage({ params }: { params: Promise<{ truckId:
                             &larr; Back to Dispatcher
                         </Link>
                     </main>
-            <MissingInfoModal id={truck?.id!} type='truck' open={true} />
+            <MissingInfoModal id={truck?.id || null} type='truck' open={true} />
         </div>
     )
 }

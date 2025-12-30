@@ -4,7 +4,6 @@ import { Trailer, Load, Driver, Truck } from "@prisma/client";
 import Link from 'next/link';
 import { RoutePlanner } from '../hooks/routePlanner';
 import { RoutePlannerContext, TreeBasedAssignment, RouteNode } from '../hooks/routePlanner';
-import { clear } from 'console';
 
 
 export default function AIBoard() {
@@ -140,7 +139,7 @@ const fetchUnassignedTrailers = async (): Promise<Trailer[]> => {
         const data = await response.json();
         // Filter for truly unassigned trailers - available status
         const availableTrailers = data.filter((trailer: Trailer) => 
-            trailer.trailer_status === 'AVAILABLE'
+            trailer.status === 'AVAILABLE'
         );
         setError(null);
         return availableTrailers; // Return the filtered available trailers

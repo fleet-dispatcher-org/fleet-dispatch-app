@@ -6,7 +6,6 @@ import Papa from "papaparse";
 
 export default function BatchUploadHandler() {
     const [file, setFile] = useState<File | undefined>(undefined);
-    const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -27,7 +26,7 @@ export default function BatchUploadHandler() {
         // Parse the CSV file
         Papa.parse(file, {
             header: true,
-            complete: async function(results: any) {     
+            complete: async function(results) {     
                 console.log("Parsed data:", results.data);
                 
                 try {
@@ -56,7 +55,7 @@ export default function BatchUploadHandler() {
                     setLoading(false);
                 }
             },
-            error: function(error: any) {
+            error: function(error) {
                 setError(`Failed to parse CSV: ${error.message}`);
                 setLoading(false);
             }

@@ -3,7 +3,7 @@ import { auth } from '@/auth'
 import prisma from "@/prisma/prisma";
 
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
         const session = await auth();
         if(!session || session.user?.role != "DISPATCHER" && session.user?.role != "ADMIN") 

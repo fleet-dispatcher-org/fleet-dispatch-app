@@ -10,7 +10,6 @@ interface ReassignStatusProps {
 export default function ReassignTruckStatus(ReassignStatusProps: ReassignStatusProps) {
     const [dropDown, setDropDown] = useState<boolean>(false);
     const [truckDetails, setTruckDetails] = useState<Truck | null>(null);
-    const [truckStatus, setTruckStatus] = useState<string>(''); 
     const { truck } = ReassignStatusProps;
     const AVAILABILITY_STATUSES = [ 
         "AVAILABLE",

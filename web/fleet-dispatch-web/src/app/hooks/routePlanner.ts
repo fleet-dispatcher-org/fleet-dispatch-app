@@ -1,5 +1,4 @@
 import {Driver, Truck, Trailer, Load} from "@prisma/client";
-import { time } from "console";
 
 // Tree-based route structure with alternatives. Accounts for Dates and sorts chronologically
 

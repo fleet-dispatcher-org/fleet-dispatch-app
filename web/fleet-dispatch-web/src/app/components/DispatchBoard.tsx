@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Role, Status } from "@prisma/client";
-import Logo from './Logo';
 import Link from 'next/link';
 import { Load } from "@prisma/client";
 
