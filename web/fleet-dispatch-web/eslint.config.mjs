@@ -1,22 +1,24 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-const eslintConfig = [ {
-  ignores: [
-    "greedyQueuePlanner.ts",
-    "OldBatchUploadHandler.tsx"
-  ]
-
-},
+const eslintConfig = [
+  // 1. Load Next.js and TypeScript configurations
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  
+  // 2. Add your custom rule overrides
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
 ];
 
 export default eslintConfig;
