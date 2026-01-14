@@ -129,7 +129,7 @@ export async function POST(req: Request) {
     }
 
     async function getAvailableTrailers() {
-        const trailers = await prisma.trailer.findMany({ where: { trailer_status: "AVAILABLE" } });
+        const trailers = await prisma.trailer.findMany({ where: { status: "AVAILABLE" } });
         return NextResponse.json({ trailers });
     }
 
