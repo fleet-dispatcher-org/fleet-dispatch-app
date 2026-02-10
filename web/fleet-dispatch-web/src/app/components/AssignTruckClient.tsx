@@ -9,9 +9,9 @@ interface AssignTruckClientProps {
     loadId: string;
     assignedTruck: {
         id: string;
-        license_plate: string;
-        make: string;
-        model: string;
+        license_plate: string | null;
+        make: string | null;
+        model: string | null;
         year: number | null;
         capacity_tons: number | null; // Changed to number
         mileage: number | null;
