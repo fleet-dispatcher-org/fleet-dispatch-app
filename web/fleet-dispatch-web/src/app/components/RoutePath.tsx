@@ -1,6 +1,6 @@
 "use client";
 
-import { Reorder } from "motion/react";
+import { Reorder } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Load } from "@prisma/client";
