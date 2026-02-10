@@ -39,7 +39,7 @@ export default function UnassignedTrailersBoard() {
                 throw new Error('Invalid response format: expected array or object with trailers property');
             }
             
-            const availableTrailers = trailersArray.filter((trailer: Trailer) => trailer.trailer_status === "AVAILABLE");
+            const availableTrailers = trailersArray.filter((trailer: Trailer) => trailer.status === "AVAILABLE");
             setTrailers(availableTrailers);
             setError(null);
         } catch (error) {
