@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -36,6 +37,8 @@ model Driver {
   loads                   Load[]
   user                    User              @relation(fields: [id], references: [id], onUpdate: NoAction)
   trucks                  Truck?            @relation(fields: [assigned_truck_id], references: [id], onUpdate: NoAction)
+
+  routes Route[]
 }
 
 model Week {
@@ -56,7 +59,7 @@ model Week {
   day_5_stop              String?
   day_6_stop              String?
   day_7_stop              String?
-
+  current_70_total        Int?    @default(70)
 
   userId                String
   user                  User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -71,16 +74,24 @@ model Trailer {
   bureaucratically_sound    Boolean?  @default(true)
   correct_equipment_working Boolean?  @default(true)
   in_range_first_stop       Boolean?  @default(false)
-  make                      String    @db.VarChar(20)
-  model                     String    @db.VarChar(20)
+  make                      String?    @db.VarChar(20)
+  model                     String?    @db.VarChar(20)
   year                      Int?
+  trailer_number            Int?   @unique
+  trailer_vessel_type        String?   @db.VarChar(20)
+  trailer_door_type          String?   @db.VarChar(20)
+  specialized_equipment_quantity     Int?
+  specialized_equipment_list String[] 
   max_cargo_capacity        Decimal?  @db.Decimal(7, 2)
   current_cargo_weight      Decimal?  @db.Decimal(7, 2)
   license_plate             String?   @db.VarChar(20)
   registration_expiry       DateTime? @db.Date
-  last_inspection_date      DateTime? @db.Date
-  next_inspection_due       DateTime? @db.Date
-  trailer_status            Availability_Status @default(AVAILABLE)
+  next_admin_date           DateTime? @db.Date
+  trailer_loaded_status     Int?
+  status                    Availability_Status @default(AVAILABLE) 
+  trailer_admin_designator   Int?
+  last_maintenance_date  DateTime?
+  next_maintenance_date     DateTime?
   required_permits          String[]
   assigned_fleet            String? 
   insurance_valid           Boolean?
@@ -89,13 +100,16 @@ model Trailer {
   load                      Load[]
   truck_id                  Truck?    @relation(fields: [assigned_truck_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   fleet                     Fleet?      @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction) 
+
+
+  routes Route[]
 }
 
 model Load {
   id               String    @id @default(cuid())
   origin           String    @db.VarChar(20)
   destination      String    @db.VarChar(20)
-  weight           Decimal
+  weight           Decimal?
   pick_up_by       DateTime   @default(now())
   due_by           DateTime  @default(now())
   status           Status     @default(UNASSIGNED)
@@ -111,6 +125,44 @@ model Load {
   destination_coordinates Json?  
   attributes       Json? 
   createdAt        DateTime @default(now())
+  truck            Truck?    @relation(fields: [assigned_truck], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  driver           Driver?   @relation(fields: [assigned_driver], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  trailer          Trailer?  @relation(fields: [assigned_trailer], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fleet            Fleet?     @relation(fields: [assigned_fleet], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  dispatcher       User?      @relation(fields: [assigned_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  routes           RouteLoad[]
+}
+
+model RouteLoad {
+  id        String   @id @default(cuid())
+  routeId   String
+  loadId    String
+  order     Int?     // Track order of Loads in Route
+  route     Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  load      Load     @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  
+  @@unique([routeId, loadId])
+  @@index([routeId])
+  @@index([loadId])
+}
+
+model Route {
+  id            String @id @default(cuid())
+  loads         RouteLoad[]
+  totalCost     Float?
+  totalDistance Float? 
+  totalDuration Float?
+  isValid       Boolean?
+  feasibilityScore  Float? 
+
+  assigned_driver   String?
+  assigned_truck    String?
+  assigned_trailer  String?
+  assigned_fleet    String?
+  assigned_by       String? 
+
+  status            Status @default(SUGGESTED)
+
   truck            Truck?    @relation(fields: [assigned_truck], references: [id], onDelete: NoAction, onUpdate: NoAction)
   driver           Driver?   @relation(fields: [assigned_driver], references: [id], onDelete: NoAction, onUpdate: NoAction)
   trailer          Trailer?  @relation(fields: [assigned_trailer], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -135,14 +187,16 @@ model Fleet {
   Load Load[]
 
   Trailer Trailer[]
+
+  routes Route[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model Truck {
   id               String    @id @default(cuid())
-  license_plate    String    @unique @db.VarChar(20)
-  make             String    @db.VarChar(20)
-  model            String    @db.VarChar(20)
+  license_plate    String?    @unique @db.VarChar(20)
+  make             String?    @db.VarChar(20)
+  model            String?    @db.VarChar(20)
   year             Int?
   capacity_tons    Decimal?  @db.Decimal(5, 2)
   mileage          Int?
@@ -153,18 +207,24 @@ model Truck {
   driver_id        String?
   assigned_trailer Boolean?  @default(false)
   trailer_id       String?
-  truck_number     String? 
+  truck_number     Int?   @unique 
   current_coordinates Json? 
   // This would be "permit": Expiration Time. 
   required_certs   Json? 
   created_at       DateTime? @default(now()) @db.Timestamp(6)
   next_maintenance_date DateTime?
+  next_admin_date       DateTime?
+  truck_admin_designator Int?
   driver           Driver[]
   trailer          Trailer[]
   load             Load[]
   attributes       Json?
   assigned_fleet_id String?
   fleet   Fleet? @relation(fields: [assigned_fleet_id], references: [id], onDelete: NoAction)
+
+
+
+  routes Route[]
 }
 
 model Account {
@@ -219,6 +279,8 @@ model User {
   assignments Load[]
 
   TimeOffRequest TimeOffRequest[]
+
+  assignedRoutes Route[]
 }
 
 model VerificationToken {
@@ -255,6 +317,13 @@ enum Status {
   REQUESTED
   UNASSIGNED
   DELIVERED
+}
+
+enum NodeType {
+  START
+  PICKUP 
+  DELIVERY 
+  END
 }
 
 enum Employment_Status {

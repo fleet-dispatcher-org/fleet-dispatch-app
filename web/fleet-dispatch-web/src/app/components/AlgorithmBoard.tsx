@@ -9,15 +9,12 @@ import { RoutePlannerContext, TreeBasedAssignment, RouteNode } from '../hooks/ro
 export default function AIBoard() {
     const [suggestedLoads, setSuggestedLoads] = useState<Load[]>([]);
     const [trucks, setTrucks] = useState<Record<string, string>>({});
-    const [unassignedTrucks, setUnassignedTrucks] = useState<Truck[]>([]);
-    const [unassignedTrailers, setUnassignedTrailers] = useState<Trailer[]>([]);
-    const [unassignedDrivers, setUnassignedDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [trailers, setTrailers] = useState<Record<string, string>>({});
     const [driverNames, setDriverNames] = useState<Record<string, string>>({});
-    const [unassignedLoads, setUnassignedLoads] = useState<Load[]>([]);
     const [generatingSuggestions, setGeneratingSuggestions] = useState(false);
+    const [clearingSuggestions, setClearingSuggestions] = useState(false);
 
     useEffect(() => {
         // Only load existing suggestions on mount, don't automatically generate new ones
@@ -53,16 +50,41 @@ export default function AIBoard() {
         }
         
         const availableDrivers = driversArray.filter((driver: Driver) => driver.driver_status === 'AVAILABLE');
-        setUnassignedDrivers(availableDrivers);
         setError(null);
         return availableDrivers; // Return the data
     } catch (error) {
         console.error('Error fetching unassigned drivers:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedDrivers([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
+    }
+};
+
+const clearSuggestions = async () => {
+    try {
+        setLoading(true);
+        setClearingSuggestions(true);
+        await fetch('/api/dispatcher/loads/clear-suggestions', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                assigned_driver: null,
+                assigned_by: null,
+                assigned_truck: null,
+                assigned_trailer: null,
+                status: 'UNASSIGNED'
+            }),
+        });
+        setError(null);
+    } catch (error) {
+        console.error('Error clearing suggestions:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error occurred');
+    } finally {
+        setLoading(false);
+        setClearingSuggestions(false);
     }
 };
 
@@ -87,13 +109,11 @@ const fetchUnassignedTrucks = async (): Promise<Truck[]> => {
         const availableTrucks = data.filter((truck: Truck) => 
             truck.truck_status === 'AVAILABLE' // && !truck.assigned_driver
         );
-        setUnassignedTrucks(availableTrucks);
         setError(null);
         return availableTrucks; // Return the filtered available trucks
     } catch (error) {
         console.error('Error fetching unassigned trucks:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedTrucks([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
@@ -119,15 +139,13 @@ const fetchUnassignedTrailers = async (): Promise<Trailer[]> => {
         const data = await response.json();
         // Filter for truly unassigned trailers - available status
         const availableTrailers = data.filter((trailer: Trailer) => 
-            trailer.trailer_status === 'AVAILABLE'
+            trailer.status === 'AVAILABLE'
         );
-        setUnassignedTrailers(availableTrailers);
         setError(null);
         return availableTrailers; // Return the filtered available trailers
     } catch (error) {
         console.error('Error fetching unassigned trailers:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedTrailers([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
@@ -153,13 +171,11 @@ const fetchUnassignedLoads = async (): Promise<Load[]> => {
         const data = await response.json();
         // let unassignedLoads = data.filter((load: Load) => !load.assigned_driver || !load.assigned_truck || !load.assigned_trailer);
         const unassignedLoads = data.filter((load: Load) => load.status === 'UNASSIGNED');
-        setUnassignedLoads(unassignedLoads);
         setError(null);
         return unassignedLoads; // Return the filtered unassigned loads
     } catch (error) {
         console.error('Error fetching unassigned loads:', error);
         setError(error instanceof Error ? error.message : 'Unknown error occurred');
-        setUnassignedLoads([]);
         return []; // Return empty array on error
     } finally {
         setLoading(false);
@@ -171,7 +187,7 @@ const makeSuggestionsParallel = async () => {
         setGeneratingSuggestions(true);
         setError(null);
         
-        await Promise.all([
+        const [unassignedDrivers, unassignedTrucks, unassignedTrailers, unassignedLoads] = await Promise.all([
             fetchUnassignedDrivers(), 
             fetchUnassignedTrucks(), 
             fetchUnassignedTrailers(),
@@ -187,7 +203,7 @@ const makeSuggestionsParallel = async () => {
         }
 
         const routePlanner = new RoutePlanner();
-        const suggestions = routePlanner.makeTreeBasedAssignments(assignmentData, 100, 20, 20, "HIGHEST_LOAD_COUNT");
+        const suggestions = routePlanner.makeChronologicalTreeBasedAssignments(assignmentData, 600, 10, 10, "HIGHEST_FEASIBILITY", "pick_up_by");
 
         console.log("Suggestions:", suggestions);
         
@@ -518,6 +534,15 @@ const handleGetSuggestions = async () => {
                     <p className="text-gray-500 mt-2">No suggested loads found.</p>
                 </div>
             )}
+
+            <div className="mt-6 flex justify-start">
+                <button
+                    onClick={clearSuggestions}
+                    disabled={loading || clearingSuggestions}
+                    className='bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed'>
+                    {clearingSuggestions ? 'Clearing Suggestions...' : 'Clear Suggestions'}
+                </button>
+            </div>
             
             {/* Refresh Button */}
             <div className="mt-6 flex justify-end">

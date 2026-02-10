@@ -63,7 +63,7 @@ export default function AssignTrailerClient({ loadId, assignedTrailer }: AssignT
                 throw new Error("Invalid response format: expected array or object with trailers property");
             }
 
-            const availableTrailers = trailersArray.filter((trailer: Trailer) => trailer.trailer_status === "AVAILABLE");
+            const availableTrailers = trailersArray.filter((trailer: Trailer) => trailer.status === "AVAILABLE");
             setTrailers(availableTrailers);
             setLoading(false);
             setError(null);

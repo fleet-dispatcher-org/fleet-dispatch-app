@@ -147,7 +147,7 @@ export default function UnassignedDrivers() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <Link 
-                                        href={`/dispatcher/drivers/${driver.id}`}
+                                        href={`/admin/users/${driver.id}`}
                                         className="group"
                                     >
                                         <span className='text-sm font-medium text-gray-300 hover:underline mx-auto'>

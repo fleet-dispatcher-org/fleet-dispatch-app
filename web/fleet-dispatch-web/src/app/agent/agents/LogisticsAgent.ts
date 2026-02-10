@@ -103,7 +103,7 @@ export class LogisticsAgent extends BaseAgent {
                 id: trailer.id,
                 type: trailer.model || 'Standard',
                 location: trailer.current_location,
-                status: trailer.trailer_status,
+                status: trailer.status,
                 capacity: trailer.max_cargo_capacity,
                 current_coordinates: trailer.current_coordinates,
             }));

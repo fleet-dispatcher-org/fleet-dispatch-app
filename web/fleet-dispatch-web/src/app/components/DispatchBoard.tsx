@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Role, Status } from "@prisma/client";
-import Logo from './Logo';
 import Link from 'next/link';
 import { Load } from "@prisma/client";
 
@@ -245,25 +244,7 @@ export default function DispatchBoard() {
         );
     }
     return (
-         <div className="max-w-7xl mx-auto p-6k">
-            {/* Outer Container ^*/}
-            
-            {/* Header */}
-            <div className="mb-8">
-                <div className="flex flex-row mb-2">
-                    <Logo 
-                        path="/fleet-dispatch-logo-no-background.png"
-                        alt="Inverted Logo"
-                        width={38}
-                        height={38}
-                        reroute="/"
-                    />
-                    <h1 className="text-3xl mt-0.5 ml-2 font-bold text-gray-400">Dispatcher Dashboard</h1>
-                </div>
-                <p className="text-gray-500 mt-2">
-                    Welcome back, {session?.user?.name}. Manage your drivers and loads here.
-                </p>
-            </div>
+        <div>
 
             {/* Loads Table */}
             <div className="bg-gray-900 shadow rounded-lg overflow-hidden">
@@ -329,7 +310,7 @@ export default function DispatchBoard() {
                                         </Link>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
-                                        { trailers[load.assigned_trailer || ""] ?? "No Trailer Assigned"}
+                                        {trailers[load.assigned_trailer || ""] ?? "No Trailer Assigned"}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hover:underline hover:cursor-pointer">
                                         {(() => {

@@ -119,7 +119,7 @@ const fetchUnassignedTrailers = async (): Promise<Trailer[]> => {
         const data = await response.json();
         // Filter for truly unassigned trailers - available status
         const availableTrailers = data.filter((trailer: Trailer) => 
-            trailer.trailer_status === 'AVAILABLE'
+            trailer.status === 'AVAILABLE'
         );
         setUnassignedTrailers(availableTrailers);
         setError(null);
