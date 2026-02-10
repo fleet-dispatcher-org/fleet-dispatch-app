@@ -141,7 +141,7 @@ export default async function Page({ params }: LoadViewProps) {
 
     const serializedLoad = {
         ...load, 
-        weight: load.weight.toNumber(),
+        weight: load.weight!.toNumber(),
     }
     
     const serializedTrailer = assigned_trailer ? {
@@ -178,7 +178,7 @@ export default async function Page({ params }: LoadViewProps) {
             <main className="max-w-7xl mx-auto px-6 py-8 bg-gray-900 border border-gray-700 mt-4 rounded-lg">
                 {/* Route Header */}
                 <div className="mb-8">
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg p-6 text-white">
+                    <div className="bg-linear-to-r from-blue-600 to-blue-800 rounded-lg p-6 text-white">
                         <div className="flex items-center justify-center space-x-4">
                             <div className="text-center">
                                 <h2 className="text-lg font-semibold opacity-90">Origin</h2>
