@@ -3,14 +3,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/prisma/prisma';
 import { Status } from '@prisma/client';
 
+// NOTE: Changed assigned trailer and truck to numbers because of how I'm looking for it in here. 
+// This might assign it in the db, not sure that I want that, may have to edit code
+
 interface ParsedRoute {
   route: {
     routeIdentifier: string;
     totalDistance: number;
     totalCost: number;
     assigned_driver: string;
-    assigned_truck: string;
-    assigned_trailer: string;
+    assigned_truck: number;
+    assigned_trailer: number;
     status: Status;
   };
   loads: Array<{
@@ -22,7 +25,7 @@ interface ParsedRoute {
     status: Status;
     assigned_driver: string;
     assigned_trailer: string;
-    assigned_truck: string;
+    assigned_truck: number;
     order: number;
   }>;
   driver: {
@@ -73,20 +76,20 @@ function parseRouteData(routeRows: any[], routeId: string): ParsedRoute {
   };
 
   const truck = {
-    truck_number: firstRow['TRUCK'],
+    truck_number: Number(firstRow['TRUCK']),
     next_maintenance_date: new Date(firstRow['TRUCK MAINT DATE']),
     next_admin_date: new Date(firstRow['TRUCK ADMIN DATE']),
     current_location: firstRow['TRUCK GO LOCATION NAME'],
-    truck_admin_designator: firstRow['TRUCK ADMIN DESIGNATOR'],
+    truck_admin_designator: Number(firstRow['TRUCK ADMIN DESIGNATOR']),
   };
 
   // const firstTrailerRow = routeRows.find(row => row['TRAILER']);
   const trailer = {
-    trailer_number: firstRow['TRAILER'],
+    trailer_number: Number(firstRow['TRAILER']),
     next_maintenance_date: new Date(firstRow['TRAILER MAINT DATE']),
     next_admin_date: new Date(firstRow['TRAILER ADMIN DATE']),
     current_location: firstRow['TRAILER GO LOCATION NAME'],
-    trailer_admin_designator: firstRow['TRAILER ADMIN DESIGNATION'],
+    trailer_admin_designator: Number(firstRow['TRAILER ADMIN DESIGNATION']),
     trailer_vessel_type: firstRow['TRAILER VESSEL TYPE'],
   };
 
@@ -136,6 +139,8 @@ function parseRouteData(routeRows: any[], routeId: string): ParsedRoute {
     assigned_trailer: trailer.trailer_number,
     status: 'PENDING' as Status,
   };
+
+  console.log("Truck Info: ", truck)
 
   return {
     route,
